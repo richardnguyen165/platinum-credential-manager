@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "EObKdppb+Vg=",
+  "dgSpecHash": "XKmuzVye6O0=",
   "success": true,
   "projectFilePath": "C:\\Users\\richard.nguyen\\platinum-credential-manager\\PlatinumCredentialManager.Api\\PlatinumCredentialManager.Api.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\richard.nguyen\\.nuget\\packages\\dotnetenv\\3.2.0\\dotnetenv.3.2.0.nupkg.sha512",
+    "C:\\Users\\richard.nguyen\\.nuget\\packages\\superpower\\3.0.0\\superpower.3.0.0.nupkg.sha512"
+  ],
   "logs": []
 }
