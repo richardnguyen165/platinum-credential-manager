@@ -1,5 +1,6 @@
 // Install: dotnet add PlatinumCredentialManager.Api package DotNetEnv
 
+using PlatinumCredentialManager.Api.Data; // For migrate db and add creds store db
 using PlatinumCredentialManager.Api.Endpoints;
 
 DotNetEnv.Env.Load();  // reads .env from the working directory
@@ -19,7 +20,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.AddCredsStoreDb();  // Register db context 
+
 var app = builder.Build(); // Move this to after the cors and loading dot env
+
+app.MigrateDb();
 
 // CORS policy
 app.UseCors(corsPolicy);   // add this before app.MapGamesEndpoints()
