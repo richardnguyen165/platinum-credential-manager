@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PlatinumCredentialManager.Api.Data;
 
@@ -10,9 +11,11 @@ using PlatinumCredentialManager.Api.Data;
 namespace PlatinumCredentialManager.Api.Data.Migrations
 {
     [DbContext(typeof(CredsStoreContext))]
-    partial class CredsStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20260606220947_AddDateCreated")]
+    partial class AddDateCreated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.8");

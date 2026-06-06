@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net10.0": {
       "DotNetEnv/3.2.0": {
@@ -2455,36 +2455,28 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\richard.nguyen\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\Richa\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\richard.nguyen\\platinum-credential-manager\\PlatinumCredentialManager.Api\\PlatinumCredentialManager.Api.csproj",
+      "projectUniqueName": "C:\\Users\\Richa\\platinum-credential-manager\\platinum-credential-manager\\PlatinumCredentialManager.Api\\PlatinumCredentialManager.Api.csproj",
       "projectName": "PlatinumCredentialManager.Api",
-      "projectPath": "C:\\Users\\richard.nguyen\\platinum-credential-manager\\PlatinumCredentialManager.Api\\PlatinumCredentialManager.Api.csproj",
-      "packagesPath": "C:\\Users\\richard.nguyen\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\richard.nguyen\\platinum-credential-manager\\PlatinumCredentialManager.Api\\obj\\",
+      "projectPath": "C:\\Users\\Richa\\platinum-credential-manager\\platinum-credential-manager\\PlatinumCredentialManager.Api\\PlatinumCredentialManager.Api.csproj",
+      "packagesPath": "C:\\Users\\Richa\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Richa\\platinum-credential-manager\\platinum-credential-manager\\PlatinumCredentialManager.Api\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\richard.nguyen\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\Richa\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0": {
-          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {}
         }
@@ -2499,11 +2491,10 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net10.0": {
-        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "DotNetEnv": {
@@ -2540,7 +2531,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.204/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

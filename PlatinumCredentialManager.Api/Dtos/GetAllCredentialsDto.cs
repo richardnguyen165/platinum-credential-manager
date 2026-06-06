@@ -5,5 +5,6 @@ public record class GetAllCredentialsDto
     int Id,
     string ServiceName,
     string Username,
-    DateOnly DateCreated
+    DateOnly DateCreated,
+    DateOnly DateLastUpdated
 );
