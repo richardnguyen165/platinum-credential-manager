@@ -1,3 +1,5 @@
+namespace PlatinumCredentialManager.Api.Dtos.Credential;
+
 public record class GetDetailedCredentialDto
 (
     int Id,

@@ -24,6 +24,7 @@ public static class DataExtensions
                 // If credential table is empty
                 if (!context.Set<Credential>().Any())
                 {
+                    // TODO: connect with category
                     context.Set<Credential>().AddRange(
                         new Credential { ServiceName = "TD Bank", Password = "123456" },
                         new Credential { ServiceName = "Home", Username = "admin", Password = "456"}

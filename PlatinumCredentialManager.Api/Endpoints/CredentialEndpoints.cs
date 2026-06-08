@@ -1,5 +1,5 @@
 using PlatinumCredentialManager.Api.Data;
-using PlatinumCredentialManager.Api.Dtos;
+using PlatinumCredentialManager.Api.Dtos.Credential; 
 using Microsoft.EntityFrameworkCore;
 using PlatinumCredentialManager.Api.Models;
 

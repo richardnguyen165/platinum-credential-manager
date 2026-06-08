@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PlatinumCredentialManager.Api.Dtos;
+namespace PlatinumCredentialManager.Api.Dtos.Credential;
 
 // For creating a credential, sending from the user (PUT)
 public record class CreateCredentialDto
