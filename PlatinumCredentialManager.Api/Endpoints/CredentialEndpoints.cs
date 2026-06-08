@@ -16,10 +16,10 @@ public static class CredentialEndpoints
         // READ/GET All users credentials (GET /creds) (For dashboard view)
         credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext) =>
         {
-            await dbContext.Credentials
+            return Results.Ok(await dbContext.Credentials
             .Select(credential => new GetAllCredentialsDto(credential.Id, credential.ServiceName, credential.Username, credential.DateCreated, credential.DateLastUpdated))
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync());
         });
 
         // READ/GET a specific user credential (GET /creds/:id) (For detailed view)
@@ -43,12 +43,24 @@ public static class CredentialEndpoints
         // CREATE/POST a credential (POST /creds)
         credentialURLGroup.MapPost("/", async (CreateCredentialDto newCredential, CredsStoreContext dbContext) =>
         {
-            Credential credential = new()
+            Credential credential;
+            if (newCredential.Username is null)
             {
-                ServiceName = newCredential.ServiceName,
-                Username = newCredential.Username,
-                Password = newCredential.Password
-            };
+                credential = new()
+                {
+                    ServiceName = newCredential.ServiceName,
+                    Password = newCredential.Password
+                };
+            }
+            else
+            {
+                credential = new()
+                {
+                    Username = newCredential.Username,
+                    ServiceName = newCredential.ServiceName,
+                    Password = newCredential.Password
+                };
+            }
 
             dbContext.Credentials.Add(credential);
 
@@ -76,11 +88,22 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
-            findCredential.ServiceName = updatedCredential.ServiceName;
-            findCredential.Username = updatedCredential.Username;
-            findCredential.Password =
-            updatedCredential.Password;
-            findCredential.DateLastUpdated = DateOnly.FromDateTime(DateTime.UtcNow);
+            if (updatedCredential.ServiceName is not null)
+            {
+                findCredential.ServiceName = updatedCredential.ServiceName;
+            }
+            if (updatedCredential.Username is not null)
+            {
+                findCredential.Username = updatedCredential.Username;
+            }
+            if (updatedCredential.Password is not null)
+            {
+                findCredential.Password = updatedCredential.Password;
+            }
+            if ( updatedCredential.ServiceName is not null || updatedCredential.Username is not null || updatedCredential.Password is not null)
+            {
+                findCredential.DateLastUpdated = DateOnly.FromDateTime(DateTime.UtcNow);   
+            }
 
             await dbContext.SaveChangesAsync();
 
@@ -90,9 +113,9 @@ public static class CredentialEndpoints
         // DELETE a credential (DELETE /creds/:id)
         credentialURLGroup.MapDelete("/{id}", async (int id, CredsStoreContext dbContext) =>
         {
-           await dbContext.Credentials.Where(credential => credential.Id == id).ExecuteDeleteAsync();
+            await dbContext.Credentials.Where(credential => credential.Id == id).ExecuteDeleteAsync();
 
-           return Results.NoContent(); 
+            return Results.NoContent();
         });
     }
 }

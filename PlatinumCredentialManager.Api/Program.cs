@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(corsPolicy, policy =>
     {
         // null forgiving -> ! ->  just in case
-        policy.WithOrigins(builder.Configuration["FRONTEND_URL"]!)
+        policy.WithOrigins(builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
