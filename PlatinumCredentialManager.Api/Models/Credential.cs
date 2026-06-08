@@ -20,7 +20,9 @@ public class Credential
 
     // For one credential, they are attached to one category. For one category, they have many credentials
 
-    public int CategoryId { get; set; }
+    // This is the foreign key - defaults to miscallaneous
+    public int CategoryId { get; set; } = 1;
 
+    // Allows for null values
     public Category? Category { get; set; }
 }
