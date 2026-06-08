@@ -2,7 +2,7 @@ GET http://localhost:5142/creds
 
 ###
 
-GET http://localhost:5142/creds/2
+GET http://localhost:5142/creds/3
 
 ###
 
@@ -20,10 +20,8 @@ DELETE http://localhost:5142/creds/3
 
 ### 
 
-PUT http://localhost:5142/creds/3
+PATCH http://localhost:5142/creds/3
 Content-Type: application/json
-
 {
-    
     "ServiceName": "12346"
 }

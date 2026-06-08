@@ -78,8 +78,8 @@ public static class CredentialEndpoints
             return Results.CreatedAtRoute(GetCredEndpointName, new { id = newCredentialDetails.Id }, newCredentialDetails);
         });
 
-        // UPDATE/PUT a credenital (PUT /creds/:id)
-        credentialURLGroup.MapPut("/{id}", async (int id, UpdateCredentialDto updatedCredential, CredsStoreContext dbContext) =>
+        // UPDATE/PATCH a credenital (PATCH /creds/:id)
+        credentialURLGroup.MapPatch("/{id}", async (int id, UpdateCredentialDto updatedCredential, CredsStoreContext dbContext) =>
         {
             var findCredential = await dbContext.Credentials.FindAsync(id);
 
@@ -98,6 +98,10 @@ public static class CredentialEndpoints
             }
             if (updatedCredential.Password is not null)
             {
+                if (string.IsNullOrWhiteSpace(updatedCredential.Password))
+                {
+                    return Results.BadRequest("Password cannot be blank!");
+                }
                 findCredential.Password = updatedCredential.Password;
             }
             if ( updatedCredential.ServiceName is not null || updatedCredential.Username is not null || updatedCredential.Password is not null)
