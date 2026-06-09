@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Category;
+using PlatinumCredentialManager.Api.Models;
+using Superpower.Model;
 
 namespace PlatinumCredentialManager.Api.Endpoints;
 
@@ -21,14 +23,69 @@ public static class CategoryEndpoints
             .ToListAsync());
         });
 
-        // GET a specific category (when we click on a specific category, we will all of its details and its aname  -> important for frontend)
+        // GET a specific category (when we click on a specific category, we will all of its details (credentials) and its name  -> important for frontend)
+        categoryURLGroup.MapGet("/{id}", async (int id, CredsStoreContext dbContext) =>
+        {
+            var category = await dbContext.Categories.FindAsync(id);
+
+            return category is null ? Results.NotFound() : Results.Ok(
+                new GetDetailedCategoryDto(
+                    category.Id,
+                    category.CategoryName,
+                    category.Credentials
+                )
+            );
+        });
 
         // CREATE/POST a category (POST /category)
+        categoryURLGroup.MapPost("/", async (CreateCategoryDto newCategory, CredsStoreContext dbContext) =>
+        {
+            Category category = new()
+            {
+                CategoryName = newCategory.CategoryName
+            };
 
-        // UPDATE/PUT a Category (PUT /category) 
+            dbContext.Categories.Add(category);
+
+            await dbContext.SaveChangesAsync();
+
+            GetDetailedCategoryDto newCategoryDetails = new(
+                category.Id,
+                category.CategoryName,
+                category.Credentials
+            );
+
+            return Results.CreatedAtRoute(GetCategoryEndpointName, new { id = newCategoryDetails.Id }, newCategoryDetails );
+        });
+
+        // UPDATE/PUT a Category (PUT /category/:id) 
+        categoryURLGroup.MapPut("/{id}", async (int id, UpdateCategoryDto updatedCategory, CredsStoreContext dbContext) =>
+        {
+            var findCategory = await dbContext.Categories.FindAsync(id);
+
+            if (findCategory is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedCategory.CategoryName))
+            {
+                return Results.BadRequest("Category cannot be blank!");
+            }
+            else if (updatedCategory.CategoryName == "Miscallaneous")
+            {
+                return Results.BadRequest("Category name cannot be named 'Miscallaneous'");
+            }
+
+            findCategory.CategoryName = updatedCategory.CategoryName;
+
+            await dbContext.SaveChangesAsync();
+
+            return Results.NoContent();
+        });
 
         // DELETE a category (DELETE /category/:id)
-        categoryURLGroup.MapDelete("/", async (int id, CredsStoreContext dbContext) =>
+        categoryURLGroup.MapDelete("/{id}", async (int id, CredsStoreContext dbContext) =>
         {
             await dbContext.Categories.Where(category => category.Id == id).ExecuteDeleteAsync();
             

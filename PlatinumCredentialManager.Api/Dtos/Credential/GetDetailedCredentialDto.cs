@@ -7,5 +7,6 @@ public record class GetDetailedCredentialDto
     string Username,
     string Password,
     DateOnly DateCreated,
-    DateOnly DateLastUpdated
+    DateOnly DateLastUpdated,
+    string CategoryName // we would need to display the category name
 );

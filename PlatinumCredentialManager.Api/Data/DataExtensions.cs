@@ -31,8 +31,9 @@ public static class DataExtensions
                     );
 
                     context.Set<Credential>().AddRange(
-                        new Credential { ServiceName = "TD Bank", Password = "123456" },
-                        new Credential { ServiceName = "Home", Username = "admin", Password = "456"}
+                        new Credential { ServiceName = "Biking", Password = "1234" },
+                        new Credential { ServiceName = "TD Bank", Password = "123456", CategoryId = 2 },
+                        new Credential { ServiceName = "Home", Username = "admin", Password = "456", CategoryId = 3 }
                     );
                 }
                 context.SaveChanges();
