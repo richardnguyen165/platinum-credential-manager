@@ -63,16 +63,30 @@ public static class CredentialEndpoints
         }).WithName(GetCredEndpointName);
 
         // CREATE/POST a credential (POST /creds)
+        // You must create the credential in a category
         credentialURLGroup.MapPost("/", async (CreateCredentialDto newCredential, CredsStoreContext dbContext) =>
         {
             // ?? is the null-coalescing operator. It returns the left side if it's not null, otherwise returns the right side.
             // You create credentials with a category -> pass the id
 
-            var category = await dbContext.Categories.FindAsync(newCredential.CategoryId);
+            // Contradicts itself -> category id can be passed as null (not pass in anything)
+            // var category = await dbContext.Categories.FindAsync(newCredential.CategoryId);
 
-            if (category is null)
+            // if (category is null)
+            // {
+            //     return Results.NotFound();
+            // }
+
+            // Check if there exists a credential of the same name in the same category
+            bool nameTakenStatus = await dbContext.Credentials
+            .AnyAsync(credential => 
+                (credential.CategoryId == newCredential.CategoryId) 
+                && (credential.ServiceName == newCredential.ServiceName)
+            );
+
+            if (nameTakenStatus)
             {
-                return Results.NotFound();
+                return Results.Conflict("Service name already taken in selected category");
             }
 
             Credential credential = new()
@@ -80,12 +94,14 @@ public static class CredentialEndpoints
                 Username = newCredential.Username ?? "",
                 ServiceName = newCredential.ServiceName,
                 Password = newCredential.Password,
-                CategoryId = newCredential.CategoryId ?? 1
+                CategoryId = newCredential.CategoryId
             };
 
             dbContext.Credentials.Add(credential);
 
             await dbContext.SaveChangesAsync();
+
+            var category = await dbContext.Categories.FindAsync(credential.CategoryId);
 
             GetDetailedCredentialDto newCredentialDetails = new(
                 credential.Id,
@@ -112,6 +128,18 @@ public static class CredentialEndpoints
 
             if (updatedCredential.ServiceName is not null)
             {
+                bool nameTakenStatus = await dbContext.Credentials
+                .AnyAsync(credential => 
+                    // need findCredential here because there could be a case where the category id was never updated => use exisiting credential in db
+                    (credential.CategoryId == findCredential.CategoryId) 
+                    && (credential.ServiceName == updatedCredential.ServiceName)
+                );
+
+                if (nameTakenStatus)
+                {
+                    return Results.Conflict("Service name already taken in selected category");
+                }
+
                 findCredential.ServiceName = updatedCredential.ServiceName;
             }
             if (updatedCredential.Username is not null)

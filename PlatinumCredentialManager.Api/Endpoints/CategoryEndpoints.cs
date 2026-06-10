@@ -26,20 +26,36 @@ public static class CategoryEndpoints
         // GET a specific category (when we click on a specific category, we will all of its details (credentials) and its name  -> important for frontend)
         categoryURLGroup.MapGet("/{id}", async (int id, CredsStoreContext dbContext) =>
         {
-            var category = await dbContext.Categories.FindAsync(id);
+            // This doesnot join with the Credentials table, so it returns an empty list
+            // var category = await dbContext.Categories.FindAsync(id);
 
-            return category is null ? Results.NotFound() : Results.Ok(
-                new GetDetailedCategoryDto(
-                    category.Id,
-                    category.CategoryName,
-                    category.Credentials
-                )
-            );
+            var category = await dbContext.Categories
+            .Where(c => c.Id == id)
+            .Select(c => new GetDetailedCategoryDto(
+                c.Id,
+                c.CategoryName,
+                c.Credentials
+            ))
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+            // FirstOrDefaultAsync actually joins with the Credential table, and finds the related Credentials
+
+            return category is null ? Results.NotFound() : Results.Ok(category);
         });
 
         // CREATE/POST a category (POST /category)
         categoryURLGroup.MapPost("/", async (CreateCategoryDto newCategory, CredsStoreContext dbContext) =>
         {
+            var categorySameName = await dbContext.Categories
+            .FirstOrDefaultAsync(
+                category => category.CategoryName == newCategory.CategoryName.Trim()
+            );
+
+            if (categorySameName is not null)
+            {
+                return Results.BadRequest("There exists a category that has the same name!");
+            }
+
             Category category = new()
             {
                 CategoryName = newCategory.CategoryName
@@ -56,7 +72,7 @@ public static class CategoryEndpoints
             );
 
             return Results.CreatedAtRoute(GetCategoryEndpointName, new { id = newCategoryDetails.Id }, newCategoryDetails );
-        });
+        }).WithName(GetCategoryEndpointName);
 
         // UPDATE/PUT a Category (PUT /category/:id) 
         categoryURLGroup.MapPut("/{id}", async (int id, UpdateCategoryDto updatedCategory, CredsStoreContext dbContext) =>
@@ -85,8 +101,39 @@ public static class CategoryEndpoints
         });
 
         // DELETE a category (DELETE /category/:id)
+        // When you delete you must the two things:
+        // One: Ensure that the category they are deleting is not miscallaneous
+        // Two: If we delete a category, we migrate those credentials to miscallaneous
         categoryURLGroup.MapDelete("/{id}", async (int id, CredsStoreContext dbContext) =>
         {
+            if (id == 1)
+            {
+                return Results.BadRequest("Cannot delete default category 'Miscallaneous!");
+            }
+
+            // // 1. Find Category and its credentials
+            // // Where is like an if condition for sql
+            // var categoryCredentials = await dbContext.Credentials
+            // .Where(c => c.CategoryId == id)
+            // .ToListAsync();
+
+            // // 2. Iterate through each of its credentials, saving it to category 1
+            // foreach (Credential credential in categoryCredentials)
+            // {
+            //     credential.CategoryId = 1;
+            //     // await dbContext.SaveChangesAsync(); Save everything after you are done (1 trip only)
+            // }
+
+            // This is quicker however
+            // https://learn.microsoft.com/en-us/ef/core/saving/execute-insert-update-delete
+            // Mass update - first we update the credentials, then we delete the category
+            await dbContext.Credentials
+            .Where(credential => credential.CategoryId == id)
+            .ExecuteUpdateAsync(set => set.SetProperty(cred => cred.CategoryId, 1));
+
+            await dbContext.SaveChangesAsync();
+
+            // Delete category
             await dbContext.Categories.Where(category => category.Id == id).ExecuteDeleteAsync();
             
             return Results.NoContent(); 

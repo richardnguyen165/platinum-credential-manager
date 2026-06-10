@@ -32,4 +32,6 @@ app.UseCors(corsPolicy);   // add this before app.MapGamesEndpoints()
 
 app.MapCredentialEndpoints();
 
+app.MapCategoryEndpoints();
+
 app.Run();
