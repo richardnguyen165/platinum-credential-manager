@@ -1,2 +1,8 @@
 *.env
 *.env.local
+
+# SQLite database (generated locally, reseeded on run)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PlatinumCredentialManager.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4127f832c64af20b3bb7a078631a796688593267")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7ec4c93dd1465703a5fba7baef025e436285d5f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("PlatinumCredentialManager.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PlatinumCredentialManager.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
