@@ -14,13 +14,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy(corsPolicy, policy =>
     {
         // null forgiving -> ! ->  just in case
-        policy.WithOrigins(builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173")
+        // dotnet run url
+        policy.WithOrigins("http://localhost:5142")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
 builder.AddCredsStoreDb();  // Register db context 
+
+builder.Services.AddValidation(); // Allows for annotations to work
 
 var app = builder.Build(); // Move this to after the cors and loading dot env
 
@@ -30,5 +33,7 @@ app.MigrateDb();
 app.UseCors(corsPolicy);   // add this before app.MapGamesEndpoints()
 
 app.MapCredentialEndpoints();
+
+app.MapCategoryEndpoints();
 
 app.Run();

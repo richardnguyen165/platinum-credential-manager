@@ -17,4 +17,12 @@ public class Credential
     public DateOnly DateCreated { get; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
     public DateOnly DateLastUpdated { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    // For one credential, they are attached to one category. For one category, they have many credentials
+
+    // This is the foreign key - defaults to miscallaneous
+    public int CategoryId { get; set; } = 1;
+
+    // Allows for null values
+    public Category? Category { get; set; }
 }

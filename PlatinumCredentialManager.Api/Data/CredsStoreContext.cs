@@ -8,4 +8,6 @@ namespace PlatinumCredentialManager.Api.Data;
 public class CredsStoreContext(DbContextOptions<CredsStoreContext> options): DbContext(options)
 {
     public DbSet<Credential> Credentials => Set<Credential>();
+
+    public DbSet<Category> Categories => Set<Category>();
 }
