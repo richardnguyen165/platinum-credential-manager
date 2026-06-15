@@ -4,9 +4,9 @@ namespace PlatinumCredentialManager.Api.Dtos.Credential;
 
 public record class GetAllCredentialsDto
 (
-    int Id,
-    string ServiceName,
-    string Username,
-    DateOnly DateCreated,
-    DateOnly DateLastUpdated
+    [Required] int Id,
+    [Required][StringLength(100)] string ServiceName,
+    [Required][StringLength(100)] string Username,
+    [Required] DateOnly DateCreated,
+    [Required] DateOnly DateLastUpdated
 );

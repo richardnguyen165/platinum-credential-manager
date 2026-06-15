@@ -77,6 +77,14 @@ public static class CredentialEndpoints
             //     return Results.NotFound();
             // }
 
+            // Check if the category exists
+            var categoryCheck = await dbContext.Categories.FindAsync(newCredential.CategoryId);
+
+            if (categoryCheck is null)
+            {
+                return Results.NotFound();
+            }
+
             // Check if there exists a credential of the same name in the same category
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential => 
@@ -116,8 +124,8 @@ public static class CredentialEndpoints
             return Results.CreatedAtRoute(GetCredEndpointName, new { id = newCredentialDetails.Id }, newCredentialDetails);
         });
 
-        // UPDATE/PATCH a credenital (PATCH /creds/:id)
-        credentialURLGroup.MapPatch("/{id}", async (int id, UpdateCredentialDto updatedCredential, CredsStoreContext dbContext) =>
+        // UPDATE/PUT a credenital (PUT /creds/:id)
+        credentialURLGroup.MapPut("/{id}", async (int id, UpdateCredentialDto updatedCredential, CredsStoreContext dbContext) =>
         {
             var findCredential = await dbContext.Credentials.FindAsync(id);
 
@@ -126,43 +134,33 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
-            if (updatedCredential.ServiceName is not null)
-            {
-                bool nameTakenStatus = await dbContext.Credentials
-                .AnyAsync(credential => 
-                    // need findCredential here because there could be a case where the category id was never updated => use exisiting credential in db
-                    (credential.CategoryId == findCredential.CategoryId) 
-                    && (credential.ServiceName == updatedCredential.ServiceName)
-                );
+            bool nameTakenStatus = await dbContext.Credentials
+            .AnyAsync(credential =>
+                // Check if any other credential (EXCLUDING itself, has the same name)
+                credential.Id != id
+                && (credential.CategoryId == updatedCredential.CategoryId)
+                && (credential.ServiceName == updatedCredential.ServiceName)
+            );
 
-                if (nameTakenStatus)
-                {
-                    return Results.Conflict("Service name already taken in selected category");
-                }
+            if (nameTakenStatus)
+            {
+                return Results.Conflict("Service name already taken in selected category");
+            }
 
-                findCredential.ServiceName = updatedCredential.ServiceName;
-            }
-            if (updatedCredential.Username is not null)
+            if (string.IsNullOrWhiteSpace(updatedCredential.Password))
             {
-                findCredential.Username = updatedCredential.Username;
+                return Results.BadRequest("Password cannot be blank!");
             }
-            if (updatedCredential.CategoryId is not null)
-            {
-                // value needed since dto category id is nullable
-                findCredential.CategoryId = updatedCredential.CategoryId.Value;
-            }
-            if (updatedCredential.Password is not null)
-            {
-                if (string.IsNullOrWhiteSpace(updatedCredential.Password))
-                {
-                    return Results.BadRequest("Password cannot be blank!");
-                }
-                findCredential.Password = updatedCredential.Password;
-            }
-            if (updatedCredential.ServiceName is not null || updatedCredential.Username is not null || updatedCredential.Password is not null || updatedCredential.CategoryId is not null)
-            {
-                findCredential.DateLastUpdated = DateOnly.FromDateTime(DateTime.UtcNow);
-            }
+
+            findCredential.CategoryId = updatedCredential.CategoryId;
+
+            findCredential.ServiceName = updatedCredential.ServiceName;
+
+            findCredential.Username = updatedCredential.Username;
+
+            findCredential.Password = updatedCredential.Password;
+
+            findCredential.DateLastUpdated = DateOnly.FromDateTime(DateTime.UtcNow);
 
             await dbContext.SaveChangesAsync();
 

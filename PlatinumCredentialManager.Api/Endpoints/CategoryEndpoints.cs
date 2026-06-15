@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Category;
@@ -9,6 +10,21 @@ namespace PlatinumCredentialManager.Api.Endpoints;
 public static class CategoryEndpoints
 {
     private const string GetCategoryEndpointName = "GetCategory";
+    private const int MISCALLANEOUS_ID = 1;
+    private const int RANDOM_STRING_LENGTH = 6;
+
+    // https://stackoverflow.com/questions/1344221/how-can-i-generate-random-alphanumeric-strings
+    private static string randomTagGenerator()
+    {
+        Random random = new Random();
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        return new string(
+            Enumerable
+            .Repeat(chars, RANDOM_STRING_LENGTH)
+            .Select(character => character[random.Next(character.Length)])
+            .ToArray()
+        );
+    }
 
     public static void MapCategoryEndpoints(this WebApplication app)
     {
@@ -106,11 +122,12 @@ public static class CategoryEndpoints
         // Two: If we delete a category, we migrate those credentials to miscallaneous
         categoryURLGroup.MapDelete("/{id}", async (int id, CredsStoreContext dbContext) =>
         {
-            if (id == 1)
+            if (id == MISCALLANEOUS_ID)
             {
                 return Results.BadRequest("Cannot delete default category 'Miscallaneous!");
             }
 
+            // SHELVED: DOES NOT CONSIDER THAT MIGRATING CREDENTIALS COULD HAVE SAME NAME AS IN MISC.
             // // 1. Find Category and its credentials
             // // Where is like an if condition for sql
             // var categoryCredentials = await dbContext.Credentials
@@ -124,12 +141,37 @@ public static class CategoryEndpoints
             //     // await dbContext.SaveChangesAsync(); Save everything after you are done (1 trip only)
             // }
 
+            // SHELVED: DOES NOT CONSIDER THAT MIGRATING CREDENTIALS COULD HAVE SAME NAME AS IN MISC.
             // This is quicker however
             // https://learn.microsoft.com/en-us/ef/core/saving/execute-insert-update-delete
             // Mass update - first we update the credentials, then we delete the category
-            await dbContext.Credentials
-            .Where(credential => credential.CategoryId == id)
-            .ExecuteUpdateAsync(set => set.SetProperty(cred => cred.CategoryId, 1));
+            // await dbContext.Credentials
+            // .Where(credential => credential.CategoryId == id)
+            // .ExecuteUpdateAsync(set => set.SetProperty(cred => cred.CategoryId, 1));
+
+            // 1. Get all names in Miscallaneous
+            HashSet<String> allMiscNames = await dbContext.Credentials
+            .Where(cred => cred.CategoryId == MISCALLANEOUS_ID)
+            .Select(c => c.ServiceName)
+            .ToHashSetAsync();
+
+            // 2. Find all the credentials in the category
+            var categoryCredentials = await dbContext.Credentials
+            .Where(c => c.CategoryId == id)
+            .ToListAsync();
+
+            // 3. Change id, and change name if needed
+            foreach (Credential credential in categoryCredentials)
+            {
+                credential.CategoryId = MISCALLANEOUS_ID;
+                string name = credential.ServiceName;
+                // Check if the misc. category acutally contains the name
+                while (allMiscNames.Contains(name))
+                {
+                    name = $"{credential.ServiceName} - {randomTagGenerator()}";
+                }
+                credential.ServiceName = name;
+            }
 
             await dbContext.SaveChangesAsync();
 

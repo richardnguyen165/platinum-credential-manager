@@ -23,6 +23,8 @@ builder.Services.AddCors(options =>
 
 builder.AddCredsStoreDb();  // Register db context 
 
+builder.Services.AddValidation(); // Allows for annotations to work
+
 var app = builder.Build(); // Move this to after the cors and loading dot env
 
 app.MigrateDb();

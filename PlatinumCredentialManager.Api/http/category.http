@@ -1,0 +1,48 @@
+### GET all categories (seeded: Miscallaneous, Financial Passwords, Home, Work, Social Media, Shopping)
+GET http://localhost:5142/category
+
+###
+
+### GET a specific category with its credentials (4 = Work: Google, Slack, GitHub)
+GET http://localhost:5142/category/1
+
+###
+
+### CREATE a new category
+POST http://localhost:5142/category
+Content-Type: application/json
+
+{
+    "CategoryName": "Gaming"
+}
+
+###
+
+### CREATE a duplicate category name -> expect 400 BadRequest
+POST http://localhost:5142/category
+Content-Type: application/json
+
+{
+    "CategoryName": "Work"
+}
+
+###
+
+### UPDATE/rename a category (5 = Social Media)
+PUT http://localhost:5142/category/5
+Content-Type: application/json
+
+{
+    "CategoryName": "Socials"
+}
+
+###
+
+### DELETE Miscallaneous (id 1) -> expect 400 BadRequest (cannot delete default)
+DELETE http://localhost:5142/category/1
+
+###
+
+### DELETE Work (id 4) -> credentials migrate to Miscallaneous.
+### Work has "Google"/"GitHub", which also exist elsewhere, so this exercises the name-collision handling.
+DELETE http://localhost:5142/category/4

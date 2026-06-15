@@ -43,6 +43,33 @@ npm run dev
 
 The dev server will start and print the local URL (typically `http://localhost:5173`).
 
+## Resetting the Database
+
+The API uses a SQLite database stored in a single file, `PlatinumCredentialManager.db`, inside the `PlatinumCredentialManager.Api/` folder (see the `CredsStore` connection string in `appsettings.json`).
+
+To wipe it and start fresh with the seed data, **delete the database file and run the app**. On startup the API applies migrations (`app.MigrateDb()`) and re-seeds the categories and credentials (the seeder only runs when the credentials table is empty, so a fresh database always gets seeded).
+
+**PowerShell (Windows):**
+
+```powershell
+cd PlatinumCredentialManager.Api
+Remove-Item PlatinumCredentialManager.db* -Force   # the * also clears the -wal / -shm files
+dotnet run
+```
+
+**Bash (macOS / Linux):**
+
+```bash
+cd PlatinumCredentialManager.Api
+rm -f PlatinumCredentialManager.db*
+dotnet run
+```
+
+Notes:
+- Stop the running API first — the file is locked while the app is using it.
+- The `*` matters: SQLite may leave `PlatinumCredentialManager.db-wal` and `-shm` side files. Deleting only the `.db` can leave stale data behind.
+- Alternatively, if you have the EF Core tools installed (`dotnet tool install --global dotnet-ef`), you can drop the database without deleting the file manually: `dotnet ef database drop --force`. The schema is still rebuilt on the next `dotnet run`.
+
 ## Tech Stack
 
 - **Backend:** ASP.NET Core (.NET 10), C#

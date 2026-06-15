@@ -2,11 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PlatinumCredentialManager.Api.Dtos.Credential;
 
+// PUT = full replace, so every field must be supplied.
 public record class UpdateCredentialDto
 (
-    // Not necessary to update a field
-    string ServiceName,
-    string Username, // user may not have a username for application
-    string Password,
-    int? CategoryId
+    [Required][StringLength(100)] string ServiceName,
+    [Required][StringLength(100)] string Username,
+    [Required][StringLength(100)] string Password,
+    // [Required] is a no-op on a non-nullable int (an omitted value just binds to 0), so it is left off here.
+    int CategoryId
 );
