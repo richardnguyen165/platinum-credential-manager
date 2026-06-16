@@ -25,7 +25,24 @@ builder.AddCredsStoreDb();  // Register db context
 
 builder.Services.AddValidation(); // Allows for annotations to work
 
+builder.Services.AddOpenApi(options =>
+{
+    // .NET 10 emits OpenAPI 3.1 by default, but the bundled Swagger UI mishandles it:
+    // path params render as "integer | string" and validation wrongly reports
+    // "Required field is not provided" even when a value is entered.
+    // Pinning the document to 3.0 makes Swagger UI parse it correctly.
+    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
+});
+
 var app = builder.Build(); // Move this to after the cors and loading dot env
+
+// Swagger UI syntax
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();   // serves /openapi/v1.json
+    app.UseSwaggerUI(options =>
+        options.SwaggerEndpoint("/openapi/v1.json", "Platinum Credential Manager"));
+}
 
 app.MigrateDb();
 

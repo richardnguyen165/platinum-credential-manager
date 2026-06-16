@@ -43,6 +43,23 @@ npm run dev
 
 The dev server will start and print the local URL (typically `http://localhost:5173`).
 
+## Exploring the API (Swagger UI)
+
+With the API running, you can browse and test every endpoint interactively — no need to hand-write requests.
+
+| Page | URL | Purpose |
+|------|-----|---------|
+| Swagger UI | `http://localhost:5142/swagger` | Interactive UI: expand an endpoint, click **Try it out**, fill the fields, **Execute** |
+| OpenAPI document | `http://localhost:5142/openapi/v1.json` | Raw JSON spec the UI is generated from |
+
+Both are only served in the **Development** environment (they're wrapped in `if (app.Environment.IsDevelopment())` in `Program.cs`).
+
+How it's wired:
+- `Microsoft.AspNetCore.OpenApi` (`AddOpenApi()` / `MapOpenApi()`) generates the OpenAPI document. .NET 10 emits OpenAPI **3.1** by default, but the document is pinned to **3.0** (`options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0`) because the bundled Swagger UI mishandles 3.1 — path parameters render as `integer | string` and validation wrongly reports *"Required field is not provided"* even when a value is entered.
+- `Swashbuckle.AspNetCore.SwaggerUI` (`UseSwaggerUI(...)`) serves the UI and points it at `/openapi/v1.json`.
+
+> Tip: after changing endpoints, restart the API (the document is generated at startup) and hard-refresh the Swagger page (Ctrl+F5) so the browser doesn't show a cached spec.
+
 ## Resetting the Database
 
 The API uses a SQLite database stored in a single file, `PlatinumCredentialManager.db`, inside the `PlatinumCredentialManager.Api/` folder (see the `CredsStore` connection string in `appsettings.json`).
