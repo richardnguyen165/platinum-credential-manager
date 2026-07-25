@@ -1,5 +1,7 @@
 // Install: dotnet add PlatinumCredentialManager.Api package DotNetEnv
 
+using Microsoft.AspNetCore.Authentication.JwtBearer; // For jwt token
+using Microsoft.IdentityModel.Tokens;
 using PlatinumCredentialManager.Api.Data; // For migrate db and add creds store db
 using PlatinumCredentialManager.Api.Endpoints;
 
@@ -25,6 +27,22 @@ builder.AddCredsStoreDb();  // Register db context
 
 builder.Services.AddValidation(); // Allows for annotations to work
 
+// For token services
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.Authority = "http://localhost:8080/realms/";
+    options.Audience = "plantinum-api";
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience= true,
+        ValidateLifetime = true
+    };
+});
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddOpenApi(options =>
 {
     // .NET 10 emits OpenAPI 3.1 by default, but the bundled Swagger UI mishandles it:
@@ -48,6 +66,10 @@ app.MigrateDb();
 
 // CORS policy
 app.UseCors(corsPolicy);   // add this before app.MapGamesEndpoints()
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapCredentialEndpoints();
 

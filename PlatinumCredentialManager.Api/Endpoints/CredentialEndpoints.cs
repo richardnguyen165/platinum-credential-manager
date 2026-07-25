@@ -11,7 +11,7 @@ public static class CredentialEndpoints
 
     public static void MapCredentialEndpoints(this WebApplication app)
     {
-        var credentialURLGroup = app.MapGroup("/creds");
+        var credentialURLGroup = app.MapGroup("/creds").RequireAuthorization();
 
         // READ/GET All users credentials in (GET /creds) (For dashboard view)
         // For a screen that displays all the credentials (not the screen for each category)

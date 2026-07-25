@@ -28,7 +28,7 @@ public static class CategoryEndpoints
 
     public static void MapCategoryEndpoints(this WebApplication app)
     {
-        var categoryURLGroup = app.MapGroup("/category");
+        var categoryURLGroup = app.MapGroup("/category").RequireAuthorization();
 
         // GET All Categories
         categoryURLGroup.MapGet("/", async (CredsStoreContext dbContext) =>
