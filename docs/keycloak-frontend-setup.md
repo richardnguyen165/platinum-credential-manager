@@ -14,6 +14,98 @@ Keycloak is already provisioned for this repo (`docker-compose.yml` runs Keycloa
 Goal: initialise keycloak-js with a **silent-SSO + explicit Login button** flow (`check-sso`),
 expose auth state to components, and send the access token (with auto-refresh) on API calls.
 
+## Decision: custom-built Login / Sign-up pages, not Keycloak's hosted UI
+
+Superseding the "explicit Login button" flow above: `LogIn.vue` and `SignUp.vue` will be real
+in-app forms (username/password fields, submit button) — the user never leaves the app or sees
+Keycloak's own login screen. This trades away some of what `keycloak-js`'s redirect flow gives
+for free, so the plan above changes in a few places:
+
+- **`platinum-vue` needs `directAccessGrantsEnabled: true`** in `platinum-realm.json` (currently
+  `false`). This is what lets a client POST `username`/`password` straight to Keycloak's token
+  endpoint (`/realms/platinum/protocol/openid-connect/token`, `grant_type=password`) instead of
+  requiring the browser-redirect flow.
+- **`LogIn.vue`** posts the form fields to that token endpoint directly and receives
+  `access_token` / `refresh_token` / `id_token` back.
+- **`useAuth.js`'s `login()` changes signature** — from a no-arg redirect (`keycloak.login()`) to
+  `login(username, password)` that makes the POST above and stores the resulting tokens.
+- **Token storage becomes manual.** `keycloak-js`'s automatic token handling (`onAuthSuccess`,
+  `onTokenExpired`, silent refresh) only fires for logins that go through *its* redirect flow.
+  Since this flow bypasses that, `useAuth.js` needs to hold `accessToken` / `refreshToken` /
+  expiry itself and refresh them on its own (e.g. before each API call, or on a timer).
+- **The `check-sso` wiring in `main.js` (step 4) becomes mostly dead weight** — it only finds an
+  existing session if a login previously went through Keycloak's hosted page. Harmless to leave,
+  but not doing useful work under this approach.
+- **Sign-up is a separate problem.** There is no direct-grant equivalent for registration.
+  Options: (a) enable realm self-registration (`registrationAllowed: true`) and still redirect to
+  Keycloak's hosted registration page — contradicts "own page"; or (b) have `SignUp.vue` call the
+  **Keycloak Admin REST API** to create the user. Option (b) requires an admin/service-account
+  token, which **must not be requested from the browser** (it would expose a privileged
+  credential to anyone with devtools) — it needs to go through the ASP.NET Core API
+  ([PlatinumCredentialManager.Api](PlatinumCredentialManager.Api)) acting as a trusted
+  intermediary: `SignUp.vue` → your API → Keycloak Admin API.
+
+**Known tradeoffs of this approach** (accepted, not blockers): Keycloak itself discourages
+Direct Access Grants — it doesn't support MFA prompts, social login, or "new device" checks
+mid-flow, and the SPA briefly holds the raw password in memory during submit. Acceptable here
+since this is a small internal-scale credential manager, not a public-facing product.
+
+### `useAuth.js` changes required
+
+1. **Drop the `keycloak.onAuthSuccess` / `onAuthLogout` / `onTokenExpired` wiring.** These only
+   fire when a login goes through keycloak-js's own redirect/init flow. Since the form posts
+   credentials directly, `keycloak.js` never sees the login happen, so these never fire.
+2. **Add token fields to `authState`**: `accessToken`, `refreshToken`, `expiresAt` — somewhere to
+   hold the token so `http.js` can attach it to API requests later.
+3. **Define the token/logout endpoints as plain constants** (same URL/realm/client values as
+   `keycloak.js`, no need to keep importing the `keycloak` instance for login/logout):
+   ```js
+   const KEYCLOAK_URL = import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8080'
+   const REALM = import.meta.env.VITE_KEYCLOAK_REALM ?? 'platinum'
+   const CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? 'platinum-vue'
+   const TOKEN_URL = `${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/token`
+   const LOGOUT_URL = `${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/logout`
+   ```
+4. **Rewrite `login()` to take credentials and POST them**:
+   ```js
+   async function login(username, password) {
+     const response = await fetch(TOKEN_URL, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+       body: new URLSearchParams({ grant_type: 'password', client_id: CLIENT_ID, username, password }),
+     })
+     if (!response.ok) throw new Error('Invalid username or password')
+     const data = await response.json()
+     const payload = JSON.parse(atob(data.access_token.split('.')[1]))
+
+     authState.authenticated = true
+     authState.username = payload.preferred_username
+     authState.accessToken = data.access_token
+     authState.refreshToken = data.refresh_token
+     authState.expiresAt = Date.now() + data.expires_in * 1000
+   }
+   ```
+   `LogIn.vue` calls this with the form's typed-in values and catches the thrown error to show
+   "wrong password."
+5. **Rewrite `logout()` to revoke the session, then clear state**:
+   ```js
+   async function logout() {
+     await fetch(LOGOUT_URL, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+       body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: authState.refreshToken }),
+     })
+     authState.authenticated = false
+     authState.username = ''
+     authState.accessToken = ''
+     authState.refreshToken = ''
+   }
+   ```
+6. **Add a refresh function, exported alongside `login`/`logout`.** `http.js` needs to call this
+   before requests once the token is close to expiring — the same role `keycloak.updateToken(30)`
+   played before. Same shape as `login()`, but with `grant_type: 'refresh_token'` and
+   `refresh_token: authState.refreshToken` instead of username/password.
+
 ## Blocking issues this plan resolves or flags
 
 1. **Export/import mismatch** — make `keycloak.js` `export default` so `main.js` and the new files can import the single shared instance.

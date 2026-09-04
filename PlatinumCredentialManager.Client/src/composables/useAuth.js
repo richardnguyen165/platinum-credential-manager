@@ -1,6 +1,34 @@
-import { reactive } from 'vue';
+import { reactive } from 'vue'
+import { keycloak } from '../config/keycloak.js'
 
-export default function useAuth(){
-    const userState = reactive({ authenticated: false, username: '' });
-    const login = () => { return }
-};
+const authState = reactive({
+  authenticated: keycloak.authenticated ?? false,
+  username: keycloak.tokenParsed?.preferred_username ?? '',
+})
+
+keycloak.onAuthSuccess = () => {
+    authState.authenticated = true
+    authState.username = keycloak.tokenParsed?.preferred_username ?? ''
+}
+
+keycloak.onAuthLogout = () => {
+    authState.authenticated = false
+    authState.username = ''
+}
+
+keycloak.onTokenExpired = () => {
+    keycloak.updateToken(30);
+}
+
+//  Redirec to keycloak's login page
+function login() {
+    keycloak.login()
+}
+
+function logout() {
+    keycloak.logout()
+}
+
+export default function useAuth() {
+  return { authState, login, logout }
+}
