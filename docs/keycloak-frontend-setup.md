@@ -1,5 +1,8 @@
 # Set up Keycloak on the Vue frontend
 
+> **Superseded** — decided to switch auth providers. See
+> [supabase-auth-setup.md](supabase-auth-setup.md) for the current plan.
+
 ## Context
 
 Keycloak is already provisioned for this repo (`docker-compose.yml` runs Keycloak 26.2 on
