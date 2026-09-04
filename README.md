@@ -1,6 +1,19 @@
 # Platinum Credential Manager
 
-A full-stack application for securely storing and managing user credentials. It consists of a .NET 10 ASP.NET Core REST API backend and a Vue 3 single-page application frontend.
+A full-stack application for securely storing and managing user credentials. It consists of a .NET 10 ASP.NET Core REST API backend, a Vue 3 single-page application frontend, and Keycloak for authentication.
+
+## Quick Start
+
+New to this repo? Here's the fastest path from clone to a logged-in app. Each step links to the fuller explanation further down.
+
+1. **Clone it** and install the [Prerequisites](#prerequisites) below (.NET SDK, Node.js, Docker Desktop).
+2. **Start Docker Desktop**, then from the repo root run `docker compose up -d` to bring up Keycloak. See [step 1](#1-keycloak-identity-provider).
+3. **Start the API**: `cd PlatinumCredentialManager.Api && dotnet run`. `dotnet run` restores NuGet packages and applies database migrations automatically — no separate install step needed. See [step 2](#2-backend-api).
+4. **Start the frontend**: `cd PlatinumCredentialManager.Client && npm install && npm run dev`. See [step 3](#3-frontend).
+5. Visit `http://localhost:5173` — you'll be redirected to a Keycloak login page. Since no users exist yet, first go create one: see [Authentication (Keycloak)](#authentication-keycloak).
+6. Log in with that user and the app loads.
+
+That's the whole stack running. Details, troubleshooting, and the reasoning behind each piece are below.
 
 ## Prerequisites
 
@@ -8,20 +21,36 @@ A full-stack application for securely storing and managing user credentials. It 
 |------|---------|
 | [.NET SDK](https://dotnet.microsoft.com/download) | 10.0+ |
 | [Node.js](https://nodejs.org/) | 20.19+ or 22.12+ |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Any recent version (runs Keycloak) |
 
 ## Project Structure
 
 ```
 platinum-credential-manager/
 ├── PlatinumCredentialManager.Api/     # ASP.NET Core backend
-└── PlatinumCredentialManager.Client/  # Vue 3 + Vite frontend
+├── PlatinumCredentialManager.Client/  # Vue 3 + Vite frontend
+├── keycloak/platinum-realm.json       # Keycloak realm export (auto-imported on startup)
+└── docker-compose.yml                 # Keycloak container definition
 ```
 
 ## Getting Started
 
-Both services must be running for the application to work. Start them in separate terminals.
+Three services must be running for the application to work: Keycloak, the API, and the frontend. Start each in its own terminal, in this order.
 
-### Backend (API)
+### 1. Keycloak (identity provider)
+
+```bash
+docker compose up -d
+```
+
+Starts Keycloak at `http://localhost:8080` and auto-imports the `platinum` realm (clients `platinum-vue` and `platinum-api`) from `keycloak/platinum-realm.json`.
+
+- Admin console: `http://localhost:8080` → login `admin` / `admin`
+- No users are seeded by the realm import — see [Authentication (Keycloak)](#authentication-keycloak) below to create one.
+- Check status any time with `docker compose ps`; view logs with `docker compose logs -f keycloak`.
+- Stop with `docker compose down` (add `-v` only if you intentionally want to wipe the realm/user data).
+
+### 2. Backend (API)
 
 ```bash
 cd PlatinumCredentialManager.Api
@@ -33,7 +62,9 @@ The API will be available at:
 - HTTP: `http://localhost:5142`
 - HTTPS: `https://localhost:7032`
 
-### Frontend
+On startup it applies EF Core migrations and validates JWTs issued by the `platinum` realm (see `Program.cs` — `Authority`/`Audience` must point at Keycloak, so Keycloak has to be up first).
+
+### 3. Frontend
 
 ```bash
 cd PlatinumCredentialManager.Client
@@ -41,7 +72,21 @@ npm install
 npm run dev
 ```
 
-The dev server will start and print the local URL (typically `http://localhost:5173`).
+The dev server will start and print the local URL (typically `http://localhost:5173`). Because the app calls `keycloak.init({ onLoad: 'login-required' })` in `main.js`, visiting this URL immediately redirects to the Keycloak login page — the Vue app won't render until you've authenticated.
+
+## Authentication (Keycloak)
+
+The app uses Keycloak (realm `platinum`) for login via OAuth2 Authorization Code + PKCE — the browser is redirected to Keycloak's hosted login page, never handles raw credentials, and gets back a JWT that the API validates.
+
+**Creating a test user** (the realm import doesn't seed any):
+
+1. Admin console (`http://localhost:8080`) → switch realm to `platinum` → **Users** → **Add user**.
+2. Fill in username, email, first/last name (required — an incomplete profile triggers Keycloak's "Update Account Information" prompt on first login) → **Create**.
+3. **Credentials** tab → **Set password** → enter a password → toggle **Temporary** to **Off** → **Save**.
+
+Log in at `http://localhost:5173` with that username/password.
+
+> The `platinum-vue` client has `directAccessGrantsEnabled: false` by design — the frontend must go through the redirect flow rather than posting credentials straight to Keycloak's token endpoint.
 
 ## Exploring the API (Swagger UI)
 
@@ -91,3 +136,4 @@ Notes:
 
 - **Backend:** ASP.NET Core (.NET 10), C#
 - **Frontend:** Vue 3, Vite, Axios
+- **Identity:** Keycloak 26.2 (OAuth2 / OpenID Connect)
