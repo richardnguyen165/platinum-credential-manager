@@ -24,15 +24,22 @@ public static class DataExtensions
                 // If credential table is empty
                 if (!context.Set<Credential>().Any())
                 {
+                    // Every Category is owned by a User, so seed a placeholder user first and
+                    // hang all the demo data off it. KeycloakId stands in for the JWT "sub"
+                    // claim - a real one is a GUID issued by Keycloak.
+                    var seedUser = new User { KeycloakId = "00000000-0000-0000-0000-000000000000" };
+                    context.Set<User>().Add(seedUser);
+
                     // Miscallaneous must be id 1 (it is the default category for credentials).
                     // The 5 categories after it get ids 2..6 in the order they are added.
+                    // Setting the User navigation lets EF fill in UserId on SaveChanges.
                     context.Set<Category>().AddRange(
-                        new Category { CategoryName = "Miscallaneous" },       // 1
-                        new Category { CategoryName = "Financial Passwords" }, // 2
-                        new Category { CategoryName = "Home" },                // 3
-                        new Category { CategoryName = "Work" },                // 4
-                        new Category { CategoryName = "Social Media" },        // 5
-                        new Category { CategoryName = "Shopping" }             // 6
+                        new Category { CategoryName = "Miscallaneous",       User = seedUser }, // 1
+                        new Category { CategoryName = "Financial Passwords", User = seedUser }, // 2
+                        new Category { CategoryName = "Home",                User = seedUser }, // 3
+                        new Category { CategoryName = "Work",                User = seedUser }, // 4
+                        new Category { CategoryName = "Social Media",        User = seedUser }, // 5
+                        new Category { CategoryName = "Shopping",            User = seedUser }  // 6
                     );
 
                     // Service names are unique WITHIN a category but may repeat ACROSS categories.

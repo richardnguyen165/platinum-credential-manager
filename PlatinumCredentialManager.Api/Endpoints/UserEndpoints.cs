@@ -13,6 +13,6 @@ public static class UserEndpoints
 
     public static void MapUserEndpoints(this WebApplication app)
     {
-        
+        var categoryURLGroup = app.MapGroup("/user").RequireAuthorization();
     }
 }
