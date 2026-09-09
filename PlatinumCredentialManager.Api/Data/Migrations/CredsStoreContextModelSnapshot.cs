@@ -34,7 +34,7 @@ namespace PlatinumCredentialManager.Api.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("PlatinumCredentialManager.Api.Models.Credential", b =>
@@ -65,7 +65,7 @@ namespace PlatinumCredentialManager.Api.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Credentials");
+                    b.ToTable("Credentials", (string)null);
                 });
 
             modelBuilder.Entity("PlatinumCredentialManager.Api.Models.User", b =>
@@ -80,7 +80,7 @@ namespace PlatinumCredentialManager.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("PlatinumCredentialManager.Api.Models.Category", b =>

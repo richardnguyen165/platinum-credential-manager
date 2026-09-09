@@ -53,12 +53,12 @@ public static class UserEndpoints
                 .Include(u => u.Categories)
                 .FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            var userPresent = user is null;
+            var created = user is null;
 
-            if (!userPresent)
+            if (created)
             {
                 user = new User { KeycloakId = keycloakId };
-                user.Categories.Add(new Category { CategoryName = "Miscallaneous"} );
+                user.Categories.Add(new Category { CategoryName = "Miscallaneous", User = user, UserId = user.Id });
                 dbContext.Users.Add(user);
                 await dbContext.SaveChangesAsync();
             }
@@ -69,7 +69,9 @@ public static class UserEndpoints
                 user.Categories.Select(c => c.CategoryName).ToList()
             );
 
-            return userPresent ? Results.Ok(dto) : Results.CreatedAtRoute(GetCurrentUserRoute, null, dto);
+            return created
+                ? Results.CreatedAtRoute(GetCurrentUserRoute, null, dto)
+                : Results.Ok(dto);
         });
     }
 

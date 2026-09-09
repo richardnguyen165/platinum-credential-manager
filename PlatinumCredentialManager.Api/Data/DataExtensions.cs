@@ -42,9 +42,15 @@ public static class DataExtensions
                         new Category { CategoryName = "Shopping",            User = seedUser }  // 6
                     );
 
+                    // Persist the user + categories now so the categories get their real ids
+                    // (1..6, in add order). The credentials below reference categories by the
+                    // literal CategoryId, so those rows must exist before the credential inserts.
+                    context.SaveChanges();
+
                     // Service names are unique WITHIN a category but may repeat ACROSS categories.
                     // Shared-across-categories names below: "Google", "PayPal", "Netflix", "GitHub".
-                    context.Set<Credential>().AddRange(
+                    var seededCredentials = new[]
+                    {
                         // Miscallaneous (CategoryId defaults to 1)
                         new Credential { ServiceName = "Biking", Password = "1234" },
                         new Credential { ServiceName = "Google", Username = "personal", Password = "misc-google" },
@@ -73,7 +79,16 @@ public static class DataExtensions
                         new Credential { ServiceName = "Amazon", Username = "rich", Password = "shop-amazon", CategoryId = 6 },
                         new Credential { ServiceName = "PayPal", Username = "rich@pay", Password = "shop-paypal", CategoryId = 6 },
                         new Credential { ServiceName = "Netflix", Username = "rich", Password = "shop-netflix", CategoryId = 6 }
-                    );
+                    };
+
+                    // Credential.UserId is a required FK; every seeded credential is owned by the
+                    // same seed user (mirrors its Category's owner).
+                    // foreach (var credential in seededCredentials)
+                    // {
+                    //     credential.User = seedUser;
+                    // }
+
+                    context.Set<Credential>().AddRange(seededCredentials);
                 }
                 context.SaveChanges();
             })

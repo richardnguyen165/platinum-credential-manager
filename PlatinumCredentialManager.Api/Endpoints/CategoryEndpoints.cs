@@ -4,7 +4,6 @@ using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Category;
 using PlatinumCredentialManager.Api.Dtos.Credential;
 using PlatinumCredentialManager.Api.Models;
-using System.Security.Cryptography;
 
 namespace PlatinumCredentialManager.Api.Endpoints;
 
@@ -116,7 +115,8 @@ public static class CategoryEndpoints
             Category category = new()
             {
                 CategoryName = newCategory.CategoryName.Trim(),
-                User = user  // EF sets UserId from this on SaveChanges
+                User = user,
+                UserId = user.Id
             };
 
             dbContext.Categories.Add(category);

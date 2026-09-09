@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Credential;
 using Microsoft.EntityFrameworkCore;
@@ -15,9 +16,18 @@ public static class CredentialEndpoints
 
         // READ/GET All users credentials in (GET /creds) (For dashboard view)
         // For a screen that displays all the credentials (not the screen for each category)
-        credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext) =>
+        credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
             return Results.Ok(await dbContext.Credentials
+            .Where(credential => credential.Category.UserId == user.Id)
             .Select(credential =>
             new GetAllCredentialsDto(
                     credential.Id,
@@ -32,17 +42,25 @@ public static class CredentialEndpoints
         });
 
         // READ/GET a specific user credential (GET /creds/:id) (For detailed view)
-        credentialURLGroup.MapGet("/{id}", async (int id, CredsStoreContext dbContext) =>
+        credentialURLGroup.MapGet("/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
             // Find credential by id
-            var credential = await dbContext.Credentials.FindAsync(id);
+            var credential = await dbContext.Credentials.FirstOrDefaultAsync(c => c.Id == id && c.Category.UserId == user.Id);
 
             if (credential is null)
             {
                 return Results.NotFound();
             }
 
-            var category = await dbContext.Categories.FindAsync(credential.CategoryId);
+            var category = await dbContext.Categories.FirstOrDefaultAsync(c => c.Id == credential.CategoryId && c.UserId == user.Id);
 
             if (category is null)
             {
@@ -64,21 +82,18 @@ public static class CredentialEndpoints
 
         // CREATE/POST a credential (POST /creds)
         // You must create the credential in a category
-        credentialURLGroup.MapPost("/", async (CreateCredentialDto newCredential, CredsStoreContext dbContext) =>
+        credentialURLGroup.MapPost("/", async (CreateCredentialDto newCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
-            // ?? is the null-coalescing operator. It returns the left side if it's not null, otherwise returns the right side.
-            // You create credentials with a category -> pass the id
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Contradicts itself -> category id can be passed as null (not pass in anything)
-            // var category = await dbContext.Categories.FindAsync(newCredential.CategoryId);
+            if (keycloakId is null) return Results.Unauthorized();
 
-            // if (category is null)
-            // {
-            //     return Results.NotFound();
-            // }
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
 
             // Check if the category exists
-            var categoryCheck = await dbContext.Categories.FindAsync(newCredential.CategoryId);
+            var categoryCheck = await dbContext.Categories.FirstOrDefaultAsync(category => category.Id == newCredential.CategoryId && category.UserId == user.Id);
 
             if (categoryCheck is null)
             {
@@ -90,6 +105,7 @@ public static class CredentialEndpoints
             .AnyAsync(credential => 
                 (credential.CategoryId == newCredential.CategoryId) 
                 && (credential.ServiceName == newCredential.ServiceName)
+                && credential.Category.UserId == user.Id
             );
 
             if (nameTakenStatus)
@@ -102,7 +118,7 @@ public static class CredentialEndpoints
                 Username = newCredential.Username ?? "",
                 ServiceName = newCredential.ServiceName,
                 Password = newCredential.Password,
-                CategoryId = newCredential.CategoryId
+                CategoryId = newCredential.CategoryId,
             };
 
             dbContext.Credentials.Add(credential);
@@ -118,16 +134,24 @@ public static class CredentialEndpoints
                 credential.Password,
                 credential.DateCreated,
                 credential.DateLastUpdated,
-                category.CategoryName
+                categoryCheck.CategoryName
             );
 
             return Results.CreatedAtRoute(GetCredEndpointName, new { id = newCredentialDetails.Id }, newCredentialDetails);
         });
 
         // UPDATE/PUT a credenital (PUT /creds/:id)
-        credentialURLGroup.MapPut("/{id}", async (int id, UpdateCredentialDto updatedCredential, CredsStoreContext dbContext) =>
+        credentialURLGroup.MapPut("/{id}", async (int id, UpdateCredentialDto updatedCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
-            var findCredential = await dbContext.Credentials.FindAsync(id);
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
+            var findCredential = await dbContext.Credentials.FirstOrDefaultAsync(credential => credential.Id == id && credential.Category.UserId == user.Id);
 
             if (findCredential is null)
             {
@@ -140,7 +164,14 @@ public static class CredentialEndpoints
                 credential.Id != id
                 && (credential.CategoryId == updatedCredential.CategoryId)
                 && (credential.ServiceName == updatedCredential.ServiceName)
+                && credential.Category.UserId == user.Id
             );
+            bool userOwnsCategory = await dbContext.Categories.AnyAsync(c => c.Id == updatedCredential.CategoryId && c.UserId == user.Id);
+
+            if (!userOwnsCategory)
+            {
+                return Results.BadRequest("User cannot update category they do not own!");
+            }
 
             if (nameTakenStatus)
             {
@@ -156,7 +187,8 @@ public static class CredentialEndpoints
 
             findCredential.ServiceName = updatedCredential.ServiceName;
 
-            findCredential.Username = updatedCredential.Username;
+            // Username can be blank
+            findCredential.Username = updatedCredential.Username ?? "";
 
             findCredential.Password = updatedCredential.Password;
 
@@ -168,10 +200,18 @@ public static class CredentialEndpoints
         });
 
         // DELETE a credential (DELETE /creds/:id)
-        credentialURLGroup.MapDelete("/{id}", async (int id, CredsStoreContext dbContext) =>
+        credentialURLGroup.MapDelete("/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
             await dbContext.Credentials
-            .Where(credential => credential.Id == id)
+            .Where(credential => credential.Id == id && credential.Category.UserId == user.Id)
             .ExecuteDeleteAsync();
 
             return Results.NoContent();
