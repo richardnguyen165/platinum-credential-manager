@@ -4,13 +4,13 @@ using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Category;
 using PlatinumCredentialManager.Api.Dtos.Credential;
 using PlatinumCredentialManager.Api.Models;
+using System.Security.Cryptography;
 
 namespace PlatinumCredentialManager.Api.Endpoints;
 
 public static class CategoryEndpoints
 {
     private const string GetCategoryEndpointName = "GetCategory";
-    private const int MISCALLANEOUS_ID = 1;
     private const int RANDOM_STRING_LENGTH = 6;
 
     // https://stackoverflow.com/questions/1344221/how-can-i-generate-random-alphanumeric-strings
@@ -29,6 +29,8 @@ public static class CategoryEndpoints
     public static void MapCategoryEndpoints(this WebApplication app)
     {
         var categoryURLGroup = app.MapGroup("/category").RequireAuthorization();
+
+        var MISC_CONSTANT = "Miscallaneous";
 
         // GET All Categories belonging to user
         categoryURLGroup.MapGet("/", async (CredsStoreContext dbContext, ClaimsPrincipal principal) =>
@@ -106,7 +108,7 @@ public static class CategoryEndpoints
             {
                 return Results.BadRequest("There exists a category that has the same name!");
             }
-            else if (newCategory.CategoryName == "Miscallaneous")
+            else if (newCategory.CategoryName == MISC_CONSTANT)
             {
                 return Results.BadRequest("Category name cannot be named 'Miscallaneous'");
             }
@@ -158,7 +160,7 @@ public static class CategoryEndpoints
                 return Results.NotFound();
             if (string.IsNullOrWhiteSpace(updatedCategory.CategoryName))
                 return Results.BadRequest("Category cannot be blank!");
-            if (updatedCategory.CategoryName == "Miscallaneous")
+            if (updatedCategory.CategoryName == MISC_CONSTANT)
                 return Results.BadRequest("Category name cannot be named 'Miscallaneous'");
             if (await dbContext.Categories.AnyAsync(c => c.UserId == user.Id && c.CategoryName == name))
                 return Results.BadRequest("There exists a category that has the same name!");
@@ -188,11 +190,11 @@ public static class CategoryEndpoints
 
             if (category is null) return Results.NotFound();
 
-            if (category.CategoryName == "Miscallaneous") return Results.BadRequest("Cannot delete default category 'Miscallaneous!");
+            if (category.CategoryName == MISC_CONSTANT) return Results.BadRequest("Cannot delete default category 'Miscallaneous!");
 
             // 1. Find the miscallenous category id (diff for each user)
             var miscId = await dbContext.Categories
-                .Where(c => c.UserId == user.Id && c.CategoryName == "Miscallaneous")
+                .Where(c => c.UserId == user.Id && c.CategoryName == MISC_CONSTANT)
                 .Select(c => c.Id).FirstAsync();
 
             // 2. Find all the credential names in the miscalleneous category, store in hashset

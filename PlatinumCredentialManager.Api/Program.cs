@@ -71,8 +71,10 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.MapUserEndpoints();
+
 app.MapCredentialEndpoints();
 
 app.MapCategoryEndpoints();
 
-app.Run();
+await app.RunAsync();
