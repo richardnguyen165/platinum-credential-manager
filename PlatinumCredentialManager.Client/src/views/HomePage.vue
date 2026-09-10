@@ -10,15 +10,20 @@
 
 <script setup>
     import  { useRouter } from 'vue-router'
+    import useAuth from '@/composables/useAuth'
+
+    const { keycloak, authState, login, logout, signup } = useAuth();
     
     const router = useRouter();
 
     // Redirects
     function goToLogIn() {
-        router.push('/login');
+        // router.push('/login');
+        login();
     }
 
     function goToSignUp() {
-        router.push('/signup');
+        // router.push('/signup');
+        signup();
     }
 </script>

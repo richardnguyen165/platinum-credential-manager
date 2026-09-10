@@ -1,3 +1,4 @@
+<!-- ARCHIVED -->
 <template>
   <input v-model="email" />
   <input v-model="password"/>
