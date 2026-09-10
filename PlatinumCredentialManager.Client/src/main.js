@@ -13,8 +13,6 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         { path: '/', component: HomePage},
-        { path: '/signup', component: SignUp},
-        { path: '/login', component: LogIn},
         { path: '/cred-homepage/:user_id', query: {user_id: Number}, component: CredHomepage, meta: { requiresAuth: true }},
         { path: '/cred-categories/:user_id', query: {user_id: Number},  component: CredCategories, meta: { requiresAuth: true }},
         { path: '/cred-categories/:category_id/:user_id', query: {category_id: Number, user_id: Number},  component: CredCategories, meta: { requiresAuth: true }},
