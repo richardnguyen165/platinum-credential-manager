@@ -6,3 +6,7 @@
 *.db-shm
 *.db-wal
 *.db-journal
+
+# .NET build output (regenerated on every build)
+[Bb]in/
+[Oo]bj/

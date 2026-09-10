@@ -10,4 +10,6 @@ public class CredsStoreContext(DbContextOptions<CredsStoreContext> options): DbC
     public DbSet<Credential> Credentials => Set<Credential>();
 
     public DbSet<Category> Categories => Set<Category>();
+
+    public DbSet<User> Users => Set<User>();
 }

@@ -24,20 +24,33 @@ public static class DataExtensions
                 // If credential table is empty
                 if (!context.Set<Credential>().Any())
                 {
+                    // Every Category is owned by a User, so seed a placeholder user first and
+                    // hang all the demo data off it. KeycloakId stands in for the JWT "sub"
+                    // claim - a real one is a GUID issued by Keycloak.
+                    var seedUser = new User { KeycloakId = "00000000-0000-0000-0000-000000000000" };
+                    context.Set<User>().Add(seedUser);
+
                     // Miscallaneous must be id 1 (it is the default category for credentials).
                     // The 5 categories after it get ids 2..6 in the order they are added.
+                    // Setting the User navigation lets EF fill in UserId on SaveChanges.
                     context.Set<Category>().AddRange(
-                        new Category { CategoryName = "Miscallaneous" },       // 1
-                        new Category { CategoryName = "Financial Passwords" }, // 2
-                        new Category { CategoryName = "Home" },                // 3
-                        new Category { CategoryName = "Work" },                // 4
-                        new Category { CategoryName = "Social Media" },        // 5
-                        new Category { CategoryName = "Shopping" }             // 6
+                        new Category { CategoryName = "Miscallaneous",       User = seedUser }, // 1
+                        new Category { CategoryName = "Financial Passwords", User = seedUser }, // 2
+                        new Category { CategoryName = "Home",                User = seedUser }, // 3
+                        new Category { CategoryName = "Work",                User = seedUser }, // 4
+                        new Category { CategoryName = "Social Media",        User = seedUser }, // 5
+                        new Category { CategoryName = "Shopping",            User = seedUser }  // 6
                     );
+
+                    // Persist the user + categories now so the categories get their real ids
+                    // (1..6, in add order). The credentials below reference categories by the
+                    // literal CategoryId, so those rows must exist before the credential inserts.
+                    context.SaveChanges();
 
                     // Service names are unique WITHIN a category but may repeat ACROSS categories.
                     // Shared-across-categories names below: "Google", "PayPal", "Netflix", "GitHub".
-                    context.Set<Credential>().AddRange(
+                    var seededCredentials = new[]
+                    {
                         // Miscallaneous (CategoryId defaults to 1)
                         new Credential { ServiceName = "Biking", Password = "1234" },
                         new Credential { ServiceName = "Google", Username = "personal", Password = "misc-google" },
@@ -66,7 +79,16 @@ public static class DataExtensions
                         new Credential { ServiceName = "Amazon", Username = "rich", Password = "shop-amazon", CategoryId = 6 },
                         new Credential { ServiceName = "PayPal", Username = "rich@pay", Password = "shop-paypal", CategoryId = 6 },
                         new Credential { ServiceName = "Netflix", Username = "rich", Password = "shop-netflix", CategoryId = 6 }
-                    );
+                    };
+
+                    // Credential.UserId is a required FK; every seeded credential is owned by the
+                    // same seed user (mirrors its Category's owner).
+                    // foreach (var credential in seededCredentials)
+                    // {
+                    //     credential.User = seedUser;
+                    // }
+
+                    context.Set<Credential>().AddRange(seededCredentials);
                 }
                 context.SaveChanges();
             })

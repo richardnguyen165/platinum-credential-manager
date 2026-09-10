@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PlatinumCredentialManager.Api.Data;
 
@@ -10,9 +11,11 @@ using PlatinumCredentialManager.Api.Data;
 namespace PlatinumCredentialManager.Api.Data.Migrations
 {
     [DbContext(typeof(CredsStoreContext))]
-    partial class CredsStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20260908155047_CategoryUserForeignKey")]
+    partial class CategoryUserForeignKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
@@ -34,7 +37,7 @@ namespace PlatinumCredentialManager.Api.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("PlatinumCredentialManager.Api.Models.Credential", b =>
@@ -65,7 +68,7 @@ namespace PlatinumCredentialManager.Api.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Credentials", (string)null);
+                    b.ToTable("Credentials");
                 });
 
             modelBuilder.Entity("PlatinumCredentialManager.Api.Models.User", b =>
@@ -80,7 +83,7 @@ namespace PlatinumCredentialManager.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("PlatinumCredentialManager.Api.Models.Category", b =>
