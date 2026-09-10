@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 import { keycloak } from '@/config/keycloak.js'
-import { urlencoded } from 'express';
+import axios from 'axios';
 
 const authState = reactive({
   authenticated: false,
@@ -16,13 +16,13 @@ const TOKEN_URL = `${url}/realms/${realm}/protocol/openid-connect/token`
 const LOGOUT_URL = `${url}/realms/${realm}/protocol/openid-connect/logout`
 
 async function login(username, password) {
-    let result;
     try {
-        result = await fetch(TOKEN_URL, { method: 'POST', body: urlencoded({ grant_type: 'password', clientId, username, password }) });
-
-        if (!result.ok) throw new Error('failed');
-
-        const data = await response.json(); // gets payload
+        const { status, data } = await axios.post(TOKEN_URL, new URLSearchParams({
+            grant_type: 'password',
+            client_id: clientId,
+            username,
+            password
+        }));
 
         // decode jwt payload
         const payload = JSON.parse(atob(data.access_token.split('.')[1]))
@@ -34,50 +34,44 @@ async function login(username, password) {
         authState.expiresAt = Date.now() + data.expires_in * 1000
         authState.authenticated = true;
 
-        return {
-            "status": result.status,
-        }
+        return { status }
     }
-    catch {
+    catch (err) {
         return {
-            "status": result.status,
+            "status": err.response?.status,
             "error": "Invalid credentials"
         }
     }   
 }
 
 async function refresh() {
-    let result;
     try {
-        result = await fetch(TOKEN_URL, { method: 'POST', body: urlencoded({ grant_type: 'refresh_token', clientId, username, password }) })
-
-        if (!result.ok) throw new Error('failed')
-
-        const data = await response.json(); // gets payload
+        const { data, status }  = await axios.post(TOKEN_URL, new URLSearchParams({
+            grant_type: 'refresh_token',
+            client_id: clientId,
+            refresh_token: authState.refreshToken
+        }));
 
         // renews session token
         authState.refreshToken = data.refresh_token;
 
         return {
-            "status": result.status,
+            status
         }
     } 
-    catch {
+    catch (err) {
         return {
-            "status": result.status,
+            "status": err.response?.status,
             "error": "Failed to refresh token."
         }
     }
 }
 
 async function logout() {
-    let result;
     try {
-        result = await fetch(LOGOUT_URL, { method: 'POST', body: urlencoded({
+        const { status } = await axios.post(LOGOUT_URL, new URLSearchParams({
             client_id: clientId, refresh_token: authState.refreshToken
-        }) }) 
-
-        if (!result.ok) throw new Error('failed')
+        }));
 
         // Clear state
         authState.username = '';
@@ -87,12 +81,12 @@ async function logout() {
         authState.expiresAt = '';
 
         return {
-            "status": result.status,
+            status
         }
 
-    } catch {
+    } catch (err) {
         return {
-            "status": result.status,
+            "status": err.response?.status,
             "error": "Failed to logout."
         }
     }
