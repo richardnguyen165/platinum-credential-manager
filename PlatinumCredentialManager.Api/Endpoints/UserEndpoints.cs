@@ -31,7 +31,11 @@ public static class UserEndpoints
                     u.KeycloakId,
                     u.Categories.Select(
                         category => 
-                        category.CategoryName
+                        // nested dto
+                        new CategorySummaryDto(
+                            category.Id, // needed for v-for in frontend for v-key
+                            category.CategoryName
+                        )
                     ).ToList()
                 ))
                 .AsNoTracking()
@@ -66,8 +70,12 @@ public static class UserEndpoints
             var dto = new GetUserDto(
                 user.Id,
                 user.KeycloakId,
-                user.Categories.Select(c => c.CategoryName).ToList()
-            );
+                user.Categories.Select(c =>
+                // nested dto
+                new CategorySummaryDto(
+                    c.Id, // needed for v-for in frontend for v-key
+                    c.CategoryName
+                )).ToList());
 
             return created
                 ? Results.CreatedAtRoute(GetCurrentUserRoute, null, dto)
