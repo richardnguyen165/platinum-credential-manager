@@ -17,6 +17,7 @@
 
     const router = useRouter();
 
+    // If userId in authState is defined (meaning successful request), redirect to user's homepage
     watch(() => authState.userId, (userId) => {
         if (userId) router.push(`/cred-homepage/${userId}`)
     }, { immediate: true })
