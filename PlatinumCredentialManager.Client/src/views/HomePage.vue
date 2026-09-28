@@ -1,5 +1,3 @@
-<script setup></script>
-
 <template>
   <h1>Welcome to Platinum Credential Manager - Home</h1>
   <button @click="goToSignUp">Sign Up</button>
@@ -9,6 +7,7 @@
 <style scoped></style>
 
 <script setup>
+    import Header from '@/components/Header.vue';
     import { watch } from 'vue'
     import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'

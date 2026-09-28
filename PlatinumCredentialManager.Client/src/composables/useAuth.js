@@ -34,6 +34,7 @@ keycloak.onTokenExpired = () => {
 }
 
 function signup() {
+    // Goes to homepage
     keycloak.register({ redirectUri: window.location.origin + '/' })
 }
 
@@ -42,7 +43,8 @@ function login() {
 }
 
 function logout() {
-    keycloak.logout()
+    // Goes to homepage
+    keycloak.logout({ redirectUri: window.location.origin + '/' })
 }
 
 export default function useAuth() {

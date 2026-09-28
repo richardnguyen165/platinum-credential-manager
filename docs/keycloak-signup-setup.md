@@ -39,7 +39,7 @@ one. The two ways to register from a custom in-app form:
 | Topic | Link |
 |-------|------|
 | Admin REST API reference — **Users** section: `POST /admin/realms/{realm}/users`, `PUT .../users/{id}/reset-password` | https://www.keycloak.org/docs-api/latest/rest-api/index.html |
-| Same, pinned to our version (26.2.5) | https://www.keycloak.org/docs-api/26.2.5/rest-api/index.html |
+| Same, pinned to our version (26.7.4) | https://www.keycloak.org/docs-api/26.7.4/rest-api/index.html |
 | OIDC token endpoint & grant types (the `client_credentials` call for the admin token) | https://www.keycloak.org/docs/latest/securing_apps/index.html |
 | Official Java admin-client library (reference only — no .NET equivalent, we hand-roll `HttpClient`) | https://www.keycloak.org/securing-apps/admin-client |
 
@@ -51,9 +51,9 @@ one. The two ways to register from a custom in-app form:
 
 ### Version note
 
-We run **26.2.5**; `latest` currently serves 26.7.x — screens are nearly identical. If something
-differs, use the archive: https://www.keycloak.org/documentation-archive → 26.2.5, or swap
-`latest` → `26.2.5` in the `/docs/` URLs.
+We run **26.7.4** (upgraded from 26.2.5 on 2026-09-28). If `latest` has moved on and something
+differs, use the archive: https://www.keycloak.org/documentation-archive → 26.7.4, or swap
+`latest` → `26.7.4` in the `/docs/` URLs.
 
 ### Narrative tutorials (unofficial, prose walkthroughs)
 

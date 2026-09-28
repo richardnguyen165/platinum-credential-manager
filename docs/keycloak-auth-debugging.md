@@ -306,12 +306,53 @@ Both were needed. Fixing only the audience got past JWT validation but still
 401'd (from the endpoint's own `Results.Unauthorized()` this time, not the
 middleware) because `sub` was still missing.
 
-## Still outstanding
+## Follow-up: built-in client scopes restored (2026-09-28)
 
 The underlying defect — the realm export missing its built-in client scopes
-— hasn't been fixed, only worked around for the one claim (`sub`) that was
-blocking login. `preferred_username` and `email` are still absent from
-tokens (they'd normally come from the `profile`/`email` scopes), which is
-why `authState.username` in `useAuth.js` will read as an empty string. If
-that's needed later, either add more dedicated mappers the same way, or
-properly rebuild the realm's `clientScopes` definitions.
+— was originally only worked around for `sub`. It is now fixed at the source.
+
+**Why the scopes were missing.** When a realm JSON contains a top-level
+`clientScopes` key — *even an empty array* — Keycloak treats that list as
+the complete set and skips creating its standard scopes. The old
+`platinum-realm.json` had `"clientScopes": []`, so the realm came up with
+only `offline_access`, and every client's `defaultClientScopes` pointed at
+names that didn't exist.
+
+**What changed in [`keycloak/platinum-realm.json`](../keycloak/platinum-realm.json).**
+The file was re-exported from the admin console (Keycloak 26.7.4, *Partial
+export* with clients, groups and roles included) to pick up the user-profile
+change (`firstName`/`lastName` removed, `email` required). Then these keys
+were **deleted** so Keycloak builds the defaults itself on import:
+
+| Removed | Where |
+|---|---|
+| `clientScopes` | top level |
+| `defaultDefaultClientScopes`, `defaultOptionalClientScopes` | top level |
+| `defaultClientScopes`, `optionalClientScopes` | every entry in `clients` |
+
+With those absent, the import creates the standard scopes (`basic`,
+`profile`, `email`, `roles`, `web-origins`, `acr`, …) and assigns the realm
+defaults to every client. The two dedicated `platinum-vue` mappers
+(`platinum-api-audience`, `sub`) are unchanged. `sub` is now also supplied
+by the `basic` scope, so the dedicated mapper is redundant but harmless.
+
+**Verified** by importing the file into a throwaway Keycloak 26.7.4 and
+requesting a token for a test user through `platinum-vue`:
+
+```
+aud: ["platinum-api", "account"]      <- audience check still passes
+sub, preferred_username, email        <- all present
+scope: "openid profile email"
+```
+
+`authState.username` in `useAuth.js` now gets a real value.
+
+**If you re-export the realm later,** the export will again list
+`clientScopes` and per-client scope lists. Either delete those keys as
+above before committing, or make sure the exported `clientScopes` array
+actually contains the built-in scopes. Never commit an empty `"clientScopes": []`.
+
+**Applying it locally** requires a re-import, which wipes users and console
+changes: `docker compose down -v && docker compose up -d`, or, when running
+Keycloak without Docker, stop it, delete `<keycloak>\data\h2`, and start it
+again with `--import-realm`.
