@@ -4,7 +4,8 @@ import axios from 'axios'
 
 const authState = reactive({
   authenticated: keycloak.authenticated ?? false,
-  username: keycloak.tokenParsed?.preferred_username ?? ''
+  username: keycloak.tokenParsed?.preferred_username ?? '',
+  userId: null
 })
 
 const BACKEND_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5142';
@@ -14,16 +15,12 @@ keycloak.onAuthSuccess = async () => {
     authState.username = keycloak.tokenParsed?.preferred_username ?? ''
 
     try {
-        const { status } = await axios.post(`${BACKEND_URL}/user/me`, null, {
+        const { data } = await axios.post(`${BACKEND_URL}/user/me`, null, {
         headers: { Authorization: `Bearer ${keycloak.token}` }});
 
-        return {
-            status
-        }
+        authState.userId = data.id
     } catch (err) {
-        return {
-            "error": err.response?.status,
-        }
+        console.error('Failed to provision user', err)
     }
 }
 

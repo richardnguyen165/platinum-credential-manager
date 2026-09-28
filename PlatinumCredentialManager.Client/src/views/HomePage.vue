@@ -9,12 +9,17 @@
 <style scoped></style>
 
 <script setup>
-    import  { useRouter } from 'vue-router'
+    import { watch } from 'vue'
+    import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
 
     const { keycloak, authState, login, logout, signup } = useAuth();
-    
+
     const router = useRouter();
+
+    watch(() => authState.userId, (userId) => {
+        if (userId) router.push(`/cred-homepage/${userId}`)
+    }, { immediate: true })
 
     // Redirects
     function goToLogIn() {
