@@ -21,7 +21,7 @@ That's the whole stack running. Details, troubleshooting, and the reasoning behi
 |------|---------|
 | [.NET SDK](https://dotnet.microsoft.com/download) | 10.0+ |
 | [Node.js](https://nodejs.org/) | 20.19+ or 22.12+ |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Any recent version (runs Keycloak) |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Any recent version (runs Keycloak). Optional: see [Running Keycloak without Docker](#running-keycloak-without-docker) |
 
 ## Project Structure
 
@@ -49,6 +49,24 @@ Starts Keycloak at `http://localhost:8080` and auto-imports the `platinum` realm
 - No users are seeded by the realm import — see [Authentication (Keycloak)](#authentication-keycloak) below to create one.
 - Check status any time with `docker compose ps`; view logs with `docker compose logs -f keycloak`.
 - Stop with `docker compose down` (add `-v` only if you intentionally want to wipe the realm/user data).
+- The realm is imported **only when it doesn't exist yet**. After pulling a change to `platinum-realm.json`, run `docker compose down -v && docker compose up -d` to re-import it (this deletes your local users).
+
+#### Running Keycloak without Docker
+
+Keycloak is a plain Java app, so Docker isn't required.
+
+1. Install Java 21: `winget install Microsoft.OpenJDK.21`, then **fully restart VS Code / your terminal** so `java` and `JAVA_HOME` are picked up.
+2. Download the Keycloak **26.7.x** zip from the [releases page](https://github.com/keycloak/keycloak/releases) and extract it so that `bin\kc.bat` sits directly under e.g. `C:\keycloak` (Windows' "Extract All" adds an extra nested folder, so move its contents up if needed).
+3. Copy the realm file in and start it:
+   ```powershell
+   New-Item -ItemType Directory -Force C:\keycloak\data\import
+   Copy-Item .\keycloak\platinum-realm.json C:\keycloak\data\import\
+   $env:KC_BOOTSTRAP_ADMIN_USERNAME = 'admin'
+   $env:KC_BOOTSTRAP_ADMIN_PASSWORD = 'admin'
+   C:\keycloak\bin\kc.bat start-dev --import-realm
+   ```
+
+It listens on `http://localhost:8080` just like the container, so nothing else changes. Data lives in `C:\keycloak\data\h2`. To re-import an updated realm file, stop Keycloak, delete that folder, copy the new JSON in, and start again.
 
 ### 2. Backend (API)
 
@@ -81,7 +99,7 @@ The app uses Keycloak (realm `platinum`) for login via OAuth2 Authorization Code
 **Creating a test user** (the realm import doesn't seed any):
 
 1. Admin console (`http://localhost:8080`) → switch realm to `platinum` → **Users** → **Add user**.
-2. Fill in username, email, first/last name (required — an incomplete profile triggers Keycloak's "Update Account Information" prompt on first login) → **Create**.
+2. Fill in email (required; it's also the username, since the realm uses email-as-username) → **Create**. First/last name were removed from the realm's user profile, so they're no longer asked for.
 3. **Credentials** tab → **Set password** → enter a password → toggle **Temporary** to **Off** → **Save**.
 
 Log in at `http://localhost:5173` with that username/password.
@@ -136,4 +154,4 @@ Notes:
 
 - **Backend:** ASP.NET Core (.NET 10), C#
 - **Frontend:** Vue 3, Vite, Axios
-- **Identity:** Keycloak 26.2 (OAuth2 / OpenID Connect)
+- **Identity:** Keycloak 26.7 (OAuth2 / OpenID Connect)

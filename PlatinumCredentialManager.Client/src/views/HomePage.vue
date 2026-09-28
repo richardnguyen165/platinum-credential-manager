@@ -1,5 +1,3 @@
-<script setup></script>
-
 <template>
   <h1>Welcome to Platinum Credential Manager - Home</h1>
   <button @click="goToSignUp">Sign Up</button>
@@ -9,12 +7,19 @@
 <style scoped></style>
 
 <script setup>
-    import  { useRouter } from 'vue-router'
+    import Header from '@/components/Header.vue';
+    import { watch } from 'vue'
+    import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
 
     const { keycloak, authState, login, logout, signup } = useAuth();
-    
+
     const router = useRouter();
+
+    // If userId in authState is defined (meaning successful request), redirect to user's homepage
+    watch(() => authState.userId, (userId) => {
+        if (userId) router.push(`/cred-homepage/${userId}`)
+    }, { immediate: true })
 
     // Redirects
     function goToLogIn() {

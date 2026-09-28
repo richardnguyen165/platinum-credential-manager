@@ -2,12 +2,11 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { keycloak } from './config/keycloak.js'
 import { createRouter, createWebHistory } from 'vue-router'
-import LogIn from './views/LogIn.vue'
-import SignUp from './views/SignUp.vue'
 import HomePage from './views/HomePage.vue'
 import CredHomepage from './views/CredHomepage.vue'
 import CredCategories from './views/CredCategories.vue'
 import CredSearchup from './views/CredSearchup.vue'
+import NotFound from './views/NotFound.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -26,7 +25,7 @@ const router = createRouter({
 // router guard
 router.beforeEach((to) => {
   if (to.meta.requiresAuth && !keycloak.authenticated) {
-      keycloak.login({ redirectUri: window.location.orgin + to.fullPath })
+      keycloak.login({ redirectUri: window.location.origin + to.fullPath })
       return false
   }
 })

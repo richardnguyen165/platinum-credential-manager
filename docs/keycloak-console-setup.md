@@ -15,7 +15,7 @@ Keycloak `:8080`, Vue `:5173`, API `:5142`.
 docker compose up -d
 ```
 
-[docker-compose.yml](docker-compose.yml) runs Keycloak 26.2 and imports
+[docker-compose.yml](docker-compose.yml) runs Keycloak 26.7 and imports
 [keycloak/platinum-realm.json](keycloak/platinum-realm.json) **only if the `platinum` realm does
 not already exist** in the `keycloak_data` volume.
 
@@ -116,6 +116,13 @@ To make the JSON match what you clicked:
 Then diff and commit the parts you want as the reproducible baseline (registration flag, the
 audience mapper, the post-logout URI).
 
+> **Before committing an export, delete the client-scope keys.** Remove the top-level
+> `clientScopes`, `defaultDefaultClientScopes` and `defaultOptionalClientScopes`, plus
+> `defaultClientScopes` / `optionalClientScopes` on each client. If they're present, Keycloak
+> imports *only* the listed scopes and skips its built-in ones (`basic`, `profile`, `email`, …),
+> so tokens lose `preferred_username` and `email`. Background and verification:
+> [keycloak-auth-debugging.md → Follow-up](keycloak-auth-debugging.md#follow-up-built-in-client-scopes-restored-2026-09-28).
+
 ## Reference documentation
 
 | Step | Official doc |
@@ -127,4 +134,4 @@ audience mapper, the post-logout URI).
 | Step 4 — audience mapper | Server Admin Guide → [Audience support](https://www.keycloak.org/docs/latest/server_admin/index.html#_audience); [Protocol mappers](https://www.keycloak.org/admin-api/protocol-mappers) |
 | Step 6 — OIDC endpoints | [Securing Applications and Services Guide](https://www.keycloak.org/docs/latest/securing_apps/index.html) |
 | Frontend adapter | [keycloak-js adapter](https://www.keycloak.org/securing-apps/javascript-adapter) |
-| Version pinned to 26.2.5 | swap `latest` → `26.2.5` in `/docs/` URLs, or [documentation archive](https://www.keycloak.org/documentation-archive) |
+| Version pinned to 26.7 | swap `latest` → `26.7.4` in `/docs/` URLs, or [documentation archive](https://www.keycloak.org/documentation-archive) |
