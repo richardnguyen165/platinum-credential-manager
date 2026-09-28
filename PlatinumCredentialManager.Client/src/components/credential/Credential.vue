@@ -7,15 +7,18 @@
         Error: Loading credential failed!
     </div>
     <div v-else>
-        <button>
-            Exit
+        <button @click="goBackToCategory()">
+            Exit Back to Category
         </button>
         <!-- TODO: Delete Credential Modal-->
         <button>
             Delete Credential
         </button>
         <button>
-            Export Credential
+            Import Credentials
+        </button>
+        <button>
+            Export Credentials
         </button>
         <div>
             <input v-model="serviceName">
@@ -42,11 +45,18 @@
 </template>
 
 <script setup>
-    import Header from './Header.vue';
+    import Header from './layout/Header.vue/index.js';
     import { ref, watch } from 'vue'; 
     import { keycloak } from '@/config/keycloak';
+    import { useRouter } from 'vue-router';
+    import { getCredential } from '@/services/credentialService.js';
 
-    const credential = ref(null), serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref('');
+    const credential = ref(null), serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref(''), categoryId = ref('');
+    const router = useRouter();
+
+    function goBackToCategory() {
+        router.push(`/cred-categories/${categoryId.value}/${authState.userId}`);
+    };
 
     function editCredentialAction(){
         return;
@@ -56,16 +66,14 @@
         return;
     }
 
-    const props = defineProps({
-        userId: Number,
+    const { credId } = defineProps({
         credId: Number
     });
 
     onMounted(async () => {
         try {
-            const { data } = await axios.get(`${BACKEND_URL}/creds/${props.credId}`, {
-            headers: { Authorization: `Bearer ${keycloak.token}` }});
-
+            const { data } = await getCredential(credId);
+            
             credential.value = data;
             serviceName.value = data.serviceName;
             username.value = data.username;

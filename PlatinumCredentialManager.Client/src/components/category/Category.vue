@@ -7,7 +7,7 @@
         Error: Loading credentials failed!
     </div>
     <div v-else>
-        <button>
+        <button @click="redirectBackToAllCategories">
             Go Back to All Categories
         </button>
         <!-- TODO: Edit Category Modal -->
@@ -43,12 +43,13 @@
 </template>
 
 <script setup>
-    import Header from './Header.vue';
+    import Header from './layout/Header.vue/index.js';
     import axios from 'axios';
     import { onMounted, ref } from 'vue'
     import { keycloak } from '@/config/keycloak';
     import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
+    import { getCategory } from '@/services/categoryService.js';
 
 
     const { authState } = useAuth();
@@ -57,6 +58,10 @@
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const router = useRouter();
+
+    function redirectBackToAllCategories(){
+        router.push(`/cred-categories/${authState.userId}`);
+    }
 
     function redirectCredential(credentialId){
         router.push(`/cred-categories/${credentialId}/${props.categoryId}/${authState.userId}`);
@@ -77,14 +82,13 @@
         return;
     }
 
-    const props = defineProps({
+    const { categoryId } = defineProps({
         categoryId: Number
     });
 
     onMounted(async () => {
         try {
-            const { data } = await axios.get(`${BACKEND_URL}/category/${props.categoryId}`, {
-            headers: { Authorization: `Bearer ${keycloak.token}` }});
+            const { data } = await getCategory(categoryId);
 
             allCredentials.value = data.credentials;
         } catch {

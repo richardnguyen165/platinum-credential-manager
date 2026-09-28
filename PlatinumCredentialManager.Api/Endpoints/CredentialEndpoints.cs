@@ -76,6 +76,7 @@ public static class CredentialEndpoints
                     credential.DateCreated,
                     credential.DateLastUpdated,
                     category.CategoryName
+                    category.CategoryId
                 )
             );
         }).WithName(GetCredEndpointName);

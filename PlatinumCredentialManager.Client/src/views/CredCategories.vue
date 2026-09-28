@@ -12,7 +12,8 @@
     <div v-else>
         <!-- TODO: Create category modal -->
         <button @click="createCategoryModal">Create Category</button>
-        <button>Import Category</button>
+        <button>Import Category and Credentials</button>
+        <button>Export Category and Credentials</button>
         <!-- Only shows category name -->
         <div v-for="category in allCategories" :key="category.id" @click="redirectCredentialCategory(category.id)" >
             {{ category.categoryName }}
@@ -27,6 +28,7 @@
     import { keycloak } from '@/config/keycloak';
     import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
+    import { getUser } from '@/services/userService';
 
     const { authState } = useAuth();
     const BACKEND_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5142';
@@ -46,8 +48,7 @@
 
     onMounted(async () => {
         try {
-            const { data } = await axios.get(`${BACKEND_URL}/user/me`, {
-            headers: { Authorization: `Bearer ${keycloak.token}` }});
+            const { data } = await getUser();
 
             allCategories.value = data.categories;
         } catch {
