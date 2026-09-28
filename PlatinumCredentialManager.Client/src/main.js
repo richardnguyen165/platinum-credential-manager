@@ -7,8 +7,8 @@ import CredHomepage from './views/CredHomepage.vue'
 import CredCategories from './views/CredCategories.vue'
 import CredSearchup from './views/CredSearchup.vue'
 import NotFound from './views/NotFound.vue'
-import Category from './components/category/Category.vue/index.js'
-import Credential from './components/credential/Credential.vue/index.js'
+import Category from './components/category/Category.vue'
+import Credential from './components/credential/Credential.vue'
 
 const router = createRouter({
     history: createWebHistory(),
