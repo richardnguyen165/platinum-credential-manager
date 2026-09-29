@@ -7,13 +7,16 @@
         Error: Loading credentials failed!
     </div>
     <div v-else>
+        <p>
+            Category Name: {{ categoryName }}
+        </p>
         <button @click="redirectBackToAllCategories">
             Go Back to All Categories
         </button>
-        <button @click="editCategoryModal">
+        <button v-if="!isMiscallaneous" @click="editCategoryModal">
             Edit Category
         </button>
-        <button @click="deleteCategoryModal">
+        <button v-if="!isMiscallaneous" @click="deleteCategoryModal">
             Delete Category
         </button>
         <button @click="createCredentialModal">
@@ -47,6 +50,8 @@
     import { getCategory } from '@/services/categoryService.js';
     import Form from '../ui/Form.vue';
 
+    const isMiscallaneous = ref(null);
+    const categoryName = ref(null);
     const allCredentials = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
@@ -86,6 +91,8 @@
         try {
             const data = await getCategory(categoryId);
             allCredentials.value = data.credentials;
+            categoryName.value = data.categoryName;
+            isMiscallaneous.value = categoryName.value === "Miscallaneous";
         } catch {
             console.log('Failed to retrive credentals');
             successfullyLoaded.value = false;

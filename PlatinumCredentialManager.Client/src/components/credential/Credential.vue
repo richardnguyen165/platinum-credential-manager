@@ -10,9 +10,11 @@
         <button @click="goBackToCategory()">
             Exit Back to Category
         </button>
-        <!-- TODO: Delete Credential Modal-->
-        <button>
+        <button @click="deleteCredentialModal">
             Delete Credential
+        </button>
+        <button @click="editCredentialModal">
+            Edit Credential
         </button>
         <button>
             Import Credentials
@@ -21,49 +23,55 @@
             Export Credentials
         </button>
         <div>
-            <input v-model="serviceName">
+            <p>
                 Service Name: {{ serviceName }}
-            </input>
-            <input v-model="username">
+            </p>
+            <p>
                 Username: {{ username }}
-            </input>
-            <input v-model="password">
-                Password: {{ password }}
-            </input>
-            <div>
+            </p>
+            <p>
+                Password:
+                <input :type=" showPassword ? 'text' : 'password' " :id="password" v-model="password" readonly />
+                <button @click="showPassword = !showPassword"> {{ showPassword ? 'Hide' : 'Show' }} Password </button>
+            </p>
+            <p>
                 Date Created: {{ dateCreated }}
-            </div>
-            <div>
+            </p>
+            <p>
                 Date Last Updated: {{ dateLastUpdated }}
-            </div>
+            </p>
         </div>
-        <!-- TODO: Edit Credential Saving Action-->
-        <button>
-            Save Edits
-        </button>
+        <Form :show="showModal" :categoryId="categoryId" :credentialId="credId" :action="action"  @close="showModal = false" @rerun = "loaderHelper"/>
     </div>
 </template>
 
 <script setup>
+    import Form from '../ui/Form.vue';
     import Header from '../layout/Header.vue';
-    import { ref, watch } from 'vue'; 
-    import { keycloak } from '@/config/keycloak';
+    import { ref, onMounted } from 'vue'; 
     import { useRouter } from 'vue-router';
     import { getCredential } from '@/services/credentialService.js';
 
-    const credential = ref(null), serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref('');
+    const serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref('');
     const router = useRouter();
+    const action = ref('');
+    const showModal = ref(false);
+    const isLoading = ref(true);
+    const successfullyLoaded = ref(true);
+    const showPassword = ref(false);
 
     function goBackToCategory() {
         router.push(`/cred-categories/${categoryId}/${userId}`);
     };
 
-    function editCredentialAction(){
-        return;
+    function editCredentialModal(){
+        action.value = "edit-credential"
+        showModal.value = true;
     }
 
     function deleteCredentialModal() {
-        return;
+        action.value = "delete-credential"
+        showModal.value = true;
     }
 
     const { categoryId, credId, userId } = defineProps({
@@ -74,12 +82,12 @@
 
     onMounted(async () => {
         try {
-            const { data } = await getCredential(credId);
+            const data = await getCredential(credId);
             
-            credential.value = data;
             serviceName.value = data.serviceName;
             username.value = data.username;
             password.value = data.password;
+            dateCreated.value = data.dateCreated;
             dateLastUpdated.value = data.dateLastUpdated
         } catch {
             console.log('Failed to retrive credential');

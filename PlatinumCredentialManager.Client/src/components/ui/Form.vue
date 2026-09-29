@@ -1,7 +1,7 @@
 <template>
     <Teleport to="body">
         <!-- emitHelper should not have brackets so that it does not call any code -->
-        <Modal :show="show" :inputs="allInputs" :categoryId="categoryId" :credentialId="credentialId" @close="$emit('close')" @ok="emitHelper">
+        <Modal :show="show" :inputs="allInputs" :categoryId="categoryId" :credentialId="credentialId" @close="emit('close')" @ok="emitHelper">
             <template #header>
                 <h3>{{ title }}</h3>
             </template>
@@ -14,17 +14,21 @@
 </template>
 
 <script setup>
+    import useAuth from '@/composables/useAuth.js';
     import { deleteCategory, postCategory, putCategory } from '@/services/categoryService.js';
     import Modal from './Modal.vue';
     import { computed } from 'vue';
+    import { useRouter } from 'vue-router';
     import { deleteCredential, postCredential, putCredential } from '@/services/credentialService.js';
 
     // Since action changes we need computed
     const title = computed(() => titleHelper());
     const allInputs = computed(() => inputHelper());
     const description = computed(() => descriptionHelper());
+    const router = useRouter();
+    const { authState } = useAuth()
 
-    defineEmits(['close', 'rerun']);
+    const emit = defineEmits(['close', 'rerun']);
 
     const { show, action, categoryId, credentialId } = defineProps({
         show: Boolean,
@@ -68,10 +72,12 @@
         else if (action === "delete-category") await deleteCategory(id);
         else if (action === "create-credential") await postCredential(data);
         else if (action === "edit-credential") await putCredential(id, data);
-        await deleteCredential(id);
+        else await deleteCredential(id);
 
+        if (action == "delete-category") router.push(`/cred-categories/${authState.userId}`);
+        else if (action === "delete-credential") router.push(`/cred-categories/${categoryId}/${userId}`);
         // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-        $emit('rerun');
+        else emit('rerun');
     }
 
 </script>

@@ -10,7 +10,6 @@
         Error: Loading credential categories failed!
     </div>
     <div v-else>
-        <!-- TODO: Create category modal -->
         <button @click="createCategoryModal">Create Category</button>
         <button>Import Category and Credentials</button>
         <button>Export Category and Credentials</button>
@@ -18,35 +17,36 @@
         <div v-for="category in allCategories" :key="category.id" @click="redirectCredentialCategory(category.id)" >
             {{ category.categoryName }}
         </div>
+        <Form :show="showModal" :action="action"  @close="showModal = false" @rerun = "categoryLoaderHelper"/>
     </div>
 </template>
 
 <script setup>
+    import Form from '@/components/ui/Form.vue';
     import Header from '@/components/layout/Header.vue';
-    import axios from 'axios';
     import { onMounted, ref } from 'vue'
-    import { keycloak } from '@/config/keycloak';
     import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
     import { getUser } from '@/services/userService';
 
     const { authState } = useAuth();
-    const BACKEND_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5142';
     const allCategories = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const router = useRouter();
+    const action = ref('');
+    const showModal = ref(false);
 
     function redirectCredentialCategory(categoryId) {
         router.push(`/cred-categories/${categoryId}/${authState.userId}`);
     };
 
-    // TODO: Create category modal
     function createCategoryModal() {
-        return;
+        action.value = "create-category";
+        showModal.value = true;
     };
 
-    onMounted(async () => {
+    async function categoryLoaderHelper() {
         try {
             const user = await getUser();
 
@@ -57,6 +57,10 @@
         } finally {
             isLoading.value = false;
         }
+    }
+
+    onMounted(async () => {
+        await categoryLoaderHelper();
     });
 
     
