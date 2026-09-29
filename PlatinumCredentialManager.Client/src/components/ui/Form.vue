@@ -1,7 +1,7 @@
 <template>
     <Teleport to="body">
         <!-- emitHelper should not have brackets so that it does not call any code -->
-        <Modal :show="showModal" :inputs="allInputs" :categoryId="categoryId" :credentialId="credentialId" @close="showModal = false" @ok="emitHelper">
+        <Modal :show="show" :inputs="allInputs" :categoryId="categoryId" :credentialId="credentialId" @close="$emit('close')" @ok="emitHelper">
             <template #header>
                 <h3>{{ title }}</h3>
             </template>
@@ -16,20 +16,22 @@
 <script setup>
     import { deleteCategory, postCategory, putCategory } from '@/services/categoryService.js';
     import Modal from './Modal.vue';
-    import { ref } from 'vue';
+    import { computed } from 'vue';
     import { deleteCredential, postCredential, putCredential } from '@/services/credentialService.js';
 
-    // Since this will only be activate by a click, then we can show the modal once the button is clicked => we can pass a prop
-    const showModal = ref(false);
-    const title = ref(titleHelper());
-    const allInputs = ref(inputHelper());
-    const description = ref(descriptionHelper());
+    // Since action changes we need computed
+    const title = computed(() => titleHelper());
+    const allInputs = computed(() => inputHelper());
+    const description = computed(() => descriptionHelper());
 
-    const { action, categoryId, credentialId } = defineProps({
+    defineEmits(['close']);
+
+    const { show, action, categoryId, credentialId } = defineProps({
+        show: Boolean,
         action: String,
         categoryId: Number || null,
         credentialId: Number || null
-    })
+    });
 
     function titleHelper(){
         if (action === "create-category") return "Create A Category";

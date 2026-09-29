@@ -10,17 +10,14 @@
         <button @click="redirectBackToAllCategories">
             Go Back to All Categories
         </button>
-        <!-- TODO: Edit Category Modal -->
-        <button>
+        <button @click="editCategoryModal">
             Edit Category
         </button>
-        <!-- TODO: Delete Category Modal -->
-        <button>
+        <button @click="deleteCategoryModal">
             Delete Category
         </button>
-        <!-- TODO: Add Category Modal -->
-        <button>
-            Add Credential
+        <button @click="createCredentialModal">
+            Create Credential
         </button>
         <button>
             Import Credentials
@@ -39,6 +36,7 @@
                 Date Last Updated: {{ credential.dateLastUpdated }}
             </div>
         </div>
+        <Form :show="showModal" :categoryId="categoryId" :action="action"  @close="showModal = false"/>
     </div>
 </template>
 
@@ -46,49 +44,50 @@
     import Header from '../layout/Header.vue';
     import { onMounted, ref } from 'vue'
     import { useRouter } from 'vue-router'
-    import useAuth from '@/composables/useAuth'
     import { getCategory } from '@/services/categoryService.js';
+    import Form from '../ui/Form.vue';
 
-    const { authState } = useAuth();
     const allCredentials = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const router = useRouter();
+    const action = ref('');
+    const showModal = ref(false);
 
     function redirectBackToAllCategories(){
-        router.push(`/cred-categories/${authState.userId}`);
+        router.push(`/cred-categories/${userId}`);
     }
 
     function redirectCredential(credentialId){
-        router.push(`/cred-categories/${credentialId}/${props.categoryId}/${authState.userId}`);
+        router.push(`/cred-categories/${credentialId}/${categoryId}/${userId}`);
     }
 
-    // TODO: Edit category modal
     function editCategoryModal(){
-        return;
+        action.value = "edit-category";
+        showModal.value = true;
     }
 
-    // TODO: Delete category modal
     function deleteCategoryModal(){
-        return;
+        action.value = "delete-category";
+        showModal.value = true;
     }
 
-    // TODO: Add credential modal
-    function addCredentialModal(){
-        return;
+    function createCredentialModal(){
+        action.value = "create-credential";
+        showModal.value = true;
     }
 
-    const { categoryId } = defineProps({
-        categoryId: Number
+    const { categoryId, userId } = defineProps({
+        categoryId: Number,
+        userId: Number
     });
 
     onMounted(async () => {
         try {
-            const { data } = await getCategory(categoryId);
-
+            const data = await getCategory(categoryId);
             allCredentials.value = data.credentials;
         } catch {
-            console.log('Failed to retrive category');
+            console.log('Failed to retrive credentals');
             successfullyLoaded.value = false;
         } finally {
             isLoading.value = false;

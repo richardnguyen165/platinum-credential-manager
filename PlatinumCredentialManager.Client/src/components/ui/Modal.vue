@@ -20,8 +20,11 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button @click="$emit('ok')">OK</button>
-                    <button @click="$emit('close', collectData(), chooseId())">Cancel</button>
+                    <button @click="() => {
+                        $emit('ok', collectData(), chooseId())
+                        $emit('close')
+                    }">OK</button>
+                    <button @click="$emit('close')">Cancel</button>
                 </div>
             </div>
         </div>
@@ -33,7 +36,7 @@
 // https://vuejs.org/guide/built-ins/transition.html
 
 const { show, inputs, categoryId, credentialId } = defineProps({
-    show: Array,
+    show: Boolean,
     inputs: Object,
     categoryId: Number || null,
     credentialId: Number || null
@@ -41,7 +44,7 @@ const { show, inputs, categoryId, credentialId } = defineProps({
 
 function collectData() {
     let data = {};
-    for (let input in inputs){
+    for (const input of inputs){
         let element = document.getElementById(input['key']);
         data['key'] = element.value;
     }
@@ -52,6 +55,7 @@ function chooseId() {
     return (credentialId !== null) ? credentialId : categoryId;
 }
 
+// Passe sup ok and close event
 defineEmits(['ok', 'close']);
 </script>
 
@@ -92,7 +96,7 @@ defineEmits(['ok', 'close']);
 }
 
 .modal-enter-active, .modal-leave-active {
-    transition: opacity 1s ease;
+    transition: opacity 0.5s ease;
 }
 
 </style>
