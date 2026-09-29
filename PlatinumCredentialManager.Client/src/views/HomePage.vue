@@ -7,12 +7,11 @@
 <style scoped></style>
 
 <script setup>
-    import Header from '@/components/Header.vue';
     import { watch } from 'vue'
     import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
 
-    const { keycloak, authState, login, logout, signup } = useAuth();
+    const { authState, login, signup } = useAuth();
 
     const router = useRouter();
 

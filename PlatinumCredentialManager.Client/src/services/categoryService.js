@@ -15,7 +15,7 @@ export async function postCategory(newData) {
     return data;
 }
 
-export async function putCredential(categoryId, changedData){
+export async function putCategory(categoryId, changedData){
     const { data } = await http.put(`/category/${categoryId}`, changedData);
     return data;
 }

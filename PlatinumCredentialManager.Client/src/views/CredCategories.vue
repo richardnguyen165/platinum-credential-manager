@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-    import Header from '@/components/Header.vue';
+    import Header from '@/components/layout/Header.vue';
     import axios from 'axios';
     import { onMounted, ref } from 'vue'
     import { keycloak } from '@/config/keycloak';
@@ -48,9 +48,9 @@
 
     onMounted(async () => {
         try {
-            const { data } = await getUser();
+            const user = await getUser();
 
-            allCategories.value = data.categories;
+            allCategories.value = user.categories;
         } catch {
             console.log('Failed to retrive credential categories');
             successfullyLoaded.value = false;

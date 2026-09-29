@@ -43,17 +43,13 @@
 </template>
 
 <script setup>
-    import Header from './layout/Header.vue/index.js';
-    import axios from 'axios';
+    import Header from '../layout/Header.vue';
     import { onMounted, ref } from 'vue'
-    import { keycloak } from '@/config/keycloak';
     import { useRouter } from 'vue-router'
     import useAuth from '@/composables/useAuth'
     import { getCategory } from '@/services/categoryService.js';
 
-
     const { authState } = useAuth();
-    const BACKEND_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5142';
     const allCredentials = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);

@@ -45,17 +45,17 @@
 </template>
 
 <script setup>
-    import Header from './layout/Header.vue/index.js';
+    import Header from '../layout/Header.vue';
     import { ref, watch } from 'vue'; 
     import { keycloak } from '@/config/keycloak';
     import { useRouter } from 'vue-router';
     import { getCredential } from '@/services/credentialService.js';
 
-    const credential = ref(null), serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref(''), categoryId = ref('');
+    const credential = ref(null), serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref('');
     const router = useRouter();
 
     function goBackToCategory() {
-        router.push(`/cred-categories/${categoryId.value}/${authState.userId}`);
+        router.push(`/cred-categories/${categoryId}/${userId}`);
     };
 
     function editCredentialAction(){
@@ -66,8 +66,10 @@
         return;
     }
 
-    const { credId } = defineProps({
-        credId: Number
+    const { categoryId, credId, userId } = defineProps({
+        categoryId: Number,
+        credId: Number,
+        userId: Number
     });
 
     onMounted(async () => {

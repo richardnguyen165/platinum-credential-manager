@@ -1,19 +1,34 @@
 <template>
     <Teleport to="body">
-        <Modal :show="showModal" :inputs="allInputs" @close="showModal = false" @ok="">
+        <!-- emitHelper should not have brackets so that it does not call any code -->
+        <Modal :show="showModal" :inputs="allInputs" :categoryId="categoryId" :credentialId="credentialId" @close="showModal = false" @ok="emitHelper">
             <template #header>
                 <h3>{{ title }}</h3>
+            </template>
+
+            <template>
+                <p>{{ description }}</p>
             </template>
         </Modal>
     </Teleport>
 </template>
 
 <script setup>
+    import { deleteCategory, postCategory, putCategory } from '@/services/categoryService.js';
     import Modal from './Modal.vue';
     import { ref } from 'vue';
+    import { deleteCredential, postCredential, putCredential } from '@/services/credentialService.js';
 
-    const { action } = defineProps({
-        action: String
+    // Since this will only be activate by a click, then we can show the modal once the button is clicked => we can pass a prop
+    const showModal = ref(false);
+    const title = ref(titleHelper());
+    const allInputs = ref(inputHelper());
+    const description = ref(descriptionHelper());
+
+    const { action, categoryId, credentialId } = defineProps({
+        action: String,
+        categoryId: Number || null,
+        credentialId: Number || null
     })
 
     function titleHelper(){
@@ -35,20 +50,23 @@
 
     function inputHelper(){
         if (action === "create-category" || action === "edit-category") return [
-            { key: 'categoryName', label: 'Category Name', type: 'text', required: true }
+            { key: 'CategoryName', label: 'Category Name', type: 'text', required: true }
         ];
         else if (action === "create-credential" || action === "edit-credential") return [
-            { key: 'serviceName', label: 'Service Name', type: 'text', required: true },
-            { key: 'username', label: 'Username', type: 'text', required: true },
-            { key: 'password', label: 'Password', type: 'password', required: false},
+            { key: 'ServiceName', label: 'Service Name', type: 'text', required: true },
+            { key: 'Username', label: 'Username', type: 'text', required: true },
+            { key: 'Password', label: 'Password', type: 'password', required: false},
         ];
         return [];
     }
 
-    // Since this will only be activate by a click, then we can show the modal once the button is clicked => we can pass a prop
-    const showModal = ref(false);
-    const title = ref(titleHelper());
-    const allInputs = ref(inputHelper());
-    const description = ref(descriptionHelper());
+    async function emitHelper(data = {}, id = null){
+        if (action === "create-category") return await postCategory(data);
+        else if (action === "edit-category") return await putCategory(id, data);
+        else if (action === "delete-category") return await deleteCategory(id);
+        else if (action === "create-credential") return await postCredential(data);
+        else if (action === "edit-credential") return await putCredential(id, data);
+        return await deleteCredential(id);
+    }
 
 </script>

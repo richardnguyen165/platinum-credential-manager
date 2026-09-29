@@ -21,7 +21,7 @@
 
                 <div class="modal-footer">
                     <button @click="$emit('ok')">OK</button>
-                    <button @click="$emit('close')">Cancel</button>
+                    <button @click="$emit('close', collectData(), chooseId())">Cancel</button>
                 </div>
             </div>
         </div>
@@ -32,10 +32,25 @@
 // https://vuejs.org/examples/#modal
 // https://vuejs.org/guide/built-ins/transition.html
 
-const { show, inputs } = defineProps({
+const { show, inputs, categoryId, credentialId } = defineProps({
     show: Array,
-    inputs: Object
+    inputs: Object,
+    categoryId: Number || null,
+    credentialId: Number || null
 });
+
+function collectData() {
+    let data = {};
+    for (let input in inputs){
+        let element = document.getElementById(input['key']);
+        data['key'] = element.value;
+    }
+    return data;
+}
+
+function chooseId() {
+    return (credentialId !== null) ? credentialId : categoryId;
+}
 
 defineEmits(['ok', 'close']);
 </script>
