@@ -46,8 +46,9 @@ function collectData() {
     let data = {};
     for (const input of inputs){
         let element = document.getElementById(input['key']);
-        data['key'] = element.value;
+        data[input['key']] = element.value;
     }
+    if (categoryId !== null) data["categoryId"] = categoryId;
     return data;
 }
 

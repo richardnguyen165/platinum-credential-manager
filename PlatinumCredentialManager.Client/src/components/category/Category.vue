@@ -36,7 +36,7 @@
                 Date Last Updated: {{ credential.dateLastUpdated }}
             </div>
         </div>
-        <Form :show="showModal" :categoryId="categoryId" :action="action"  @close="showModal = false"/>
+        <Form :show="showModal" :categoryId="categoryId" :action="action"  @close="showModal = false" @rerun = "loaderHelper"/>
     </div>
 </template>
 
@@ -82,7 +82,7 @@
         userId: Number
     });
 
-    onMounted(async () => {
+    async function loaderHelper() {
         try {
             const data = await getCategory(categoryId);
             allCredentials.value = data.credentials;
@@ -92,5 +92,9 @@
         } finally {
             isLoading.value = false;
         }
+    };
+
+    onMounted(async () => {
+        loaderHelper();
     });
 </script>

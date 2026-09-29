@@ -24,7 +24,7 @@
     const allInputs = computed(() => inputHelper());
     const description = computed(() => descriptionHelper());
 
-    defineEmits(['close']);
+    defineEmits(['close', 'rerun']);
 
     const { show, action, categoryId, credentialId } = defineProps({
         show: Boolean,
@@ -63,12 +63,15 @@
     }
 
     async function emitHelper(data = {}, id = null){
-        if (action === "create-category") return await postCategory(data);
-        else if (action === "edit-category") return await putCategory(id, data);
-        else if (action === "delete-category") return await deleteCategory(id);
-        else if (action === "create-credential") return await postCredential(data);
-        else if (action === "edit-credential") return await putCredential(id, data);
-        return await deleteCredential(id);
+        if (action === "create-category") await postCategory(data);
+        else if (action === "edit-category") await putCategory(id, data);
+        else if (action === "delete-category") await deleteCategory(id);
+        else if (action === "create-credential") await postCredential(data);
+        else if (action === "edit-credential") await putCredential(id, data);
+        await deleteCredential(id);
+
+        // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
+        $emit('rerun');
     }
 
 </script>
