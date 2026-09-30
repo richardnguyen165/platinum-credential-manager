@@ -117,8 +117,8 @@
                 await putCredential(id, data);
                 break;
             case "delete-credential":
-                deleteCredential(id);
-                await router.push(categoryPath(categoryId, authState.userId));
+                await deleteCredential(id);
+                router.push(categoryPath(categoryId, authState.userId));
                 return;
             default:
                 console.error(`Unknown form action ${action}`)
