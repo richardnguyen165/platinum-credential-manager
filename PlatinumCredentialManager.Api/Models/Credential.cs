@@ -14,7 +14,8 @@ public class Credential
     public required string Password { get; set; }
 
     // Stores when date was created, only you can get, not set, automatically initializes
-    public DateOnly DateCreated { get; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    // EF only maps properties that ahve a setter (if no setter, DateCreated always show the date it was read, not created)
+    public DateOnly DateCreated { get; private set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
     public DateOnly DateLastUpdated { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 

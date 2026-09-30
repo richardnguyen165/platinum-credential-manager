@@ -24,41 +24,41 @@
         </button>
         <div>
             <p>
-                Service Name: {{ serviceName }}
+                Service Name: {{ currentEntries.ServiceName }}
             </p>
             <p>
-                Username: {{ username }}
+                Username: {{ currentEntries.Username }}
             </p>
             <p>
                 Password:
-                <input :type=" showPassword ? 'text' : 'password' " :id="password" v-model="password" readonly />
+                <input :type=" showPassword ? 'text' : 'password' " :id="password" v-model="currentEntries.Password" readonly />
                 <button @click="showPassword = !showPassword"> {{ showPassword ? 'Hide' : 'Show' }} Password </button>
             </p>
             <p>
-                Date Created: {{ dateCreated }}
+                Date Created: {{ currentEntries.DateCreated }}
             </p>
             <p>
-                Date Last Updated: {{ dateLastUpdated }}
+                Date Last Updated: {{ currentEntries.DateLastUpdated }}
             </p>
         </div>
-        <Form :show="showModal" :categoryId="categoryId" :credentialId="credId" :action="action"  @close="showModal = false" @rerun = "loaderHelper"/>
+        <Form :show="showModal" :categoryId="categoryId" :credentialId="credId" :action="action"  :currentEntries="currentEntries" @close="showModal = false" @rerun = "credentialLoaderHelper"/>
     </div>
 </template>
 
 <script setup>
     import Form from '../ui/Form.vue';
     import Header from '../layout/Header.vue';
-    import { ref, onMounted } from 'vue'; 
+    import { ref, onMounted, reactive } from 'vue'; 
     import { useRouter } from 'vue-router';
     import { getCredential } from '@/services/credentialService.js';
 
-    const serviceName = ref(''), username = ref(''), password = ref(''), dateCreated = ref(''), dateLastUpdated = ref('');
     const router = useRouter();
     const action = ref('');
     const showModal = ref(false);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const showPassword = ref(false);
+    const currentEntries = reactive({})
 
     function goBackToCategory() {
         router.push(`/cred-categories/${categoryId}/${userId}`);
@@ -80,20 +80,24 @@
         userId: Number
     });
 
-    onMounted(async () => {
+    async function credentialLoaderHelper() {
         try {
             const data = await getCredential(credId);
             
-            serviceName.value = data.serviceName;
-            username.value = data.username;
-            password.value = data.password;
-            dateCreated.value = data.dateCreated;
-            dateLastUpdated.value = data.dateLastUpdated
+            currentEntries.ServiceName = data.serviceName;
+            currentEntries.Username = data.username;
+            currentEntries.Password = data.password;
+            currentEntries.DateCreated = data.dateCreated;
+            currentEntries.DateLastUpdated = data.dateLastUpdated
         } catch {
             console.log('Failed to retrive credential');
             successfullyLoaded.value = false;
         } finally {
             isLoading.value = false;
         }
+    }
+
+    onMounted(async () => {
+        await credentialLoaderHelper();
     });
 </script>

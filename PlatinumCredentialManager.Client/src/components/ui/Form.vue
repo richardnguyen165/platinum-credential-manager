@@ -30,11 +30,12 @@
 
     const emit = defineEmits(['close', 'rerun']);
 
-    const { show, action, categoryId, credentialId } = defineProps({
+    const { show, action, categoryId, credentialId, currentEntries } = defineProps({
         show: Boolean,
         action: String,
         categoryId: Number || null,
-        credentialId: Number || null
+        credentialId: Number || null,
+        currentEntries: Object || null
     });
 
     function titleHelper(){
@@ -56,12 +57,12 @@
 
     function inputHelper(){
         if (action === "create-category" || action === "edit-category") return [
-            { key: 'CategoryName', label: 'Category Name', type: 'text', required: true }
+            { key: 'CategoryName', label: 'Category Name', type: 'text', required: true, value: currentEntries["CategoryName"] }
         ];
         else if (action === "create-credential" || action === "edit-credential") return [
-            { key: 'ServiceName', label: 'Service Name', type: 'text', required: true },
-            { key: 'Username', label: 'Username', type: 'text', required: true },
-            { key: 'Password', label: 'Password', type: 'password', required: false},
+            { key: 'ServiceName', label: 'Service Name', type: 'text', required: true, value: currentEntries["ServiceName"] },
+            { key: 'Username', label: 'Username', type: 'text', required: true, value: currentEntries["Username"] },
+            { key: 'Password', label: 'Password', type: 'password', required: false, value: currentEntries["Password"] },
         ];
         return [];
     }
@@ -75,7 +76,7 @@
         else await deleteCredential(id);
 
         if (action == "delete-category") router.push(`/cred-categories/${authState.userId}`);
-        else if (action === "delete-credential") router.push(`/cred-categories/${categoryId}/${userId}`);
+        else if (action === "delete-credential") router.push(`/cred-categories/${categoryId}/${authState.userId}`);
         // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
         else emit('rerun');
     }

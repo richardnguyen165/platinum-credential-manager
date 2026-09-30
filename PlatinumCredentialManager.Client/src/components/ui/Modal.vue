@@ -14,9 +14,8 @@
 
                 <!-- for inputs -->
                 <div class="modal-body" v-for="input in inputs" :key="input.key" :required="input.required">
-                    <input :type="input.type" :id = "input.key">
-                        {{ input.label }}
-                    </input>
+                    {{ input.label }}
+                    <input :type="input.type" :id = "input.key" :value="input.value"/>
                 </div>
 
                 <div class="modal-footer">
