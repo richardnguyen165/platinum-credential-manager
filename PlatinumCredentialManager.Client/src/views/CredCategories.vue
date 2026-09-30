@@ -10,14 +10,14 @@
         Error: Loading credential categories failed!
     </div>
     <div v-else>
-        <button @click="createCategoryModal">Create Category</button>
+        <button @click="createModal('create-category')">Create Category</button>
         <button>Import Category and Credentials</button>
         <button>Export Category and Credentials</button>
         <!-- Only shows category name -->
         <div v-for="category in allCategories" :key="category.id" @click="redirectCredentialCategory(category.id)">
             {{ category.categoryName }}
         </div>
-        <Form :show="showModal" :action="action"  @close="showModal = false" @rerun = "categoryLoaderHelper"/>
+        <Form :show="showModal" :action="action"  @close="closeModal" @rerun = "categoryLoaderHelper"/>
     </div>
 </template>
 
@@ -31,19 +31,15 @@
     import { getUser } from '@/services/userService';
     import useAuth from '@/composables/useAuth';
     import { categoryPath } from '@/utils/routes';
+    import { useModal } from '@/composables/useModal';
+
+    const { showModal, action, createModal, closeModal } = useModal();
 
     const allCategories = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
-    const action = ref('');
-    const showModal = ref(false);
     const router = useRouter();
     const { authState } = useAuth();
-
-    function createCategoryModal() {
-        action.value = "create-category";
-        showModal.value = true;
-    };
 
     function redirectCredentialCategory(categoryId) {
         router.push(categoryPath(categoryId, authState.userId));
