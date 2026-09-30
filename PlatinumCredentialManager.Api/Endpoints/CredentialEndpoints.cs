@@ -75,7 +75,8 @@ public static class CredentialEndpoints
                     credential.Password,
                     credential.DateCreated,
                     credential.DateLastUpdated,
-                    category.CategoryName
+                    category.CategoryName,
+                    category.Id
                 )
             );
         }).WithName(GetCredEndpointName);
@@ -134,7 +135,8 @@ public static class CredentialEndpoints
                 credential.Password,
                 credential.DateCreated,
                 credential.DateLastUpdated,
-                categoryCheck.CategoryName
+                categoryCheck.CategoryName,
+                categoryCheck.Id
             );
 
             return Results.CreatedAtRoute(GetCredEndpointName, new { id = newCredentialDetails.Id }, newCredentialDetails);

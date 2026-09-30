@@ -31,7 +31,11 @@ public static class UserEndpoints
                     u.KeycloakId,
                     u.Categories.Select(
                         category => 
-                        category.CategoryName
+                        // nested dto
+                        new CategorySummaryDto(
+                            category.Id, // needed for v-for in frontend for v-key
+                            category.CategoryName
+                        )
                     ).ToList()
                 ))
                 .AsNoTracking()
@@ -60,14 +64,30 @@ public static class UserEndpoints
                 user = new User { KeycloakId = keycloakId };
                 user.Categories.Add(new Category { CategoryName = "Miscallaneous", User = user, UserId = user.Id });
                 dbContext.Users.Add(user);
-                await dbContext.SaveChangesAsync();
+
+                // Purpose of code, prevent race conditions due to multiple tab reloading or network issues, which can send the same request, resulting in duplicate creation of users
+                try {
+                    await dbContext.SaveChangesAsync();
+                } catch (DbUpdateException) {
+                    dbContext.ChangeTracker.Clear();
+
+                    user = await dbContext.Users
+                    .Include(u => u.Categories)
+                    .FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+                    created = false;
+                }
             }
 
             var dto = new GetUserDto(
                 user.Id,
                 user.KeycloakId,
-                user.Categories.Select(c => c.CategoryName).ToList()
-            );
+                user.Categories.Select(c =>
+                // nested dto
+                new CategorySummaryDto(
+                    c.Id, // needed for v-for in frontend for v-key
+                    c.CategoryName
+                )).ToList());
 
             return created
                 ? Results.CreatedAtRoute(GetCurrentUserRoute, null, dto)

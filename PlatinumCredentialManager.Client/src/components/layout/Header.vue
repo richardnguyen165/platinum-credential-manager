@@ -20,13 +20,13 @@
 
 <script setup>
     import useAuth from '@/composables/useAuth';
-    import { computed } from 'vue';
+    import { ref } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
 
     const route = useRoute();
     const router = useRouter();
 
-    const currentTab = computed(() => {
+    const currentTab = ref(() => {
         if (route.path.startsWith('/cred-homepage')) return 'home'
         if (route.path.startsWith('/cred-categories')) return 'categories'
         if (route.path.startsWith('/cred-searchup')) return 'search'

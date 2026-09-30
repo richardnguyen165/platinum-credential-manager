@@ -10,5 +10,6 @@ public record class GetDetailedCredentialDto
     [Required][StringLength(100)] string Password,
     [Required] DateOnly DateCreated,
     [Required] DateOnly DateLastUpdated,
-    [Required][StringLength(100)] string CategoryName // we would need to display the category name
+    [Required][StringLength(100)] string CategoryName, // we would need to display the category name
+    [Required] int CategoryId
 );
