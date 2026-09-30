@@ -13,13 +13,13 @@
         <button @click="redirectBackToAllCategories">
             Go Back to All Categories
         </button>
-        <button v-if="!isMiscallaneous" @click="editCategoryModal">
+        <button v-if="!isMiscallaneous" @click="createModal('edit-category')">
             Edit Category
         </button>
-        <button v-if="!isMiscallaneous" @click="deleteCategoryModal">
+        <button v-if="!isMiscallaneous" @click="createModal('delete-category')">
             Delete Category
         </button>
-        <button @click="createCredentialModal">
+        <button @click="createModal('create-credential')">
             Create Credential
         </button>
         <button>
@@ -39,47 +39,35 @@
                 Date Last Updated: {{ credential.dateLastUpdated }}
             </div>
         </div>
-        <Form :show="showModal" :categoryId="categoryId" :action="action"  :currentEntries="currentEntries" @close="showModal = false" @rerun = "loaderHelper"/>
+        <Form :show="showModal" :categoryId="categoryId" :action="action"  :currentEntries="currentEntries" @close="closeModal" @rerun = "loaderHelper"/>
     </div>
 </template>
 
 <script setup>
     import Header from '../layout/Header.vue';
+    import Form from '../ui/Form.vue';
+
     import { onMounted, ref, reactive } from 'vue'
     import { useRouter } from 'vue-router'
     import { getCategory } from '@/services/categoryService.js';
-    import Form from '../ui/Form.vue';
+    import { credentialPath, categoriesPath } from '@/utils/routes.js';
+    import { useModal } from '@/composables/useModal.js';
+
+    const { showModal, action, createModal, closeModal } = useModal();
 
     const isMiscallaneous = ref(null);
     const allCredentials = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const router = useRouter();
-    const action = ref('');
-    const showModal = ref(false);
-    const currentEntries = reactive({})
+    const currentEntries = reactive({});
 
     function redirectBackToAllCategories(){
-        router.push(`/cred-categories/${userId}`);
+        router.push(categoriesPath(userId));
     }
 
     function redirectCredential(credentialId){
-        router.push(`/cred-categories/${credentialId}/${categoryId}/${userId}`);
-    }
-
-    function editCategoryModal(){
-        action.value = "edit-category";
-        showModal.value = true;
-    }
-
-    function deleteCategoryModal(){
-        action.value = "delete-category";
-        showModal.value = true;
-    }
-
-    function createCredentialModal(){
-        action.value = "create-credential";
-        showModal.value = true;
+        router.push(credentialPath(credentialId, categoryId, userId));
     }
 
     const { categoryId, userId } = defineProps({
@@ -93,15 +81,13 @@
             allCredentials.value = data.credentials;
             currentEntries.CategoryName = data.categoryName;
             isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";
-        } catch {
-            console.log('Failed to retrive credentals');
+        } catch (error) {
+            console.error('Failed to retrive credentals', error);
             successfullyLoaded.value = false;
         } finally {
             isLoading.value = false;
         }
     };
 
-    onMounted(async () => {
-        await loaderHelper();
-    });
+    onMounted(loaderHelper);
 </script>

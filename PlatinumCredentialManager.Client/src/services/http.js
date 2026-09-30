@@ -19,6 +19,7 @@ http.interceptors.request.use(
                 config.headers.Authorization = `Bearer ${keycloak.token}`
             // Refresh token expired, user must refresh
             } catch {
+                console.log('User refresh token expired, logging out user...')
                 keycloak.logout();
             }
         }
