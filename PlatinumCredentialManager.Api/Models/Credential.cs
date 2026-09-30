@@ -9,6 +9,7 @@ public class Credential
 
     public required string ServiceName { get; set; }
 
+    // TODO: Encrypt Username and Password before storing them in the database (currently saved as plaintext).
     public string Username { get; set; } = "";
 
     public required string Password { get; set; }
