@@ -6,7 +6,7 @@
                 <h3>{{ title }}</h3>
             </template>
 
-            <template>
+            <template #description>
                 <p>{{ description }}</p>
             </template>
         </Modal>
@@ -16,7 +16,6 @@
 <script setup>
     import { computed } from 'vue';
     import { useRouter } from 'vue-router';
-    
     import Modal from './Modal.vue';
 
     import useAuth from '@/composables/useAuth.js';
