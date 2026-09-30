@@ -10,10 +10,10 @@
         <button @click="goBackToCategory()">
             Exit Back to Category
         </button>
-        <button @click="deleteCredentialModal">
+        <button @click="createModal('delete-credential')">
             Delete Credential
         </button>
-        <button @click="editCredentialModal">
+        <button @click="createModal('edit-credential')">
             Edit Credential
         </button>
         <button>
@@ -41,44 +41,40 @@
                 Date Last Updated: {{ currentEntries.DateLastUpdated }}
             </p>
         </div>
-        <Form :show="showModal" :categoryId="categoryId" :credentialId="credId" :action="action"  :currentEntries="currentEntries" @close="showModal = false" @rerun = "credentialLoaderHelper"/>
+        <Form :show="showModal" :categoryId="categoryId" :credentialId="credId" :action="action"  :currentEntries="currentEntries" @close="closeModal" @rerun = "credentialLoaderHelper"/>
     </div>
 </template>
 
 <script setup>
-    import Form from '../ui/Form.vue';
-    import Header from '../layout/Header.vue';
+
     import { ref, onMounted, reactive } from 'vue'; 
     import { useRouter } from 'vue-router';
+    
+    import Form from '../ui/Form.vue';
+    import Header from '../layout/Header.vue';
+
     import { getCredential } from '@/services/credentialService.js';
+    import { categoryPath } from '@/utils/routes.js';
+    import { useModal } from '@/composables/useModal.js';
 
-    const router = useRouter();
-    const action = ref('');
-    const showModal = ref(false);
-    const isLoading = ref(true);
-    const successfullyLoaded = ref(true);
-    const showPassword = ref(false);
-    const currentEntries = reactive({})
-
-    function goBackToCategory() {
-        router.push(`/cred-categories/${categoryId}/${userId}`);
-    };
-
-    function editCredentialModal(){
-        action.value = "edit-credential"
-        showModal.value = true;
-    }
-
-    function deleteCredentialModal() {
-        action.value = "delete-credential"
-        showModal.value = true;
-    }
+    const { showModal, action, createModal, closeModal } = useModal();
 
     const { categoryId, credId, userId } = defineProps({
         categoryId: Number,
         credId: Number,
         userId: Number
     });
+
+    const router = useRouter();
+
+    const isLoading = ref(true);
+    const successfullyLoaded = ref(true);
+    const showPassword = ref(false);
+    const currentEntries = reactive({})
+
+    function goBackToCategory() {
+        router.push(categoryPath(categoryId, userId));
+    };
 
     async function credentialLoaderHelper() {
         try {
@@ -89,15 +85,13 @@
             currentEntries.Password = data.password;
             currentEntries.DateCreated = data.dateCreated;
             currentEntries.DateLastUpdated = data.dateLastUpdated
-        } catch {
-            console.log('Failed to retrive credential');
+        } catch (error) {
+            console.catch('Failed to retrive credential', error);
             successfullyLoaded.value = false;
         } finally {
             isLoading.value = false;
         }
     }
 
-    onMounted(async () => {
-        await credentialLoaderHelper();
-    });
+    onMounted(credentialLoaderHelper);
 </script>

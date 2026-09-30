@@ -20,13 +20,16 @@
 
 <script setup>
     import useAuth from '@/composables/useAuth';
-    import { ref } from 'vue';
+    
+    import { homePath, categoriesPath, searchUpPath } from '@/utils/routes';
+    import { computed  } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
 
     const route = useRoute();
     const router = useRouter();
 
-    const currentTab = ref(() => {
+    // Stores current tab
+    const currentTab = computed (() => {
         if (route.path.startsWith('/cred-homepage')) return 'home'
         if (route.path.startsWith('/cred-categories')) return 'categories'
         if (route.path.startsWith('/cred-searchup')) return 'search'
@@ -41,18 +44,17 @@
 
         switch(redirectParam) {
             case "categories":
-                newRoute = `/cred-categories/${authState.userId}`;
+                newRoute = categoriesPath(authState.userId);
                 break;
             case "search":
-                newRoute = `/cred-searchup/${authState.userId}`;
+                newRoute = searchUpPath(authState.userId);
                 break;
             default:
-                newRoute = "/";
+                newRoute = homePath();
         }
 
         if (redirectParam === 'logout') {
             logout();
-            return;
         }
         else router.push(newRoute);
     };

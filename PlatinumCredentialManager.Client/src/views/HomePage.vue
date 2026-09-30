@@ -4,12 +4,12 @@
   <button @click="goToLogIn">Log In</button>
 </template>
 
-<style scoped></style>
-
 <script setup>
     import { watch } from 'vue'
     import { useRouter } from 'vue-router'
+    
     import useAuth from '@/composables/useAuth'
+    import { homepagePath } from '@/utils/routes';
 
     const { authState, login, signup } = useAuth();
 
@@ -17,7 +17,7 @@
 
     // If userId in authState is defined (meaning successful request), redirect to user's homepage
     watch(() => authState.userId, (userId) => {
-        if (userId) router.push(`/cred-homepage/${userId}`)
+        if (userId) router.push(homepagePath(userId))
     }, { immediate: true })
 
     // Redirects

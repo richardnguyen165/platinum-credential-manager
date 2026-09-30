@@ -31,18 +31,19 @@
 </template>
 
 <script setup>
+// Sources
 // https://vuejs.org/examples/#modal
 // https://vuejs.org/guide/built-ins/transition.html
-
-// Passe sup ok and close event
-const emit = defineEmits(['ok', 'close']);
 
 const { show, inputs, categoryId, credentialId } = defineProps({
     show: Boolean,
     inputs: Object,
-    categoryId: Number || null,
-    credentialId: Number || null
+    categoryId: Number,
+    credentialId: Number
 });
+
+// Passes up ok and close event
+const emit = defineEmits(['ok', 'close']);
 
 function collectData() {
     let data = {};
@@ -50,7 +51,8 @@ function collectData() {
         let element = document.getElementById(input['key']);
         data[input['key']] = element.value;
     }
-    if (categoryId !== null) data["categoryId"] = categoryId;
+    // change from !== to != because of categoryId is undefined it returns true => convert to loosy
+    if (categoryId != null) data["categoryId"] = categoryId;
     return data;
 }
 
