@@ -86,7 +86,7 @@
             currentEntries.DateCreated = data.dateCreated;
             currentEntries.DateLastUpdated = data.dateLastUpdated
         } catch (error) {
-            console.catch('Failed to retrive credential', error);
+            console.error('Failed to retrive credential', error);
             successfullyLoaded.value = false;
         } finally {
             isLoading.value = false;
