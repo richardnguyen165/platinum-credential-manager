@@ -10,7 +10,6 @@
             <select name="createUpdate" :id="CreateUpdate" v-model="createUpdateChoice">
                 <option value="create">Create</option>
                 <option value="update">Update</option>
-                <option value="noCreateUpdate">No Create/Update Bounds</option>
             </select>
 
             Date Filter: 

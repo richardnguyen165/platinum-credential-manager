@@ -4,8 +4,8 @@ public record class SearchCredentialDto
 (
     string? CategoryName,
     string? ServiceName,
-    string? CreateUpdateChoice,
-    string? UserDateChoice,
+    string CreateUpdateChoice,
+    string UserDateChoice,
     string? StartDate,
     string? EndDate
 );

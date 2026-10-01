@@ -10,20 +10,49 @@ public static class CredentialEndpoints
 {
     private const string GetCredEndpointName = "GetCred";
 
-    private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
-        IQueryable<Credential> data = dbContext.Credentials;
+    private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, var user, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
+        
+        int decrementDateAmount = 0;
+        
+        IQueryable<Credential> data = dbContext.Credentials.Where(credential => credential.Category.UserId == user.Id);
 
-        // StartDate
-        if (StartDate != null)
+        switch(UserDateChoice) 
         {
+            case "lastSevenDays":
+                decrementDateAmount = -6; // -6 + today = 7 days back
+                break;
+            case "lastThirtyDays":
+                decrementDateAmount = -29;
+                break;
+            case "lastYear":
+                decrementDateAmount = -1; // using -365 doesnt account for leap years
+                break;
+            case "boundedByDates":
+                if (StartDate != null)
+                {
+                    data = data.Where(credential => DateOnly.Parse(StartDate) <= (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated));
+                }
+
+                //EndDate
+                if (EndDate != null)
+                {
+                    data = data.Where(credential => (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) <= DateOnly.Parse(EndDate));
+                }
+
+                return data;
+
+            default:
+                return data;
             
         }
 
-        //EndDate
-        if (EndDate != null)
-        {
-            
-        }
+        var todaysDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var decrementedDate;
+
+        if (UserDateChoice != "lastYear") decrementedDate = todaysDate.AddDays(decrementDateAmount);
+        else decrementedDate = todaysDate.AddYears(-1);
+
+        data = data.Where(credential => decrementedDate <= (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) && (CreateUpdateChoice == 'Create' ? credential.DateCreated : credential.DateLastUpdated) <= todaysDate);
 
         return data;
     }
@@ -246,16 +275,20 @@ public static class CredentialEndpoints
 
             if (user is null) return Results.Unauthorized();
 
-            var todaysDate = DateTime.Now;
+            IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user, searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate, searchCredential.EndDate);
 
-            IQueryable<Credential> dateLINQ = 
-
-            var allRelatedCredentials = await dbContext.Credentials
+            return await dateLINQ
             .Where(credential => searchCredential.CategoryName == null || credential.Category.CategoryName == searchCredential.CategoryName ||credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) || credential.Category.CategoryName.Contains(searchCredential.CategoryName))
             .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
             credential.ServiceName.Contains(searchCredential.ServiceName))
+            .Select(credential => new SearchCredentialResultsDto(
+                credential.Category.CategoryName
+                credential.ServiceName,
+                credential.DateCreated,
+                credential.DateLastUpdated
+            ))
+            .AsNoTracking()
             .ToListAsync();
-
         });
 
 
