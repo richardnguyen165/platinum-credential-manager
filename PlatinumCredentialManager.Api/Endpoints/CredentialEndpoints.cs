@@ -148,11 +148,13 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
+            var newCredentialServiceName = newCredential.ServiceName.Trim();
+
             // Check if there exists a credential of the same name in the same category
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential => 
                 (credential.CategoryId == newCredential.CategoryId) 
-                && (credential.ServiceName == newCredential.ServiceName)
+                && (credential.ServiceName == newCredentialServiceName)
                 && credential.Category.UserId == user.Id
             );
 
@@ -164,7 +166,7 @@ public static class CredentialEndpoints
             Credential credential = new()
             {
                 Username = newCredential.Username ?? "",
-                ServiceName = newCredential.ServiceName,
+                ServiceName = newCredentialServiceName,
                 Password = newCredential.Password,
                 CategoryId = newCredential.CategoryId,
             };
@@ -177,7 +179,7 @@ public static class CredentialEndpoints
 
             GetDetailedCredentialDto newCredentialDetails = new(
                 credential.Id,
-                credential.ServiceName,
+                newCredentialServiceName,
                 credential.Username,
                 credential.Password,
                 credential.DateCreated,
@@ -207,12 +209,14 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
+            var updatedCredentialServiceName = updatedCredential.ServiceName.Trim();
+
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential =>
                 // Check if any other credential (EXCLUDING itself, has the same name)
                 credential.Id != id
                 && (credential.CategoryId == updatedCredential.CategoryId)
-                && (credential.ServiceName == updatedCredential.ServiceName)
+                && (credential.ServiceName == updatedCredentialServiceName)
                 && credential.Category.UserId == user.Id
             );
             bool userOwnsCategory = await dbContext.Categories.AnyAsync(c => c.Id == updatedCredential.CategoryId && c.UserId == user.Id);
@@ -234,7 +238,7 @@ public static class CredentialEndpoints
 
             findCredential.CategoryId = updatedCredential.CategoryId;
 
-            findCredential.ServiceName = updatedCredential.ServiceName;
+            findCredential.ServiceName = updatedCredentialServiceName;
 
             // Username can be blank
             findCredential.Username = updatedCredential.Username ?? "";
@@ -277,7 +281,7 @@ public static class CredentialEndpoints
 
             IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user, searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate, searchCredential.EndDate);
 
-            return await dateLINQ
+            return await Results.Ok(dateLINQ
             .Where(credential => searchCredential.CategoryName == null || credential.Category.CategoryName == searchCredential.CategoryName ||credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) || credential.Category.CategoryName.Contains(searchCredential.CategoryName))
             .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
             credential.ServiceName.Contains(searchCredential.ServiceName))
@@ -288,7 +292,7 @@ public static class CredentialEndpoints
                 credential.DateLastUpdated
             ))
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync());
         });
 
 

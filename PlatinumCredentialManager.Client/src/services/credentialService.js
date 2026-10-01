@@ -24,3 +24,9 @@ export async function deleteCredential(credId) {
     const { data } = await http.delete(`/creds/${credId}`);
     return data;
 }
+
+// https://axios.rest/pages/advanced/request-config => for query parameters
+export async function searchCredential(queryParams){
+    const { data } = await http.get(`/creds/search`, { params: queryParams });
+    return data;
+}
