@@ -37,7 +37,7 @@
     <div v-if="credentials == null">
         Please search for credentials using the inputs above.
     </div>
-    <div v-else-if="!credentials">
+    <div v-else-if="credentials.length === 0">
         No credentials found with the following inputs above!
     </div>
     <div v-else>
@@ -50,10 +50,11 @@
     import { searchCredential } from '@/services/credentialService';
     
     import { ref } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRouter, useRoute } from 'vue-router';
     import useAuth from '@/composables/useAuth';
 
     const router = useRouter();
+    const route = useRoute(); // for query parameters
 
     const formErrorMessage = ref('');
     const categoryNameChoice = ref('');
@@ -99,9 +100,9 @@
                 return;
             }
 
-            if(startDateChoice.value && endDateChoice.value && endDateChoice.value > startDateChoice.value)
+            if(startDateChoice.value && endDateChoice.value && endDateChoice.value < startDateChoice.value)
             {
-                formErrorMessage.value = 'End date cannot be greater than start date';
+                formErrorMessage.value = 'Start date cannot be greater than end date';
                 return;
             }
         }
@@ -110,19 +111,23 @@
 
         credentials.value = await searchCredential(payload);
 
-        const queryObject = {};
-
-        if (categoryNameChoice.value) queryObject['categoryName'] = categoryNameChoice.value;
-        if (serviceNameChoice.value) queryObject['serviceName'] = serviceNameChoice.value;
-        if (startDateChoice.value) queryObject['startDate'] = startDateChoice.value;
-        if (endDateChoice.value) queryObject['endDate'] = endDateChoice.value;
-        queryObject['createUpdateChoice'] = createUpdateChoice.value;
-        queryObject['userDateChoice'] = userDateChoice.value;
-
         // https://serversideup.net/blog/url-query-parameters-with-javascript-vue-2-and-vue-3/
-        router.push({
-            path: `/cred-searchup/${authState.userId}`,
-            query: queryObject,
-        })
+        router.push({ query: payload })
     };
+
+    // Nothing reads the query back (suppose you go back to this page, the refs could be empty)
+    // route => reading where you are right now (suppose the user bookmarks the page, the refs restart, and since this query and not parameter, the page will be blank despite the query parameters)
+    onMounted(async () => {
+        if (Object.keys(router.query).length === 0) return;
+        categoryNameChoice.value = route.query.CategoryName ?? '';
+        serviceNameChoice.value = route.query.ServiceName ?? '';
+        createUpdateChoice.value = route.query.CreateUpdateChoice ?? '';
+        userDateChoice.value = route.query.UserDateChoice ?? ''
+        startDateChoice.value = route.query.StartDate ?? '';
+        endDateChoice.value = route.query.EndDate ?? '';
+
+        const payload = parsePayload();
+
+        credentials.value = await searchCredential(payload);
+    });
 </script>
