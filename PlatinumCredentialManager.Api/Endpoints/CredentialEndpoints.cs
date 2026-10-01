@@ -10,6 +10,24 @@ public static class CredentialEndpoints
 {
     private const string GetCredEndpointName = "GetCred";
 
+    private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
+        IQueryable<Credential> data = dbContext.Credentials;
+
+        // StartDate
+        if (StartDate != null)
+        {
+            
+        }
+
+        //EndDate
+        if (EndDate != null)
+        {
+            
+        }
+
+        return data;
+    }
+
     public static void MapCredentialEndpoints(this WebApplication app)
     {
         var credentialURLGroup = app.MapGroup("/creds").RequireAuthorization();
@@ -218,5 +236,28 @@ public static class CredentialEndpoints
 
             return Results.NoContent();
         });
+
+        credentialURLGroup.MapGet("/search", async (SearchCredentialDto searchCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+            
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
+            var todaysDate = DateTime.Now;
+
+            IQueryable<Credential> dateLINQ = 
+
+            var allRelatedCredentials = await dbContext.Credentials
+            .Where(credential => searchCredential.CategoryName == null || credential.Category.CategoryName == searchCredential.CategoryName ||credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) || credential.Category.CategoryName.Contains(searchCredential.CategoryName))
+            .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
+            credential.ServiceName.Contains(searchCredential.ServiceName))
+            .ToListAsync();
+
+        });
+
+
     }
 }

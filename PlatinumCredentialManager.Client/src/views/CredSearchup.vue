@@ -3,11 +3,11 @@
     <form @submit.prevent="searchForCredentials">
         <p>Search Area</p>
         <div>
-            Category Name: <input type = "text" :id="categoryName" />
-            Service Name: <input type = "text" :id="serviceName" />
+            Category Name: <input type = "text" :id="CategoryName" />
+            Service Name: <input type = "text" :id="ServiceName" />
 
             Create/Update: 
-            <select name="createUpdate" :id="createUpdate" v-model="createUpdateChoice">
+            <select name="createUpdate" :id="CreateUpdate" v-model="createUpdateChoice">
                 <option value="create">Create</option>
                 <option value="update">Update</option>
                 <option value="noCreateUpdate">No Create/Update Bounds</option>
@@ -15,7 +15,7 @@
 
             Date Filter: 
             <select name="dateFilter" :id="dateFilter" v-model="userDateChoice">
-                <option value="lastSevenDays" @click="userDateChoice='lastSevenDays'">Last 7 Days</option>
+                <option value="lastSevenDays">Last 7 Days</option>
                 <option value="lastThirtyDays">Last 30 Days</option>
                 <option value="lastYear">Last Year</option>
                 <option value="noBounds">No Date Bounds</option>
@@ -26,8 +26,8 @@
             <div v-show="userDateChoice === 'boundedByDates'">
                 Date Bound:
                <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/date --> 
-                Starting Date: <input type="date" :id="start" name="start-date" min="2000-01-01" :max="todaysDate()" />
-                Ending Date: <input type="date" :id="end" name="end-date" min="2000-01-01" :max="todaysDate()" />
+                Starting Date: <input type="date" :id="startDate" name="start-date" min="2000-01-01" :max="todaysDate()" />
+                Ending Date: <input type="date" :id="endDate" name="end-date" min="2000-01-01" :max="todaysDate()" />
             </div>
         </div>
         <button type="submit">Search for Credentials</button>
@@ -57,6 +57,4 @@
     async function searchForCredentials(){
         return;
     }
-
-    onMounted(searchForCredentials);
 </script>
