@@ -10,7 +10,7 @@ public static class CredentialEndpoints
 {
     private const string GetCredEndpointName = "GetCred";
 
-    private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, var user, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
+    private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, User user, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
         
         int decrementDateAmount = 0;
         
@@ -47,12 +47,12 @@ public static class CredentialEndpoints
         }
 
         var todaysDate = DateOnly.FromDateTime(DateTime.UtcNow);
-        var decrementedDate;
+        DateOnly decrementedDate;
 
         if (UserDateChoice != "lastYear") decrementedDate = todaysDate.AddDays(decrementDateAmount);
         else decrementedDate = todaysDate.AddYears(-1);
 
-        data = data.Where(credential => decrementedDate <= (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) && (CreateUpdateChoice == 'Create' ? credential.DateCreated : credential.DateLastUpdated) <= todaysDate);
+        data = data.Where(credential => decrementedDate <= (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) && (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) <= todaysDate);
 
         return data;
     }
@@ -281,12 +281,12 @@ public static class CredentialEndpoints
 
             IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user, searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate, searchCredential.EndDate);
 
-            return await Results.Ok(dateLINQ
+            return Results.Ok(await dateLINQ
             .Where(credential => searchCredential.CategoryName == null || credential.Category.CategoryName == searchCredential.CategoryName ||credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) || credential.Category.CategoryName.Contains(searchCredential.CategoryName))
             .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
             credential.ServiceName.Contains(searchCredential.ServiceName))
             .Select(credential => new SearchCredentialResultsDto(
-                credential.Category.CategoryName
+                credential.Category.CategoryName,
                 credential.ServiceName,
                 credential.DateCreated,
                 credential.DateLastUpdated
