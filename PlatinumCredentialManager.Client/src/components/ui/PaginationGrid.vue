@@ -30,7 +30,7 @@
      </div>
 
      <div v-else>
-        <div @click="redirectCredential(credential.id)" v-for="credential in allCredentials" :key="credential.id">
+        <div @click="redirectCredential(credential.id)" v-for="credential in allData" :key="credential.id">
             <div>
                 Service Name: {{ credential.serviceName }}
             </div>
@@ -58,6 +58,7 @@
     });
 
     const allData = ref(null);
+    const pageNumber = ref(0);
 
     const router = useRouter();
     const route = useRoute();
