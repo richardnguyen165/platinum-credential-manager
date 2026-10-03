@@ -44,10 +44,10 @@
 
         switch(redirectParam) {
             case "categories":
-                newRoute = categoriesPath(authState.userId);
+                newRoute = categoriesPath(route.params.user_id);
                 break;
             case "search":
-                newRoute = searchUpPath(authState.userId);
+                newRoute = searchUpPath(route.params.user_id);
                 break;
             default:
                 newRoute = homePath();

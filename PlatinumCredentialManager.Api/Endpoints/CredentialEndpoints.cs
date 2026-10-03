@@ -148,7 +148,7 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
-            var newCredentialServiceName = newCredential.ServiceName.Trim();
+            var newCredentialServiceName = newCredential.ServiceName;
 
             // Check if there exists a credential of the same name in the same category
             bool nameTakenStatus = await dbContext.Credentials
@@ -209,7 +209,7 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
-            var updatedCredentialServiceName = updatedCredential.ServiceName.Trim();
+            var updatedCredentialServiceName = updatedCredential.ServiceName;
 
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential =>
@@ -270,7 +270,7 @@ public static class CredentialEndpoints
             return Results.NoContent();
         });
 
-        credentialURLGroup.MapGet("/search", async (SearchCredentialDto searchCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
+        credentialURLGroup.MapGet("/search", async ([AsParameters] SearchCredentialDto searchCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (keycloakId is null) return Results.Unauthorized();
@@ -286,6 +286,8 @@ public static class CredentialEndpoints
             .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
             credential.ServiceName.Contains(searchCredential.ServiceName))
             .Select(credential => new SearchCredentialResultsDto(
+                credential.Id,
+                credential.Category.Id,
                 credential.Category.CategoryName,
                 credential.ServiceName,
                 credential.DateCreated,

@@ -99,7 +99,7 @@ public static class CategoryEndpoints
 
             var categorySameName = await dbContext.Categories
             .FirstOrDefaultAsync(
-                category => category.CategoryName == newCategory.CategoryName.Trim()
+                category => category.CategoryName == newCategory.CategoryName
                 && category.UserId == user.Id
             );
 
@@ -114,7 +114,7 @@ public static class CategoryEndpoints
 
             Category category = new()
             {
-                CategoryName = newCategory.CategoryName.Trim(),
+                CategoryName = newCategory.CategoryName,
                 User = user,
                 UserId = user.Id
             };
@@ -152,7 +152,7 @@ public static class CategoryEndpoints
             // Finds first matching category
             var findCategory = await dbContext.Categories
             .FirstOrDefaultAsync(c => c.Id == id && c.UserId == user.Id);
-            var name = updatedCategory.CategoryName.Trim();
+            var name = updatedCategory.CategoryName;
 
             if (name.Length == 0)
                 return Results.BadRequest("Name cannot be zero legnth!");

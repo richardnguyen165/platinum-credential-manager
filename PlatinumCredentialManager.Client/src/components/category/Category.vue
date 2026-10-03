@@ -23,7 +23,7 @@
             Create Credential
         </button>
         <button>
-            Import Credentials
+            Import Credentials As CSV
         </button>
         <button>
             Export As CSV

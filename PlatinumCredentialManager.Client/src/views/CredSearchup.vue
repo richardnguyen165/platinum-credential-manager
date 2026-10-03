@@ -3,17 +3,17 @@
     <form @submit.prevent="searchForCredentials">
         <p>Search Area</p>
         <div>
-            Category Name: <input type = "text" v-model.trim="categoryNameChoice" :id="CategoryName" />
-            Service Name: <input type = "text" v-model.trim="serviceNameChoice" :id="ServiceName" />
+            Category Name: <input type = "text" v-model.trim="data['CategoryName']"/>
+            Service Name: <input type = "text" v-model.trim="data['ServiceName']"/>
 
             Create/Update: 
-            <select name="createUpdate" :id="CreateUpdate" v-model="createUpdateChoice">
+            <select name="createUpdate" v-model="data['CreateUpdateChoice']">
                 <option value="Create">Create</option>
                 <option value="Update">Update</option>
             </select>
 
             Date Filter: 
-            <select name="dateFilter" :id="dateFilter" v-model="userDateChoice">
+            <select name="dateFilter" v-model="data['UserDateChoice']">
                 <option value="lastSevenDays">Last 7 Days</option>
                 <option value="lastThirtyDays">Last 30 Days</option>
                 <option value="lastYear">Last Year</option>
@@ -25,8 +25,8 @@
             <div v-show="userDateChoice === 'boundedByDates'">
                 Date Bound:
                <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/date --> 
-                Starting Date: <input type="date" v-model="startDateChoice" :id="startDate" name="start-date" min="2000-01-01" :max="todaysDate()" />
-                Ending Date: <input type="date" v-model="endDateChoice" :id="endDate" name="end-date" min="2000-01-01" :max="todaysDate()" />
+                Starting Date: <input type="date" v-model="data['StartDate']" name="start-date" min="2000-01-01" :max="todaysDate()" />
+                Ending Date: <input type="date" v-model="data['EndDate']" name="end-date" min="2000-01-01" :max="todaysDate()" />
             </div>
         </div>
         <div>
@@ -41,30 +41,49 @@
         No credentials found with the following inputs above!
     </div>
     <div v-else>
-        <!-- TODO: Display credentials -->
+        <div @click="redirectCredentialQuery(credential)" v-for="credential in credentials" :key="credential.id">
+            <div>
+                Service Name: {{ credential.serviceName }}
+            </div>
+            <div>
+                Category Name: {{ credential.categoryName }}
+            </div>
+            <div>
+                Date Created: {{ credential.dateCreated }}
+            </div>
+            <div>
+                Date Last Updated: {{ credential.dateLastUpdated }}
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
     import Header from '@/components/layout/Header.vue';
-    import { searchCredential } from '@/services/credentialService';
-    
-    import { ref } from 'vue';
+
+    import { searchCredential } from '@/services/credentialService';    
+    import { ref, reactive, onMounted } from 'vue';
     import { useRouter, useRoute } from 'vue-router';
-    import useAuth from '@/composables/useAuth';
+    import { credentialPath } from '@/utils/routes';
+    import { parsePayload } from '@/utils/parsePayload';
 
     const router = useRouter();
     const route = useRoute(); // for query parameters
-
+    const data = reactive({
+        'CategoryName': '',
+        'ServiceName': '',
+        'UserDateChoice': 'lastSevenDays',
+        'CreateUpdateChoice': 'Create',
+        'StartDate': null,
+        'EndDate': null
+    });
     const formErrorMessage = ref('');
-    const categoryNameChoice = ref('');
-    const serviceNameChoice = ref('');
-    const userDateChoice = ref('lastSevenDays');
-    const createUpdateChoice = ref('create');
-    const startDateChoice = ref(null);
-    const endDateChoice = ref(null);
     const credentials = ref(null);
-    const { authState } = useAuth()
+
+    // can extract user_id from url
+    function redirectCredentialQuery(credential){
+        router.push({ path: credentialPath(credential.credentialId, credential.categoryId, route.params.user_id), query: parsePayload(data) });
+    }
 
     // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
     function todaysDate(){
@@ -77,37 +96,34 @@
         return year + "-" + month + "-" + day;
     }
 
-    function parsePayload(){
-
-        return {
-            "CategoryName": categoryNameChoice.value || null,
-            "ServiceName": serviceNameChoice.value || null,
-            "CreateUpdateChoice": createUpdateChoice.value,
-            "UserDateChoice": userDateChoice.value,
-            "StartDate": startDateChoice.value || null,
-            "EndDate": endDateChoice.value || null
-        }
-    }
-
     async function searchForCredentials(){
         formErrorMessage.value = '';
 
-        if (userDateChoice.value === 'boundedByDates')
+        // Clear any possibity of date being sent if the user switches
+        if (data["UserDateChoice"] !== 'boundedByDates') {
+            data["StartDate"] = null;
+            data["EndDate"] = null;
+        }
+
+        else if (data["UserDateChoice"] === 'boundedByDates')
         {
-            if(!startDateChoice.value && !endDateChoice.value)
+            let startingDate = data["StartDate"];
+            let endingDate = data["EndDate"];
+
+            if(!startingDate && !endingDate)
             {
                 formErrorMessage.value = 'Please input at least one date!';
                 return;
             }
 
-            if(startDateChoice.value && endDateChoice.value && endDateChoice.value < startDateChoice.value)
+            if(startingDate && endingDate && endingDate < startingDate)
             {
                 formErrorMessage.value = 'Start date cannot be greater than end date';
                 return;
             }
         }
 
-        const payload = parsePayload();
+        const payload = parsePayload(data);
 
         credentials.value = await searchCredential(payload);
 
@@ -118,16 +134,18 @@
     // Nothing reads the query back (suppose you go back to this page, the refs could be empty)
     // route => reading where you are right now (suppose the user bookmarks the page, the refs restart, and since this query and not parameter, the page will be blank despite the query parameters)
     onMounted(async () => {
-        if (Object.keys(router.query).length === 0) return;
-        categoryNameChoice.value = route.query.CategoryName ?? '';
-        serviceNameChoice.value = route.query.ServiceName ?? '';
-        createUpdateChoice.value = route.query.CreateUpdateChoice ?? '';
-        userDateChoice.value = route.query.UserDateChoice ?? ''
-        startDateChoice.value = route.query.StartDate ?? '';
-        endDateChoice.value = route.query.EndDate ?? '';
+        if (Object.keys(route.query).length === 0) return;
+        data["CategoryName"] = route.query.CategoryName ?? '';
+        data["ServiceName"] = route.query.ServiceName ?? '';
+        data["CreateUpdateChoice"] = route.query.CreateUpdateChoice ?? 'lastSevenDays';
+        data["UserDateChoice"] = route.query.UserDateChoice ?? 'Create'
+        data["StartDate"] = route.query.StartDate ?? '';
+        data["EndDate"] = route.query.EndDate ?? '';
 
-        const payload = parsePayload();
+        const payload = parsePayload(data);
 
         credentials.value = await searchCredential(payload);
+
+        console.log(credentials.value);
     });
 </script>

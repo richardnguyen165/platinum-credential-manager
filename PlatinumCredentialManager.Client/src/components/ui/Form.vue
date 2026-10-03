@@ -15,7 +15,7 @@
 
 <script setup>
     import { computed } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRouter, useRoute } from 'vue-router';
     import Modal from './Modal.vue';
 
     import useAuth from '@/composables/useAuth.js';
@@ -34,6 +34,7 @@
     const emit = defineEmits(['close', 'rerun']);
 
     const router = useRouter();
+    const route = useRoute();
     const { authState } = useAuth()
 
     // Since action changes we need computed
@@ -107,7 +108,7 @@
                 break;
             case "delete-category":
                 await deleteCategory(id);
-                router.push(categoriesPath(authState.userId))
+                router.push(categoriesPath(route.params.user_id))
                 return;
             case "create-credential":
                 await postCredential(data);
@@ -117,7 +118,7 @@
                 break;
             case "delete-credential":
                 await deleteCredential(id);
-                router.push(categoryPath(categoryId, authState.userId));
+                router.push(categoryPath(categoryId, route.params.user_id));
                 return;
             default:
                 console.error(`Unknown form action ${action}`)

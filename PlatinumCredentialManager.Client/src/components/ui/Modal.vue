@@ -2,63 +2,74 @@
     <!-- helps annimates element appearing and disappearing-->
     <Transition name="modal">
         <div v-if="show" class="modal-background">
-            <div class="modal-container">
-                <!-- for title-->
-                <div class="modal-header">
-                    <slot name="header"></slot>
-                </div>
+            <Form @submit.prevent="collectData">
+                <div class="modal-container">
+                    <!-- for title-->
+                    <div class="modal-header">
+                        <slot name="header"></slot>
+                    </div>
 
-                <div class="modal-description">
-                    <slot name="description"></slot>
-                </div>
+                    <div class="modal-description">
+                        <slot name="description"></slot>
+                    </div>
 
-                <!-- for inputs -->
-                <div class="modal-body" v-for="input in inputs" :key="input.key" :required="input.required">
-                    {{ input.label }}
-                    <input :type="input.type" :id = "input.key" :value="input.value"/>
-                </div>
+                    <!-- for inputs -->
+                    <div class="modal-body" v-for="input in inputs" :key="input.key">
+                        {{ input.label }}
+                        <input :type="input.type" :id = "input.key" :required="input.required" v-model.trim="data[input.key]"/>
+                    </div>
 
-                <div class="modal-footer">
-                    <button @click="() => {
-                        emit('ok', collectData(), chooseId())
-                        emit('close')
-                    }">OK</button>
-                    <button @click="emit('close')">Cancel</button>
+                    <div class="modal-footer">
+                        <button type="submit" @click="() => {
+                            emit('ok', collectData(), chooseId())
+                            emit('close')
+                        }">OK</button>
+                        <button @click="emit('close')">Cancel</button>
+                    </div>
                 </div>
-            </div>
+            </Form>
         </div>
     </Transition>
 </template>
 
 <script setup>
-// Sources
-// https://vuejs.org/examples/#modal
-// https://vuejs.org/guide/built-ins/transition.html
+    import { reactive } from 'vue';
+    const data = reactive({});
+    // Use reactive to store all of the input keys, and their input values
 
-const { show, inputs, categoryId, credentialId } = defineProps({
-    show: Boolean,
-    inputs: Object,
-    categoryId: Number,
-    credentialId: Number
-});
+    // Notes for self:
+    /* 
+    v-model:trim is shorthand for
 
-// Passes up ok and close event
-const emit = defineEmits(['ok', 'close']);
+    <input
+        :value="data[input.key]"
+        @input-"data[input.key] = $event.target.value.trim()"
+    />
+    */
 
-function collectData() {
-    let data = {};
-    for (const input of inputs){
-        let element = document.getElementById(input['key']);
-        data[input['key']] = element.value;
+    // Sources
+    // https://vuejs.org/examples/#modal
+    // https://vuejs.org/guide/built-ins/transition.html
+
+    const { show, inputs, categoryId, credentialId } = defineProps({
+        show: Boolean,
+        inputs: Object,
+        categoryId: Number,
+        credentialId: Number
+    });
+
+    // Passes up ok and close event
+    const emit = defineEmits(['ok', 'close']);
+
+    function collectData() {
+        // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
+        if (categoryId != null) data["categoryId"] = categoryId;
+        return data;
     }
-    // change from !== to != because of categoryId is undefined it returns true => convert to loosy
-    if (categoryId != null) data["categoryId"] = categoryId;
-    return data;
-}
 
-function chooseId() {
-    return credentialId || categoryId;
-}
+    function chooseId() {
+        return credentialId || categoryId;
+    }
 </script>
 
 <style>
