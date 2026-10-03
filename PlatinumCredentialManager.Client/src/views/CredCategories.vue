@@ -23,13 +23,12 @@
 
 <script setup>
     import { onMounted, ref } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRouter, useRoute } from 'vue-router';
 
     import Form from '@/components/ui/Form.vue';
     import Header from '@/components/layout/Header.vue';
 
     import { getUser } from '@/services/userService';
-    import useAuth from '@/composables/useAuth';
     import { categoryPath } from '@/utils/routes';
     import { useModal } from '@/composables/useModal';
 
@@ -39,10 +38,10 @@
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const router = useRouter();
-    const { authState } = useAuth();
+    const route = useRoute();
 
     function redirectCredentialCategory(categoryId) {
-        router.push(categoryPath(categoryId, authState.userId));
+        router.push(categoryPath(categoryId, route.params.user_id));
     };
 
     async function categoryLoaderHelper() {

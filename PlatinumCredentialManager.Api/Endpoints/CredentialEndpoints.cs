@@ -10,6 +10,53 @@ public static class CredentialEndpoints
 {
     private const string GetCredEndpointName = "GetCred";
 
+    private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, User user, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
+        
+        int decrementDateAmount = 0;
+        
+        IQueryable<Credential> data = dbContext.Credentials.Where(credential => credential.Category.UserId == user.Id);
+
+        switch(UserDateChoice) 
+        {
+            case "lastSevenDays":
+                decrementDateAmount = -6; // -6 + today = 7 days back
+                break;
+            case "lastThirtyDays":
+                decrementDateAmount = -29;
+                break;
+            case "lastYear":
+                decrementDateAmount = -1; // using -365 doesnt account for leap years
+                break;
+            case "boundedByDates":
+                if (StartDate != null)
+                {
+                    data = data.Where(credential => DateOnly.Parse(StartDate) <= (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated));
+                }
+
+                //EndDate
+                if (EndDate != null)
+                {
+                    data = data.Where(credential => (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) <= DateOnly.Parse(EndDate));
+                }
+
+                return data;
+
+            default:
+                return data;
+            
+        }
+
+        var todaysDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly decrementedDate;
+
+        if (UserDateChoice != "lastYear") decrementedDate = todaysDate.AddDays(decrementDateAmount);
+        else decrementedDate = todaysDate.AddYears(-1);
+
+        data = data.Where(credential => decrementedDate <= (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) && (CreateUpdateChoice == "Create" ? credential.DateCreated : credential.DateLastUpdated) <= todaysDate);
+
+        return data;
+    }
+
     public static void MapCredentialEndpoints(this WebApplication app)
     {
         var credentialURLGroup = app.MapGroup("/creds").RequireAuthorization();
@@ -101,11 +148,13 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
+            var newCredentialServiceName = newCredential.ServiceName;
+
             // Check if there exists a credential of the same name in the same category
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential => 
                 (credential.CategoryId == newCredential.CategoryId) 
-                && (credential.ServiceName == newCredential.ServiceName)
+                && (credential.ServiceName == newCredentialServiceName)
                 && credential.Category.UserId == user.Id
             );
 
@@ -117,7 +166,7 @@ public static class CredentialEndpoints
             Credential credential = new()
             {
                 Username = newCredential.Username ?? "",
-                ServiceName = newCredential.ServiceName,
+                ServiceName = newCredentialServiceName,
                 Password = newCredential.Password,
                 CategoryId = newCredential.CategoryId,
             };
@@ -130,7 +179,7 @@ public static class CredentialEndpoints
 
             GetDetailedCredentialDto newCredentialDetails = new(
                 credential.Id,
-                credential.ServiceName,
+                newCredentialServiceName,
                 credential.Username,
                 credential.Password,
                 credential.DateCreated,
@@ -160,12 +209,14 @@ public static class CredentialEndpoints
                 return Results.NotFound();
             }
 
+            var updatedCredentialServiceName = updatedCredential.ServiceName;
+
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential =>
                 // Check if any other credential (EXCLUDING itself, has the same name)
                 credential.Id != id
                 && (credential.CategoryId == updatedCredential.CategoryId)
-                && (credential.ServiceName == updatedCredential.ServiceName)
+                && (credential.ServiceName == updatedCredentialServiceName)
                 && credential.Category.UserId == user.Id
             );
             bool userOwnsCategory = await dbContext.Categories.AnyAsync(c => c.Id == updatedCredential.CategoryId && c.UserId == user.Id);
@@ -187,7 +238,7 @@ public static class CredentialEndpoints
 
             findCredential.CategoryId = updatedCredential.CategoryId;
 
-            findCredential.ServiceName = updatedCredential.ServiceName;
+            findCredential.ServiceName = updatedCredentialServiceName;
 
             // Username can be blank
             findCredential.Username = updatedCredential.Username ?? "";
@@ -218,5 +269,34 @@ public static class CredentialEndpoints
 
             return Results.NoContent();
         });
+
+        credentialURLGroup.MapGet("/search", async ([AsParameters] SearchCredentialDto searchCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+            
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
+            IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user, searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate, searchCredential.EndDate);
+
+            return Results.Ok(await dateLINQ
+            .Where(credential => searchCredential.CategoryName == null || credential.Category.CategoryName == searchCredential.CategoryName ||credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) || credential.Category.CategoryName.Contains(searchCredential.CategoryName))
+            .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
+            credential.ServiceName.Contains(searchCredential.ServiceName))
+            .Select(credential => new SearchCredentialResultsDto(
+                credential.Id,
+                credential.Category.Id,
+                credential.Category.CategoryName,
+                credential.ServiceName,
+                credential.DateCreated,
+                credential.DateLastUpdated
+            ))
+            .AsNoTracking()
+            .ToListAsync());
+        });
+
+
     }
 }

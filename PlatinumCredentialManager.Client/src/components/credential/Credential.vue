@@ -7,8 +7,8 @@
         Error: Loading credential failed!
     </div>
     <div v-else>
-        <button @click="goBackToCategory()">
-            Exit Back to Category
+        <button @click="goBackPrevious">
+            Go Back
         </button>
         <button @click="createModal('delete-credential')">
             Delete Credential
@@ -17,10 +17,7 @@
             Edit Credential
         </button>
         <button>
-            Import Credentials
-        </button>
-        <button>
-            Export Credentials
+            Export Credential as CSV
         </button>
         <div>
             <p>
@@ -48,21 +45,22 @@
 <script setup>
 
     import { ref, onMounted, reactive } from 'vue'; 
-    import { useRouter } from 'vue-router';
+    import { useRouter, useRoute } from 'vue-router';
     
     import Form from '../ui/Form.vue';
     import Header from '../layout/Header.vue';
 
     import { getCredential } from '@/services/credentialService.js';
-    import { categoryPath } from '@/utils/routes.js';
+    import { categoryPath, searchUpPath } from '@/utils/routes.js';
     import { useModal } from '@/composables/useModal.js';
 
     const { showModal, action, createModal, closeModal } = useModal();
 
-    const { categoryId, credId, userId } = defineProps({
+    const { categoryId, credId, userId, query } = defineProps({
         categoryId: Number,
         credId: Number,
-        userId: Number
+        userId: Number,
+        query: Object
     });
 
     const router = useRouter();
@@ -70,10 +68,15 @@
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const showPassword = ref(false);
-    const currentEntries = reactive({})
+    const currentEntries = reactive({});
 
-    function goBackToCategory() {
-        router.push(categoryPath(categoryId, userId));
+    function goBackPrevious() {
+        if (Object.keys(query).length > 0){
+            router.push({ path: searchUpPath(userId), query });
+        }
+        else {
+            router.push(categoryPath(categoryId, userId));
+        }
     };
 
     async function credentialLoaderHelper() {
@@ -86,7 +89,7 @@
             currentEntries.DateCreated = data.dateCreated;
             currentEntries.DateLastUpdated = data.dateLastUpdated
         } catch (error) {
-            console.catch('Failed to retrive credential', error);
+            console.error('Failed to retrive credential', error);
             successfullyLoaded.value = false;
         } finally {
             isLoading.value = false;
