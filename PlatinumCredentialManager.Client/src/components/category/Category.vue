@@ -48,7 +48,7 @@
     import Form from '../ui/Form.vue';
 
     import { onMounted, ref, reactive } from 'vue'
-    import { useRouter } from 'vue-router'
+    import { useRouter, useRoute } from 'vue-router'
     import { getCategory } from '@/services/categoryService.js';
     import { credentialPath, categoriesPath } from '@/utils/routes.js';
     import { useModal } from '@/composables/useModal.js';
@@ -60,19 +60,19 @@
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
     const router = useRouter();
+    const route = useRoute();
     const currentEntries = reactive({});
 
     function redirectBackToAllCategories(){
-        router.push(categoriesPath(userId));
+        router.push(categoriesPath(route.params.user_id));
     }
 
     function redirectCredential(credentialId){
-        router.push(credentialPath(credentialId, categoryId, userId));
+        router.push(credentialPath(credentialId, categoryId, route.params.user_id));
     }
 
-    const { categoryId, userId } = defineProps({
-        categoryId: Number,
-        userId: Number
+    const { categoryId } = defineProps({
+        categoryId: Number
     });
 
     async function loaderHelper() {

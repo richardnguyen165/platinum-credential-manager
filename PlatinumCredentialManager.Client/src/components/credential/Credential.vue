@@ -56,14 +56,14 @@
 
     const { showModal, action, createModal, closeModal } = useModal();
 
-    const { categoryId, credId, userId, query } = defineProps({
+    const { categoryId, credId, query } = defineProps({
         categoryId: Number,
         credId: Number,
-        userId: Number,
         query: Object
     });
 
     const router = useRouter();
+    const route = useRoute();
 
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
@@ -72,10 +72,10 @@
 
     function goBackPrevious() {
         if (Object.keys(query).length > 0){
-            router.push({ path: searchUpPath(userId), query });
+            router.push({ path: searchUpPath(route.params.user_id), query });
         }
         else {
-            router.push(categoryPath(categoryId, userId));
+            router.push(categoryPath(categoryId, route.params.user_id));
         }
     };
 

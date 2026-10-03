@@ -15,8 +15,8 @@ const router = createRouter({
         { path: '/', component: HomePage},
         { path: '/cred-homepage/:user_id', component: CredHomepage, meta: { requiresAuth: true }},
         { path: '/cred-categories/:user_id',  component: CredCategories, meta: { requiresAuth: true }},
-        { path: '/cred-categories/:category_id/:user_id',  component: Category, meta: { requiresAuth: true }, props: route => ({ categoryId: Number(route.params.category_id), userId: Number(route.params.user_id)})},
-        { path: '/cred-categories/:cred_id/:category_id/:user_id',  component: Credential, meta: { requiresAuth: true }, props: route => ({ credId: Number(route.params.cred_id), categoryId: Number(route.params.category_id), userId: Number(route.params.user_id), query: route.query })},
+        { path: '/cred-categories/:category_id/:user_id',  component: Category, meta: { requiresAuth: true }, props: route => ({ categoryId: Number(route.params.category_id)})},
+        { path: '/cred-categories/:cred_id/:category_id/:user_id',  component: Credential, meta: { requiresAuth: true }, props: route => ({ credId: Number(route.params.cred_id), categoryId: Number(route.params.category_id), query: route.query })},
         { path: '/cred-searchup/:user_id', component: CredSearchup, meta: { requiresAuth: true }},
         { path: '/:pathMatch(.*)*', component: NotFound }
     ]
