@@ -84,7 +84,7 @@
             inputPageNumber.value = Math.round(inputPageNumber.value);
         }
 
-        else if (inputPageNumber.value > allData.value.length) {
+        if (inputPageNumber.value > allData.value.length) {
             inputPageNumber.value = allData.value.length;
             pageNumber.value = inputPageNumber.value;
             currentData.value = allData.value[pageNumber.value - 1];
