@@ -6,7 +6,7 @@
     <!-- Things needed, the grid, (determine if we need to show all the categories, all the credentials in a catgory, or the searched category) (DONE) -->
 
     <!-- For pagination, we need, a back arrow, a page number, a front arrow. We need to store the page to grey out the arrow when it is at a bound. Additionally page input is accepted. -->
-     
+
      <div v-if="action === 'allCategories'">
         <div v-for="category in currentData" :key="category.id" @click="redirectToCredentialsOfCategory(category.id)">
             {{ category.categoryName }}
@@ -79,7 +79,12 @@
     const route = useRoute();
 
     function goToPage(){
-        if (inputPageNumber.value > allData.value.length) {
+        if (!Number.isInteger(inputPageNumber.value)) 
+        {
+            inputPageNumber.value = Math.round(inputPageNumber.value);
+        }
+
+        else if (inputPageNumber.value > allData.value.length) {
             inputPageNumber.value = allData.value.length;
             pageNumber.value = inputPageNumber.value;
             currentData.value = allData.value[pageNumber.value - 1];
