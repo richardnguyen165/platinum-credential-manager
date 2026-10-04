@@ -14,22 +14,19 @@
         <button>Import Category and Credentials</button>
         <button>Export Category and Credentials</button>
         <!-- Only shows category name -->
-        <div v-for="category in allCategories" :key="category.id" @click="redirectCredentialCategory(category.id)">
-            {{ category.categoryName }}
-        </div>
+        <PaginationGrid :rows="allCategories" :action="'allCategories'"/>
         <Form :show="showModal" :action="action"  @close="closeModal" @rerun = "categoryLoaderHelper"/>
     </div>
 </template>
 
 <script setup>
     import { onMounted, ref } from 'vue';
-    import { useRouter, useRoute } from 'vue-router';
 
     import Form from '@/components/ui/Form.vue';
     import Header from '@/components/layout/Header.vue';
+    import PaginationGrid from '@/components/ui/PaginationGrid.vue';
 
     import { getUser } from '@/services/userService';
-    import { categoryPath } from '@/utils/routes';
     import { useModal } from '@/composables/useModal';
 
     const { showModal, action, createModal, closeModal } = useModal();
@@ -37,12 +34,6 @@
     const allCategories = ref(null);
     const isLoading = ref(true);
     const successfullyLoaded = ref(true);
-    const router = useRouter();
-    const route = useRoute();
-
-    function redirectCredentialCategory(categoryId) {
-        router.push(categoryPath(categoryId, route.params.user_id));
-    };
 
     async function categoryLoaderHelper() {
         try {

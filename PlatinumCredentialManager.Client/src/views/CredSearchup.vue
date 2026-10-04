@@ -22,7 +22,7 @@
             </select>
 
 
-            <div v-show="userDateChoice === 'boundedByDates'">
+            <div v-show="data['UserDateChoice'] === 'boundedByDates'">
                 Date Bound:
                <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/date --> 
                 Starting Date: <input type="date" v-model="data['StartDate']" name="start-date" min="2000-01-01" :max="todaysDate()" />
@@ -41,30 +41,18 @@
         No credentials found with the following inputs above!
     </div>
     <div v-else>
-        <div @click="redirectCredentialQuery(credential)" v-for="credential in credentials" :key="credential.id">
-            <div>
-                Service Name: {{ credential.serviceName }}
-            </div>
-            <div>
-                Category Name: {{ credential.categoryName }}
-            </div>
-            <div>
-                Date Created: {{ credential.dateCreated }}
-            </div>
-            <div>
-                Date Last Updated: {{ credential.dateLastUpdated }}
-            </div>
-        </div>
+        <div> Found {{ credentials.length }} result{{ credentials.length !== 1 ? 's' : '' }}!</div>
+        <PaginationGrid :rows="credentials" :params="data" action="searchup"/>
     </div>
 </template>
 
 <script setup>
     import Header from '@/components/layout/Header.vue';
+    import PaginationGrid from '@/components/ui/PaginationGrid.vue';
 
     import { searchCredential } from '@/services/credentialService';    
     import { ref, reactive, onMounted } from 'vue';
     import { useRouter, useRoute } from 'vue-router';
-    import { credentialPath } from '@/utils/routes';
     import { parsePayload } from '@/utils/parsePayload';
 
     const router = useRouter();
@@ -78,12 +66,7 @@
         'EndDate': null
     });
     const formErrorMessage = ref('');
-    const credentials = ref(null);
-
-    // can extract user_id from url
-    function redirectCredentialQuery(credential){
-        router.push({ path: credentialPath(credential.credentialId, credential.categoryId, route.params.user_id), query: parsePayload(data) });
-    }
+    const credentials = ref([]);
 
     // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
     function todaysDate(){
@@ -97,6 +80,9 @@
     }
 
     async function searchForCredentials(){
+
+        credentials.value = []; // reset
+
         formErrorMessage.value = '';
 
         // Clear any possibity of date being sent if the user switches
@@ -145,7 +131,5 @@
         const payload = parsePayload(data);
 
         credentials.value = await searchCredential(payload);
-
-        console.log(credentials.value);
     });
 </script>

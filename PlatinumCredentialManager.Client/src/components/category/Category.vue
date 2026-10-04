@@ -28,17 +28,7 @@
         <button>
             Export As CSV
         </button>
-        <div @click="redirectCredential(credential.id)" v-for="credential in allCredentials" :key="credential.id">
-            <div>
-                Service Name: {{ credential.serviceName }}
-            </div>
-            <div>
-                Date Created: {{ credential.dateCreated }}
-            </div>
-            <div>
-                Date Last Updated: {{ credential.dateLastUpdated }}
-            </div>
-        </div>
+        <PaginationGrid :categoryId="categoryId" :rows="allCredentials" />
         <Form :show="showModal" :categoryId="categoryId" :action="action"  :currentEntries="currentEntries" @close="closeModal" @rerun = "loaderHelper"/>
     </div>
 </template>
@@ -46,11 +36,12 @@
 <script setup>
     import Header from '../layout/Header.vue';
     import Form from '../ui/Form.vue';
+    import PaginationGrid from '../ui/PaginationGrid.vue';
 
     import { onMounted, ref, reactive } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { getCategory } from '@/services/categoryService.js';
-    import { credentialPath, categoriesPath } from '@/utils/routes.js';
+    import { categoriesPath } from '@/utils/routes.js';
     import { useModal } from '@/composables/useModal.js';
 
     const { showModal, action, createModal, closeModal } = useModal();
@@ -65,10 +56,6 @@
 
     function redirectBackToAllCategories(){
         router.push(categoriesPath(route.params.user_id));
-    }
-
-    function redirectCredential(credentialId){
-        router.push(credentialPath(credentialId, categoryId, route.params.user_id));
     }
 
     const { categoryId } = defineProps({
