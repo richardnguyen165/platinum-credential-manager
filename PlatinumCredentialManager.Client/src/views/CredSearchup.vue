@@ -41,7 +41,7 @@
         No credentials found with the following inputs above!
     </div>
     <div v-else>
-        <div> Found {{ credentials.length }} result{{ credentials.length !== 1 ? 's' : '' }}!</div>
+        <div> Found {{ credentials.length }} result{{ credentials.length !== 1 ? 's' : '' }}!k</div>
         <PaginationGrid :rows="credentials" :params="data" action="searchup"/>
     </div>
 </template>
