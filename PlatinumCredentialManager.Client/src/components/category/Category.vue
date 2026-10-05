@@ -28,7 +28,7 @@
         <button>
             Export As CSV
         </button>
-        <PaginationGrid :categoryId="categoryId" :rows="allCredentials" />
+        <PaginationGrid :categoryId="categoryId" :rows="allCredentials" :action="'allCredentials'"/>
         <Form :show="showModal" :categoryId="categoryId" :action="action"  :currentEntries="currentEntries" @close="closeModal" @rerun = "loaderHelper"/>
     </div>
 </template>

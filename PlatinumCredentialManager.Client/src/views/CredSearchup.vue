@@ -21,7 +21,6 @@
                 <option value="boundedByDates">Bounded by Dates</option>
             </select>
 
-
             <div v-show="data['UserDateChoice'] === 'boundedByDates'">
                 Date Bound:
                <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/date --> 
@@ -42,7 +41,7 @@
     </div>
     <div v-else>
         <div> Found {{ credentials.length }} result{{ credentials.length !== 1 ? 's' : '' }}!k</div>
-        <PaginationGrid :rows="credentials" :params="data" action="searchup"/>
+        <PaginationGrid :rows="credentials" :params="data" action="searchup" :credential-match="data.ServiceName"/>
     </div>
 </template>
 
@@ -67,6 +66,7 @@
     });
     const formErrorMessage = ref('');
     const credentials = ref([]);
+    const submittedServiceName = ref('');
 
     // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
     function todaysDate(){
@@ -112,6 +112,9 @@
         const payload = parsePayload(data);
 
         credentials.value = await searchCredential(payload);
+
+        // Updates the sort, since without it, it would use the other service name value, and it would keep updating as typing (only change it when submitting the form)
+        submittedServiceName.value = payload['ServiceName'] ?? '';
 
         // https://serversideup.net/blog/url-query-parameters-with-javascript-vue-2-and-vue-3/
         router.push({ query: payload })

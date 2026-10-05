@@ -8,15 +8,15 @@
 
   Sort Options:
   <select name="sortFilter" v-model="sortOption">
-    <option value="azAscendingService">Service Name (Ascending Order)</option>
-    <option value="azDescendingService">Service Name (Descending Order)</option>
-    <option value="azAscendingCategory">Category Name (Ascending Order)</option>
-    <option value="azDescendingCategory">Category Name (Descending Order)</option>
-    <option value="dateCreatedAscending">Date Created (Ascending Order)</option>
-    <option value="dateCreatedDescending">Date Created (Descending Order)</option>
-    <option value="dateUpdatedAscending">Date Updated (Ascending Order)r</option>
-    <option value="dateUpdatedDescending">Date Updated (Descending Order)</option>
-
+    <option v-if="action === 'allCredentials' || action === 'searchup'" value="azAscendingService">Service Name (Ascending Order)</option>
+    <option v-if="action === 'allCredentials' || action === 'searchup'" value="azDescendingService">Service Name (Descending Order)</option>
+    <option v-if="action === 'allCategories' || action === 'searchup'" value="azAscendingCategory">Category Name (Ascending Order)</option>
+    <option v-if="action === 'allCategories' || action === 'searchup'" value="azDescendingCategory">Category Name (Descending Order)</option>
+    <option v-if="action === 'allCredentials' || action === 'searchup'" value="dateCreatedAscending">Date Created (Ascending Order)</option>
+    <option v-if="action === 'allCredentials' || action === 'searchup'" value="dateCreatedDescending">Date Created (Descending Order)</option>
+    <option v-if="action === 'allCredentials' || action === 'searchup'" value="dateUpdatedAscending">Date Updated (Ascending Order)r</option>
+    <option v-if="action === 'allCredentials' || action === 'searchup'" value="dateUpdatedDescending">Date Updated (Descending Order)</option>
+    <option v-if="action === 'searchup'" value="byMatchCredential">By Match (Credential)</option>
   </select>
 
   <div v-if="action === 'allCategories'">
@@ -42,7 +42,7 @@
     </div>
   </div>
 
-  <div v-else>
+  <div v-else-if="action === 'allCredentials'">
     <div
       @click="redirectCredential(credential.id)"
       v-for="credential in currentData"
@@ -70,28 +70,36 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import { paginateData } from "@/utils/pagination";
 import { categoryPath, credentialPath } from "@/utils/routes.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 
-const { categoryId, rows, action, params } = defineProps({
+const { categoryId, rows, action, params, credentialMatch } = defineProps({
   categoryId: Number,
   rows: Array,
   action: String,
   params: Object,
+  credentialMatch: String
 });
 
 const allData = ref([]);
 const currentData = ref([]);
 const pageNumber = ref(1);
 const inputPageNumber = ref(pageNumber.value);
-const sortOption = ref('');
+const sortOption = ref('azAscendingService');
 
 const router = useRouter();
 const route = useRoute();
+
+watch(sortOption, () => {
+  allData.value = sortDecider(sortOption.value, allData.value, credentialMatch);
+  pageNumber.value = 1;
+  currentData.value = allData.value[pageNumber.value - 1];
+  inputPageNumber.value = pageNumber.value;
+});
 
 function goToPage() {
   if (!Number.isInteger(inputPageNumber.value)) {
@@ -153,7 +161,7 @@ function redirectToCredentialsOfCategory(categoryId) {
 
 // First, when we reach onMounted => we have the data => we need to first paginate it
 onMounted(() => {
-  allData.value = paginateData(rows);
+  allData.value = sortDecider(sortOption.value, paginateData(rows));
   currentData.value = allData.value[pageNumber.value - 1];
 });
 </script>
