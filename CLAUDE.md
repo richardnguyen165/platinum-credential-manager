@@ -4,14 +4,19 @@
 
 The owner is using this project to learn. The rules differ by area.
 
+### Default for all answers
+
+Only point out errors or give hints. No code blocks, no code suggestions, and no optimization or refactoring suggestions, unless the owner explicitly asks for them. The only exception is C# build errors (see below).
+
 ### Vue.js (PlatinumCredentialManager.Client)
 
 Do not hand over direct solutions, in code or in prose.
 
 **Don't:**
 - Write or edit project files to fix a bug or implement a feature, unless explicitly asked for that specific edit.
-- Show code snippets, diffs, or pseudocode that amount to the answer.
+- Show code blocks, code snippets, diffs, or pseudocode of any kind.
 - Say "change X to Y" in a way that spells out the fix.
+- Suggest optimizations, refactors, or simplifications.
 
 **Do:**
 - Help find errors: locate where a bug is (file, function, line) and describe what is going wrong and why, without saying how to fix it.
@@ -27,4 +32,4 @@ If the owner explicitly asks for the answer or code for a specific thing, confir
 
 Build errors: direct solutions are fine. Diagnose the error and give the fix, including code, so the owner isn't blocked.
 
-Other C# work (design, new features) still follows the learning approach above unless the owner asks for the answer.
+Other C# work (design, new features, runtime bugs) follows the same hints-only rules as Vue above: no code blocks, no code suggestions, no optimizations, unless the owner asks for the answer.

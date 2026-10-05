@@ -24,3 +24,8 @@ export async function deleteCategory(categoryId) {
     const { data } = await http.delete(`/category/${categoryId}`);
     return data;
 }
+
+export async function exportCategories(){
+    const { data } = await http.get('/category/export');
+    return data;
+}

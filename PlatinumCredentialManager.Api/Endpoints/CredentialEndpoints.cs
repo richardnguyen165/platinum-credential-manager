@@ -61,6 +61,33 @@ public static class CredentialEndpoints
     {
         var credentialURLGroup = app.MapGroup("/creds").RequireAuthorization();
 
+        credentialURLGroup("/export/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
+            // Export all credentials in a specific categoryid for csv export
+            return Results.Ok(await dbContext.Credentials
+            .Where(credential => credential.Category.UserId == user.Id)
+            .Where(credential => credential.Category.CategoryId == id)
+            .Select(credential =>
+            new ExportAllCredentialsDto(
+                    credential.Id,
+                    credential.ServiceName,
+                    credential.Username,
+                    credential.Password,
+                    credential.DateCreated,
+                    credential.DateLastUpdated
+                )
+            )
+            .AsNoTracking()
+            .ToListAsync());
+        });
+
         // READ/GET All users credentials in (GET /creds) (For dashboard view)
         // For a screen that displays all the credentials (not the screen for each category)
         credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext, ClaimsPrincipal principal) =>

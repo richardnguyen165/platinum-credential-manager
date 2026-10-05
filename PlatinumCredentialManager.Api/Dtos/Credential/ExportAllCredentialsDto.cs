@@ -1,0 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace PlatinumCredentialManager.Api.Dtos.Credential;
+
+public record class ExportAllCredentialsDto
+(
+    [Required] int Id,
+    [Required][StringLength(100)] string ServiceName,
+    [Required][StringLength(100)] string Username,
+    [Required] string Password,
+    [Required] DateOnly DateCreated,
+    [Required] DateOnly DateLastUpdated
+);

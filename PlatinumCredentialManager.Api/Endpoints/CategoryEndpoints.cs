@@ -49,6 +49,35 @@ public static class CategoryEndpoints
             .ToListAsync());
         });
 
+        // needed for exporting everything as a csv
+        categoryURLGroup.MapGet("/export", async (CredsStoreContext dbContext, ClaimsPrincipal principal) => {
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
+            var allCategoryInformation = await dbContext.Categories
+            .Select(c => new ExportAllCategoriesDto(
+                c.Id,
+                c.CategoryName,
+                c.Credentials.Select(cr => new ExportAllCredentialsDto(
+                    cr.Id,
+                    cr.ServiceName,
+                    cr.Username,
+                    cr.Password,
+                    cr.DateCreated,
+                    cr.DateLastUpdated
+                )).ToList()))
+            .AsNoTracking()
+            .ToList();
+
+            // Returns all categorys with their credentials
+            return Results.Ok(allCategoryInformation);
+        });
+
         // GET a specific category (when we click on a specific category, we will all of its details (credentials) and its name  -> important for frontend)
         categoryURLGroup.MapGet("/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
