@@ -6,8 +6,8 @@
 
   <!-- For pagination, we need, a back arrow, a page number, a front arrow. We need to store the page to grey out the arrow when it is at a bound. Additionally page input is accepted. (DONE) -->
 
-  Sort Options:
-  <select name="sortFilter" v-model="sortOption">
+  <label>Sort Options:</label>
+  <select name="sortFilter" v-model="sortOption" :id="sortFilter">
     <option v-if="action === 'allCredentials' || action === 'searchup'" value="azAscendingService">Service Name (Ascending Order)</option>
     <option v-if="action === 'allCredentials' || action === 'searchup'" value="azDescendingService">Service Name (Descending Order)</option>
     <option v-if="action === 'allCategories' || action === 'searchup'" value="azAscendingCategory">Category Name (Ascending Order)</option>
@@ -76,6 +76,7 @@ import { useRouter, useRoute } from "vue-router";
 import { paginateData } from "@/utils/pagination";
 import { categoryPath, credentialPath } from "@/utils/routes.js";
 import { parsePayload } from "@/utils/parsePayload.js";
+import { sortDecider } from "@/utils/sort";
 
 const { categoryId, rows, action, params, credentialMatch } = defineProps({
   categoryId: Number,
@@ -89,13 +90,13 @@ const allData = ref([]);
 const currentData = ref([]);
 const pageNumber = ref(1);
 const inputPageNumber = ref(pageNumber.value);
-const sortOption = ref('azAscendingService');
+const sortOption = ref('');
 
 const router = useRouter();
 const route = useRoute();
 
 watch(sortOption, () => {
-  allData.value = sortDecider(sortOption.value, allData.value, credentialMatch);
+  allData.value = paginateData(sortDecider(sortOption.value, rows, credentialMatch));
   pageNumber.value = 1;
   currentData.value = allData.value[pageNumber.value - 1];
   inputPageNumber.value = pageNumber.value;
@@ -161,7 +162,6 @@ function redirectToCredentialsOfCategory(categoryId) {
 
 // First, when we reach onMounted => we have the data => we need to first paginate it
 onMounted(() => {
-  allData.value = sortDecider(sortOption.value, paginateData(rows));
-  currentData.value = allData.value[pageNumber.value - 1];
+  sortOption.value = action === 'allCategories' ? 'azAscendingCategory' :  'azAscendingService';
 });
 </script>

@@ -3,17 +3,12 @@ export function sortDecider(sortFilter, data, credentialMatch = null){
     if (sortFilter === "azAscendingService") sortServiceNameAscending(copiedData);
     else if (sortFilter === "azDescendingService") sortServiceNameDescending(copiedData);
     else if (sortFilter === "azAscendingCategory") sortCategoryNameAscending(copiedData);
-    else if (sortFilter === "azDescendingCategory")
-    sortCategoryNameDescending(copiedData);
-    else if (sortFilter === "dateCreatedAscending")
-    sortDateCreatedAscending(copiedData);
-    else if (sortFilter === "dateCreatedDescending")
-    sortDateCreatedDescending(copiedData);
-    else if (sortFilter === "dateUpdatedAscending")
-    sortDateUpdatedAscending(copiedData);
-    else if (sortFilter === "dateUpdatedDescending")
-    sortDateUpdatedDescending(copiedData);
-    else sortByMatchCredential(copiedData, credentialMatch);
+    else if (sortFilter === "azDescendingCategory") sortCategoryNameDescending(copiedData);
+    else if (sortFilter === "dateCreatedAscending") sortDateCreatedAscending(copiedData);
+    else if (sortFilter === "dateCreatedDescending") sortDateCreatedDescending(copiedData);
+    else if (sortFilter === "dateUpdatedAscending") sortDateUpdatedAscending(copiedData);
+    else if (sortFilter === "dateUpdatedDescending") sortDateUpdatedDescending(copiedData);
+    else if (sortFilter === "searchup") sortByMatchCredential(copiedData, credentialMatch);
     return copiedData;
 };
 
@@ -57,10 +52,10 @@ function sortByMatchCredential(data, credentialMatch){
         let aRank = 2, bRank = 2;
 
         if (a.serviceName === credentialMatch) aRank = 0;
-        else if (a.serviceName.StartsWith(credentialMatch)) aRank = 1;
+        else if (a.serviceName.startsWith(credentialMatch)) aRank = 1;
 
         if (b.serviceName === credentialMatch) bRank = 0;
-        else if (b.serviceName.StartsWith(credentialMatch)) bRank = 1;
+        else if (b.serviceName.startsWith(credentialMatch)) bRank = 1;
 
         // if they equal each other, 0 => evaluate right hand side
         return aRank - bRank || a.serviceName.toLowerCase().localeCompare(b.serviceName.toLowerCase());
