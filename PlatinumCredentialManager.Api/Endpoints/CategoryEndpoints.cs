@@ -60,6 +60,7 @@ public static class CategoryEndpoints
             if (user is null) return Results.Unauthorized();
 
             var allCategoryInformation = await dbContext.Categories
+            .Where(c => c.UserId == user.Id)
             .Select(c => new ExportAllCategoriesDto(
                 c.Id,
                 c.CategoryName,

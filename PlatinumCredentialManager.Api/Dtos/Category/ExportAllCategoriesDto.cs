@@ -7,5 +7,5 @@ public record class ExportAllCategoriesDto
 (
     [Required] int Id,
     [Required][StringLength(100)] string CategoryName,
-    [Required] ICollection<ExportCredentialsDto> Credentials
+    [Required] ICollection<ExportAllCredentialsDto> Credentials
 );

@@ -61,7 +61,7 @@ public static class CredentialEndpoints
     {
         var credentialURLGroup = app.MapGroup("/creds").RequireAuthorization();
 
-        credentialURLGroup("/export/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
+        credentialURLGroup.MapGet("/export/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (keycloakId is null) return Results.Unauthorized();
@@ -73,7 +73,7 @@ public static class CredentialEndpoints
             // Export all credentials in a specific categoryid for csv export
             return Results.Ok(await dbContext.Credentials
             .Where(credential => credential.Category.UserId == user.Id)
-            .Where(credential => credential.Category.CategoryId == id)
+            .Where(credential => credential.Category.Id == id)
             .Select(credential =>
             new ExportAllCredentialsDto(
                     credential.Id,
@@ -88,8 +88,8 @@ public static class CredentialEndpoints
             .ToListAsync());
         });
 
-        // READ/GET All users credentials in (GET /creds) (For dashboard view)
-        // For a screen that displays all the credentials (not the screen for each category)
+        // READ/GET All users credentials in (GET /creds)
+        // For export csv to find correlating credentials
         credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -107,6 +107,7 @@ public static class CredentialEndpoints
                     credential.Id,
                     credential.ServiceName,
                     credential.Username,
+                    credential.Password,
                     credential.DateCreated,
                     credential.DateLastUpdated
                 )
