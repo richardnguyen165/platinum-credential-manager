@@ -81,7 +81,7 @@ function sortAllCredentials(data, sortOption, secondSortOption) {
         firstSortCheck = firstOption.categoryName.toLowerCase().localeCompare(secondOption.categoryName.toLowerCase());
     
 
-        if (!firstSortCheck) return firstSortCheck; // meaning they different category
+        if (firstSortCheck) return firstSortCheck; // meaning they different category
 
         // else, they are the same category => tiebreak using the date
 
