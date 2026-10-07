@@ -70,7 +70,7 @@ function sortAllCredentials(data, sortOption, secondSortOption) {
         let firstSortCheck;
 
         let firstOption, secondOption;
-        if (sortOption.Contains("Ascending")){
+        if (sortOption.includes("Ascending")){
             firstOption = a;
             secondOption = b;
         } else {
@@ -85,7 +85,7 @@ function sortAllCredentials(data, sortOption, secondSortOption) {
 
         // else, they are the same category => tiebreak using the date
 
-        if (secondSortOption.Contains("Ascending")){
+        if (secondSortOption.includes("Ascending")){
             firstOption = a;
             secondOption = b;
         } else {
@@ -93,8 +93,8 @@ function sortAllCredentials(data, sortOption, secondSortOption) {
             secondOption = a;
         }
 
-        if (sortOption.Contains("Service")) return firstOption.serviceName.toLowerCase().localeCompare(secondOption.serviceName.toLowerCase());
-        else if (sortOption.Contains("dateCreated")) return (new Date(firstOption.dateCreated) -  new Date(secondOption.dateCreated));
+        if (sortOption.includes("Service")) return firstOption.serviceName.toLowerCase().localeCompare(secondOption.serviceName.toLowerCase());
+        else if (sortOption.includes("dateCreated")) return (new Date(firstOption.dateCreated) -  new Date(secondOption.dateCreated));
         else return (new Date(firstOption.dateLastUpdated) -  new Date(secondOption.dateLastUpdated));
     });
 }
