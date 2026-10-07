@@ -61,33 +61,6 @@ public static class CredentialEndpoints
     {
         var credentialURLGroup = app.MapGroup("/creds").RequireAuthorization();
 
-        credentialURLGroup.MapGet("/export/{id}", async (int id, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
-            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (keycloakId is null) return Results.Unauthorized();
-
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
-
-            if (user is null) return Results.Unauthorized();
-
-            // Export all credentials in a specific categoryid for csv export
-            return Results.Ok(await dbContext.Credentials
-            .Where(credential => credential.Category.UserId == user.Id)
-            .Where(credential => credential.Category.Id == id)
-            .Select(credential =>
-            new ExportAllCredentialsDto(
-                    credential.Id,
-                    credential.ServiceName,
-                    credential.Username,
-                    credential.Password,
-                    credential.DateCreated,
-                    credential.DateLastUpdated
-                )
-            )
-            .AsNoTracking()
-            .ToListAsync());
-        });
-
         // READ/GET All users credentials in (GET /creds)
         // For export csv to find correlating credentials
         credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext, ClaimsPrincipal principal) =>
@@ -103,13 +76,15 @@ public static class CredentialEndpoints
             return Results.Ok(await dbContext.Credentials
             .Where(credential => credential.Category.UserId == user.Id)
             .Select(credential =>
-            new GetAllCredentialsDto(
+            new GetDetailedCredentialDto(
                     credential.Id,
                     credential.ServiceName,
                     credential.Username,
                     credential.Password,
                     credential.DateCreated,
-                    credential.DateLastUpdated
+                    credential.DateLastUpdated,
+                    credential.Category.CategoryName,
+                    credential.Category.Id
                 )
             )
             .AsNoTracking()

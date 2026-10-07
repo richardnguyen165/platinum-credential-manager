@@ -1,61 +1,54 @@
 <template>
-    <div>
-        <button @click="executeRedirect('home')">
-            Home
-        </button>
+  <div>
+    <button @click="executeRedirect('home')">Home</button>
 
-        <button @click="executeRedirect('categories')">
-            Credential Categories
-        </button>
+    <button @click="executeRedirect('categories')">
+      Credential Categories
+    </button>
 
-        <button @click="executeRedirect('search')">
-            Search
-        </button>
+    <button @click="executeRedirect('search')">Search</button>
 
-        <button @click="executeRedirect('logout')">
-            Log-Out
-        </button>
-    </div>
+    <button @click="executeRedirect('logout')">Log-Out</button>
+  </div>
 </template>
 
 <script setup>
-    import useAuth from '@/composables/useAuth';
-    
-    import { homePath, categoriesPath, searchUpPath } from '@/utils/routes';
-    import { computed  } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+import useAuth from "@/composables/useAuth";
 
-    const route = useRoute();
-    const router = useRouter();
+import { homePath, categoriesPath, searchUpPath } from "@/utils/routes";
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
-    // Stores current tab
-    const currentTab = computed (() => {
-        if (route.path.startsWith('/cred-homepage')) return 'home'
-        if (route.path.startsWith('/cred-categories')) return 'categories'
-        if (route.path.startsWith('/cred-searchup')) return 'search'
-        return ''
-    });
+const route = useRoute();
+const router = useRouter();
 
-    const { logout, authState } = useAuth();
+// Stores current tab
+const currentTab = computed(() => {
+  if (route.path.startsWith("/cred-homepage")) return "home";
+  if (route.path.startsWith("/cred-categories")) return "categories";
+  if (route.path.startsWith("/cred-searchup")) return "search";
+  return "";
+});
 
-    function executeRedirect(redirectParam){
-        let newRoute = null;
-        currentTab.value = redirectParam !== 'logout' ? redirectParam : '';
+const { logout, authState } = useAuth();
 
-        switch(redirectParam) {
-            case "categories":
-                newRoute = categoriesPath(route.params.user_id);
-                break;
-            case "search":
-                newRoute = searchUpPath(route.params.user_id);
-                break;
-            default:
-                newRoute = homePath();
-        }
+function executeRedirect(redirectParam) {
+  let newRoute = null;
+  currentTab.value = redirectParam !== "logout" ? redirectParam : "";
 
-        if (redirectParam === 'logout') {
-            logout();
-        }
-        else router.push(newRoute);
-    };
+  switch (redirectParam) {
+    case "categories":
+      newRoute = categoriesPath(route.params.user_id);
+      break;
+    case "search":
+      newRoute = searchUpPath(route.params.user_id);
+      break;
+    default:
+      newRoute = homePath();
+  }
+
+  if (redirectParam === "logout") {
+    logout();
+  } else router.push(newRoute);
+}
 </script>

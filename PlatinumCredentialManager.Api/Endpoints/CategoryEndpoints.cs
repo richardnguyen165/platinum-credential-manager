@@ -73,7 +73,7 @@ public static class CategoryEndpoints
                     cr.DateLastUpdated
                 )).ToList()))
             .AsNoTracking()
-            .ToList();
+            .ToListAsync();
 
             // Returns all categorys with their credentials
             return Results.Ok(allCategoryInformation);

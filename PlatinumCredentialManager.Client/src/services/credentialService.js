@@ -30,8 +30,3 @@ export async function searchCredential(queryParams){
     const { data } = await http.get(`/creds/search`, { params: queryParams });
     return data;
 }
-
-export async function exportCredentials(categoryId) {
-    const { data } = await http.get(`/creds/export/${categoryId}`);
-    return data;
-}

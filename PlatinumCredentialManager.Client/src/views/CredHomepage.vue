@@ -1,10 +1,8 @@
 <template>
-    <Header></Header>
-    <div>
-        Welcome home!
-    </div>
+  <Header></Header>
+  <div>Welcome home!</div>
 </template>
 
 <script setup>
-    import Header from '@/components/layout/Header.vue';
+import Header from "@/components/layout/Header.vue";
 </script>

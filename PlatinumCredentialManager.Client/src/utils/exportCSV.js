@@ -1,8 +1,12 @@
 import { exportCategories } from "@/services/categoryService";
-import { exportCredentials, getAllCredentials } from "@/services/credentialService";
+import { getAllCredentials } from "@/services/credentialService";
+
+export async function exportCSVDecider(action, sortOption){
+    if (action === 'allCategories') exportCategoriesAsCSV(sortOption);
+};
 
 // All credentials
-export async function exportCategoriesAsCSV(sortOption){
+async function exportCategoriesAsCSV(sortOption){
     const csvRows = [];
 
     csvRows.push("All Credentials \n");
@@ -43,12 +47,20 @@ export async function exportCategoriesAsCSV(sortOption){
 };
 
 // Per category
-export async function exportCredentialsAsCSV(categoryName, categoryId, sortOption) {
+async function exportCredentialsAsCSV(credentials) {
     const csvRows = [];
 
     csvRows.push(`All Credentials in ${categoryName} \n`);
 
-    const data = sortDecider(sortOption, await exportCredentials(categoryId));
+    const allCredentials = await getAllCredentials().map(findPassword);
+
+    function findPassword(credential){
+        const firstElement = allCredentials.find(c => c.credentialId === credential.credentialId);
+        return {
+            ...credential,
+            "password": firstElement.password
+        }
+    }
 
     const headers = ["Category Name", "Service Name", "User Name", "Password", "Date Created", "Date Last Updated"];
     csvRows.push(headers.join(","));
@@ -80,7 +92,7 @@ export async function exportCredentialsAsCSV(categoryName, categoryId, sortOptio
 }
 
 // One credential
-export async function exportCredentialAsCSV(credential) 
+async function exportCredentialAsCSV(credential) 
 {
     const csvRows = [];
 
@@ -103,7 +115,7 @@ export async function exportCredentialAsCSV(credential)
     URL.revokeObjectURL(url);
 }
 
-export async function exportSearchCredentialsAsCSV(params, credentials)
+async function exportSearchCredentialsAsCSV(credentials, params)
 {
     const csvRows = [];
 
@@ -122,9 +134,9 @@ export async function exportSearchCredentialsAsCSV(params, credentials)
 
     // Tie passwords to credentials
     const allCredentials = await getAllCredentials();
-    const data = credentials.map(findPassword)
+    const data = credentials.map(findUserAndPassword)
 
-    function findPassword(credential){
+    function findUserAndPassword(credential){
         const firstElement = allCredentials.find(c => c.credentialId === credential.credentialId);
         return {
             ...credential,
@@ -136,7 +148,7 @@ export async function exportSearchCredentialsAsCSV(params, credentials)
     for (let credential of data)
     {
         const credentialRow = [
-            `"${categoryName ?? ""}"`,
+            `"${credential.categoryName ?? ""}"`,
             `"${credential.serviceName ?? ""}"`,
             `"${credential.username ?? ""}"`,
             `"${credential.password ?? ""}"`,
