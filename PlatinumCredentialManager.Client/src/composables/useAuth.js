@@ -2,6 +2,7 @@ import { reactive } from 'vue'
 
 import { keycloak } from '../config/keycloak.js'
 import { postNewUser } from '@/services/userService.js'
+import { userStore } from '@/stores/userStore.js';
 
 const authState = reactive({
   authenticated: keycloak.authenticated ?? false,
@@ -15,7 +16,8 @@ keycloak.onAuthSuccess = async () => {
 
     try {
         const user = await postNewUser();
-        authState.userId = user.id
+        authState.userId = user.id;
+        userStore.setUserId(user.id);
     } catch (error) {
         console.error('Failed to provision user', error)
     }

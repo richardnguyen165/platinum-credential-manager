@@ -1,8 +1,11 @@
 import { exportCategories } from "@/services/categoryService";
 import { getAllCredentials } from "@/services/credentialService";
 
-export async function exportCSVDecider(action, sortOption){
+export async function exportCSVDecider(action, sortOption, data, params){
     if (action === 'allCategories') exportCategoriesAsCSV(sortOption);
+    else if (action === 'allCredentials') exportCredentialsAsCSV(data);
+    else if (action === 'credential') exportCredentialAsCSV(data);
+    else exportSearchCredentialsAsCSV(data, params);
 };
 
 // All credentials
@@ -50,17 +53,20 @@ async function exportCategoriesAsCSV(sortOption){
 async function exportCredentialsAsCSV(credentials) {
     const csvRows = [];
 
-    csvRows.push(`All Credentials in ${categoryName} \n`);
+    const data = await getAllCredentials().map(findPassword);
 
-    const allCredentials = await getAllCredentials().map(findPassword);
+    let categoryName;
 
     function findPassword(credential){
-        const firstElement = allCredentials.find(c => c.credentialId === credential.credentialId);
+        if (!categoryName) categoryName = credential.categoryName;
+        const firstElement = credentials.find(c => c.credentialId === credential.credentialId);
         return {
             ...credential,
             "password": firstElement.password
         }
     }
+
+    csvRows.push(`All Credentials in ${categoryName} \n`);
 
     const headers = ["Category Name", "Service Name", "User Name", "Password", "Date Created", "Date Last Updated"];
     csvRows.push(headers.join(","));
@@ -170,5 +176,3 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     a.click();
     URL.revokeObjectURL(url);
 }
-
-

@@ -58,7 +58,7 @@
 
   <div>
     <button @click="">Import CSV</button>
-    <button @click="exportCSVDecider(action, sortOption)">Export CSV</button>
+    <button @click="exportCSVDecider(action, sortOption, rows, parsePayload(params))">Export CSV</button>
   </div>
 
   <div v-if="action === 'allCategories'">
