@@ -58,7 +58,7 @@
 
   <div>
     <button @click="">Import CSV</button>
-    <button @click="exportCSVDecider(action, sortOption, rows, parsePayload(params))">Export CSV</button>
+    <button @click="exportCSVDecider(action, sortOption, currentData, (action === 'searchup' ? parsePayload(params): null))">Export CSV</button>
   </div>
 
   <div v-if="action === 'allCategories'">
@@ -96,7 +96,7 @@
     </div>
   </div>
 
-  <div v-else-if="action = 'credential'">
+  <div v-else-if="action === 'credential'">
     <p>Service Name: {{ rows.ServiceName }}</p>
     <p>Username: {{ rows.Username }}</p>
     <p>

@@ -8,5 +8,7 @@ public record class GetAllCredentialsDto
     [Required][StringLength(100)] string ServiceName,
     [Required][StringLength(100)] string Username,
     [Required] DateOnly DateCreated,
-    [Required] DateOnly DateLastUpdated
+    [Required] DateOnly DateLastUpdated,
+    [Required][StringLength(100)] string CategoryName, // we would need to display the category name
+    [Required] int CategoryId
 );

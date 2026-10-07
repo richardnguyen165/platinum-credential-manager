@@ -7,8 +7,6 @@
   </div>
   <div v-else>
     <button @click="createModal('create-category')">Create Category</button>
-    <button>Import Category and Credentials</button>
-    <button>Export Category and Credentials</button>
     <!-- Only shows category name -->
     <PaginationGrid :rows="allCategories" :action="'allCategories'" />
     <Form
