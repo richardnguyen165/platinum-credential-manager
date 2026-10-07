@@ -9,6 +9,42 @@ export async function exportCSVDecider(action, sortOption = null, data, params =
     else await exportSearchCredentialsAsCSV(data, params);
 };
 
+function currentDateAndTime() {
+    let currentDate = new Date();
+
+    return currentDate.getDate() + "-" + 
+    (currentDate.getMonth() + 1) + "-" +
+    currentDate.getFullYear() + "_" +
+    currentDate.getHours() + ":" +
+    currentDate.getMinutes() + ":" +
+    currentDate.getSeconds();
+}
+
+async function fileWriter(title, blob) {
+    if (window.hasOwnProperty('showSaveFilePicker')){
+        try{
+            const fileHandle = await getSaveFilePicker(title);
+
+            // https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle
+            const writable = await fileHandle.createWritable();
+
+            await writable.write(blob);
+            await writable.close();
+        } catch (error) {
+            console.error(error);
+        }
+    // firefox and safari don't open the window
+    } else {
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = title;
+        a.click();
+        URL.revokeObjectURL(url); // Clears memory
+    }
+}
+
 // https://stackoverflow.com/questions/69380775/choose-a-folder-where-the-file-will-be-downloadedreactjs
 async function getSaveFilePicker(fileName) {
     const opts = {
@@ -24,9 +60,9 @@ async function getSaveFilePicker(fileName) {
 
 // All credentials
 async function exportCategoriesAsCSV(sortOption){
-    const csvRows = [];
+    const creationDateAndTime = currentDateAndTime();
 
-    csvRows.push("All Credentials \n");
+    const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`, "All Credentials \n"];
 
     const data = sortDecider(sortOption, await exportCategories());
 
@@ -54,33 +90,16 @@ async function exportCategoriesAsCSV(sortOption){
 
     const blob = new Blob([csvString], { type: 'text/csv' });
 
-    if (window.hasOwnProperty('showSaveFilePicker')){
-        try{
-            const fileHandle = await getSaveFilePicker("all_categories.csv");
+    const title = `all_categories_${currentDateAndTime}.csv`;
 
-            // https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle
-            const writable = await fileHandle.createWritable();
-
-            await writable.write(blob);
-            await writable.close();
-        } catch (error) {
-            console.error(error);
-        }
-    // firefox and safari don't open the window
-    } else {
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'all_categories.csv';
-        a.click();
-        URL.revokeObjectURL(url); // Clears memory
-    }
+    await fileWriter(title, blob);
 };
 
 // Per category
 async function exportCredentialsAsCSV(credentials) {
-    const csvRows = [];
+    const creationDateAndTime = currentDateAndTime();
+
+    const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
 
     const allCredentials = await getAllCredentials();
 
@@ -95,7 +114,6 @@ async function exportCredentialsAsCSV(credentials) {
         }
     }
 
-    console.log(data);
     let categoryName = data[0].categoryName;
 
     csvRows.push(`All Credentials in ${categoryName} \n`);
@@ -118,21 +136,19 @@ async function exportCredentialsAsCSV(credentials) {
 
     const csvString = csvRows.join('\n');
 
+    const title = `all_credentials_${categoryName.toLowerCase()}_${currentDateAndTime}.csv`
+
     const blob = new Blob([csvString], { type: 'text/csv' });
-    
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'all_credentials.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    await fileWriter(title, blob);
 }
 
 // One credential
 async function exportCredentialAsCSV(credential) 
 {
-    const csvRows = [];
+    const creationDateAndTime = currentDateAndTime();
+
+    const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
 
     const headers = ["Category Name", "Service Name", "User Name", "Password", "Date Created", "Date Last Updated"];
     csvRows.push(headers.join(","));
@@ -151,39 +167,17 @@ async function exportCredentialAsCSV(credential)
 
     const blob = new Blob([csvString], { type: 'text/csv' });
 
-    const defaultFileName = `credential_${credential.ServiceName}_${credential.DateCreated}.csv`;
+    const title = `credential_${credential.ServiceName.toLowerCase()}_${creationDateAndTime}.csv`;
 
-    if (window.hasOwnProperty('showSaveFilePicker')){
-        try{
-            const fileHandle = await getSaveFilePicker(defaultFileName);
-
-            // https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle
-            const writable = await fileHandle.createWritable();
-
-            await writable.write(blob);
-            await writable.close();
-        } catch (error) {
-            console.error(error);
-        }
-    // firefox and safari don't open the window
-    } else {
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = defaultFileName;
-        a.click();
-        URL.revokeObjectURL(url); // Clears memory
-    }
+    await fileWriter(title, blob);
 }
 
 async function exportSearchCredentialsAsCSV(credentials, params)
 {
-    const csvRows = [];
+    const creationDateAndTime = currentDateAndTime();
 
-    csvRows.push("All Credentials Found in Search \n");
+    const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`, "All Credentials Found in Search \n", "Search Parameters"];
 
-    csvRows.push("Search Parameters");
     const searchHeaders = ["Category Name", "Service Name", "User Date Choice", "Create Update Choice", "Start Date", "End Date"]
     csvRows.push(searchHeaders.join(","));
     const searchParams = [];
@@ -223,12 +217,8 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     const csvString = csvRows.join('\n');
 
     const blob = new Blob([csvString], { type: 'text/csv' });
-    
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'all_credentials_found_in_search.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    const title = `all_credentials_found_in_search_${creationDateAndTime}.csv`
+
+    await fileWriter(title, blob);
 }

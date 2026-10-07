@@ -1,6 +1,6 @@
 <template>
   <div v-if="action !== 'credential'">
-    <label>Sort Options:</label>
+    <label for="sortFilter">Sort Options:</label>
     <select name="sortFilter" v-model="sortOption" :id="sortFilter">
       <option
         v-if="action === 'allCredentials' || action === 'searchup'"
@@ -54,6 +54,42 @@
         By Match (Credential)
       </option>
     </select>
+
+    <div v-if="action === 'allCategories'">
+      <label for="withinCategorySort">Sorting Within Category: </label>
+      <select name="withinCategorySort" :id="withinCategorySort" v-model="withinCategorySortOption">
+        <option
+          value="azAscendingService"
+        >
+          Service Name (Ascending Order)
+        </option>
+        <option
+          value="azDescendingService"
+        >
+          Service Name (Descending Order)
+        </option>
+        <option
+          value="dateCreatedAscending"
+        >
+          Date Created (Ascending Order)
+        </option>
+        <option
+          value="dateCreatedDescending"
+        >
+          Date Created (Descending Order)
+        </option>
+        <option
+          value="dateUpdatedAscending"
+        >
+          Date Updated (Ascending Order)
+        </option>
+        <option
+          value="dateUpdatedDescending"
+        >
+          Date Updated (Descending Order)
+        </option>
+      </select>
+    </div>
   </div>
 
   <div>
@@ -153,6 +189,7 @@ const currentData = ref([]);
 const pageNumber = ref(1);
 const inputPageNumber = ref(pageNumber.value);
 const sortOption = ref("");
+const withinCategorySortOption = ref("");
 
 const router = useRouter();
 const route = useRoute();
@@ -160,14 +197,19 @@ const route = useRoute();
 // for credential
 const showPassword = ref(false);
 
-watch(sortOption, () => {
+watch(sortOption, () => changeData);
+
+watch(withinCategorySortOption, () => changeData);
+
+function changeData(){
   allData.value = paginateData(
-    sortDecider(sortOption.value, rows, credentialMatch),
+    sortDecider(sortOption.value, withinCategorySortOption.value, rows, credentialMatch),
   );
   pageNumber.value = 1;
   currentData.value = allData.value[pageNumber.value - 1];
   inputPageNumber.value = pageNumber.value;
-});
+}
+
 
 function goToPage() {
   if (!Number.isInteger(inputPageNumber.value)) {
@@ -231,5 +273,6 @@ function redirectToCredentialsOfCategory(categoryId) {
 onMounted(() => {
   sortOption.value =
     action === "allCategories" ? "azAscendingCategory" : (action !== 'credential' ? "azAscendingService" : null);
+  withinCategorySortOption.value = action === "allCategories" ? "azAscendingService" : "";
 });
 </script>
