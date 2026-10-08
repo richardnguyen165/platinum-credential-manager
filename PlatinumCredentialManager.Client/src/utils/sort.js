@@ -81,7 +81,7 @@ function sortAllCredentials(data, sortOption, secondSortOption) {
         firstSortCheck = firstOption.categoryName.toLowerCase().localeCompare(secondOption.categoryName.toLowerCase());
     
 
-        if (firstSortCheck) return firstSortCheck; // meaning they different category
+        if (firstSortCheck !== 0) return firstSortCheck; // meaning they different category
 
         // else, they are the same category => tiebreak using the date
 
@@ -93,8 +93,8 @@ function sortAllCredentials(data, sortOption, secondSortOption) {
             secondOption = a;
         }
 
-        if (sortOption.includes("Service")) return firstOption.serviceName.toLowerCase().localeCompare(secondOption.serviceName.toLowerCase());
-        else if (sortOption.includes("dateCreated")) return (new Date(firstOption.dateCreated) -  new Date(secondOption.dateCreated));
+        if (secondSortOption.includes("Service")) return firstOption.serviceName.toLowerCase().localeCompare(secondOption.serviceName.toLowerCase());
+        else if (secondSortOption.includes("dateCreated")) return (new Date(firstOption.dateCreated) -  new Date(secondOption.dateCreated));
         else return (new Date(firstOption.dateLastUpdated) -  new Date(secondOption.dateLastUpdated));
     });
 }

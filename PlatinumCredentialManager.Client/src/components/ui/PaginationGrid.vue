@@ -56,8 +56,8 @@
     </select>
 
     <div v-if="action === 'allCategories'">
-      <label for="withinCategorySort">Sorting Within Category: </label>
-      <select name="withinCategorySort" :id="withinCategorySort" v-model="withinCategorySortOption">
+      <label for="withinCategorySortOption">Sorting Within Category: </label>
+      <select name="withinCategorySortOption" :id="withinCategorySort" v-model="withinCategorySortOption">
         <option
           value="azAscendingService"
         >
@@ -94,7 +94,7 @@
 
   <div>
     <button @click="">Import CSV</button>
-    <button @click="exportCSVDecider(action, sortOption, currentData, (action === 'searchup' ? parsePayload(params): null))">Export CSV</button>
+    <button @click="exportCSVDecider(action, currentData, sortOption, withinCategorySortOption, (action === 'searchup' ? parsePayload(params): null))">Export CSV</button>
   </div>
 
   <div v-if="action === 'allCategories'">
@@ -197,13 +197,11 @@ const route = useRoute();
 // for credential
 const showPassword = ref(false);
 
-watch(sortOption, () => changeData);
-
-watch(withinCategorySortOption, () => changeData);
+watch(sortOption, () => changeData());
 
 function changeData(){
   allData.value = paginateData(
-    sortDecider(sortOption.value, withinCategorySortOption.value, rows, credentialMatch),
+    sortDecider(sortOption.value, null, rows, credentialMatch),
   );
   pageNumber.value = 1;
   currentData.value = allData.value[pageNumber.value - 1];

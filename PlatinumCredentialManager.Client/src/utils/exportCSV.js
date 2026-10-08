@@ -2,8 +2,8 @@ import { exportCategories } from "@/services/categoryService";
 import { getAllCredentials } from "@/services/credentialService";
 import { sortDecider } from "./sort";
 
-export async function exportCSVDecider(action, sortOption = null, data, params = null){
-    if (action === 'allCategories') await exportCategoriesAsCSV(sortOption);
+export async function exportCSVDecider(action, data, sortOption, withinCategorySortOption, params){
+    if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
     else if (action === 'allCredentials') await exportCredentialsAsCSV(data);
     else if (action === 'credential') await exportCredentialAsCSV(data);
     else await exportSearchCredentialsAsCSV(data, params);
@@ -11,13 +11,9 @@ export async function exportCSVDecider(action, sortOption = null, data, params =
 
 function currentDateAndTime() {
     let currentDate = new Date();
+    let currentDateString = `${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}_${currentDate.getHours()}-${currentDate.getMinutes()}-${currentDate.getSeconds()}`
 
-    return currentDate.getDate() + "-" + 
-    (currentDate.getMonth() + 1) + "-" +
-    currentDate.getFullYear() + "_" +
-    currentDate.getHours() + ":" +
-    currentDate.getMinutes() + ":" +
-    currentDate.getSeconds();
+    return currentDateString;
 }
 
 async function fileWriter(title, blob) {
@@ -59,38 +55,51 @@ async function getSaveFilePicker(fileName) {
 };
 
 // All credentials
-async function exportCategoriesAsCSV(sortOption){
+async function exportCategoriesAsCSV(sortOption, withinCategorySortOption){
     const creationDateAndTime = currentDateAndTime();
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`, "All Credentials \n"];
 
-    const data = sortDecider(sortOption, await exportCategories());
+    const allCategories = await exportCategories();
+    const flattenedCredentials = []
+
+    for (const category of allCategories){
+        let categoryName = category.categoryName;
+        for (const credential of category.credentials){
+            flattenedCredentials.push({
+                ...credential,
+                categoryName
+            })
+        }
+    }
+
+    console.log(flattenedCredentials);
+
+    const data = sortDecider(sortOption, withinCategorySortOption, flattenedCredentials);
 
     // https://www.geeksforgeeks.org/javascript/how-to-create-and-download-csv-file-in-javascript/
 
     const headers = ["Category Name", "Service Name", "User Name", "Password", "Date Created", "Date Last Updated"];
     csvRows.push(headers.join(","));
 
-    for (let categoryDetail of data){
-        for (let credential of categoryDetail.credentials){
-            // the quotes inside backticks are needed if the fields themselves have a comma
-            const row = [
-                `"${categoryDetail.categoryName}"`,
-                `"${credential.serviceName ?? ""}"`,
-                `"${credential.username ?? ""}"`,
-                `"${credential.password ?? ""}"`,
-                `"${credential.dateCreated}"`,
-                `"${credential.dateLastUpdated}"`,
-            ];
-            csvRows.push(row.join(","));
-        }
+    for (let credential of data){
+        // the quotes inside backticks are needed if the fields themselves have a comma
+        const row = [
+            `"${credential.categoryName}"`,
+            `"${credential.serviceName ?? ""}"`,
+            `"${credential.username ?? ""}"`,
+            `"${credential.password ?? ""}"`,
+            `"${credential.dateCreated}"`,
+            `"${credential.dateLastUpdated}"`,
+        ];
+        csvRows.push(row.join(","));
     }
 
     const csvString = csvRows.join('\n');
 
     const blob = new Blob([csvString], { type: 'text/csv' });
 
-    const title = `all_categories_${currentDateAndTime}.csv`;
+    const title = `all_categories_${creationDateAndTime}.csv`;
 
     await fileWriter(title, blob);
 };
@@ -136,7 +145,7 @@ async function exportCredentialsAsCSV(credentials) {
 
     const csvString = csvRows.join('\n');
 
-    const title = `all_credentials_${categoryName.toLowerCase()}_${currentDateAndTime}.csv`
+    const title = `all_credentials_${categoryName.toLowerCase()}_${creationDateAndTime}.csv`
 
     const blob = new Blob([csvString], { type: 'text/csv' });
 
@@ -193,7 +202,7 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     const data = credentials.map(findUserAndPassword)
 
     function findUserAndPassword(credential){
-        const firstElement = allCredentials.find(c => c.credentialId === credential.credentialId);
+        const firstElement = allCredentials.find(c => c.id === credential.id);
         return {
             ...credential,
             "username": firstElement.username,
