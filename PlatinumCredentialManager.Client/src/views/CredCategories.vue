@@ -8,7 +8,7 @@
   <div v-else>
     <button @click="createModal('create-category')">Create Category</button>
     <!-- Only shows category name -->
-    <PaginationGrid :rows="allCategories" :action="'allCategories'" />
+    <PaginationGrid :rows="allCategories" :location="'allCategories'" />
     <Form
       :show="showModal"
       :action="action"

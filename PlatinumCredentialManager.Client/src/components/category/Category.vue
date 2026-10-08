@@ -13,7 +13,7 @@
     <PaginationGrid
       :categoryId="categoryId"
       :rows="allCredentials"
-      :action="'allCredentials'"
+      :location="'allCredentials'"
     />
     <Form
       :show="showModal"

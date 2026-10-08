@@ -10,7 +10,7 @@
     <button @click="createModal('edit-credential')">Edit Credential</button>
     <PaginationGrid
       :rows="currentEntries"
-      :action="'credential'"
+      :location="'credential'"
       :categoryId="categoryId"
     />
     <Form

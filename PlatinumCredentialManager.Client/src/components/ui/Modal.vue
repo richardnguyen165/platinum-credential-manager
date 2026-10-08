@@ -9,9 +9,21 @@
             <slot name="header"></slot>
           </div>
 
+          <!--description-->
           <div class="modal-description">
             <slot name="description"></slot>
           </div>
+
+
+          <!-- TODO -->
+          <div class="modal-image">
+            <slot name="image"></slot>
+          </div>
+
+          <!-- TODO -->
+          <ul class="modal-rules" v-for="rule in rules" :key="rule.key">
+            <li></li>
+          </ul>
 
           <!-- for inputs -->
           <div class="modal-body" v-for="input in inputs" :key="input.key">
@@ -22,6 +34,10 @@
               :required="input.required"
               v-model.trim="data[input.key]"
             />
+          </div>
+
+          <div class="modalError">
+            <slot name="modalErrorMessage"></slot>
           </div>
 
           <div class="modal-footer">
@@ -63,9 +79,10 @@ const data = reactive({});
 // https://vuejs.org/examples/#modal
 // https://vuejs.org/guide/built-ins/transition.html
 
-const { show, inputs, categoryId, credentialId } = defineProps({
+const { show, inputs, rules, categoryId, credentialId } = defineProps({
   show: Boolean,
   inputs: Object,
+  rules: Object,
   categoryId: Number,
   credentialId: Number,
 });

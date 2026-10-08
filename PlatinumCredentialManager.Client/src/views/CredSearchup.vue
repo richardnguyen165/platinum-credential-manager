@@ -63,7 +63,7 @@
     <PaginationGrid
       :rows="credentials"
       :params="data"
-      action="searchup"
+      :location="searchup"
       :credential-match="data.ServiceName"
     />
   </div>

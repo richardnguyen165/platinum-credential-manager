@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import Modal from "./Modal.vue";
 
@@ -53,6 +53,9 @@ const route = useRoute();
 const title = computed(() => titleHelper());
 const allInputs = computed(() => inputHelper());
 const description = computed(() => descriptionHelper());
+const rules = computed(() => ruleHelper());
+
+const errorMessage = ref("");
 
 function titleHelper() {
   switch (action) {
@@ -68,6 +71,10 @@ function titleHelper() {
       return "Edit A Credential";
     case "delete-credential":
       return "Delete A Credential";
+    case "allCategories":
+      return "Import Credentials For Any Category"
+    case "allCredentials":
+      return "Import Credentials Into A Category"
     default:
       return "";
   }
@@ -86,6 +93,9 @@ function descriptionHelper() {
       return "Please create a credential by filling out the input fields below.";
     case "delete-credential":
       return "Are you sure you want to delete this credential?";
+    case "allCategories":
+    case "allCredentials":
+      return "Please follow the CSV format provided in the image below."
     default:
       return "";
   }
@@ -136,6 +146,17 @@ function inputHelper() {
   }
 }
 
+function ruleHelper() {
+  switch(action) {
+    case "allCategories":
+    case "allCredentials":
+      // TODO: rules
+    default:
+      return [];
+  }
+}
+
+// TODO: display error message
 async function emitHelper(data = {}, id = null) {
   switch (action) {
     case "create-category":
@@ -157,6 +178,9 @@ async function emitHelper(data = {}, id = null) {
     case "delete-credential":
       await deleteCredential(id);
       router.push(categoryPath(categoryId, route.params.user_id));
+      return;
+    case "allCategories":
+    case "allCredentials":
       return;
     default:
       console.error(`Unknown form action ${action}`);

@@ -1,61 +1,61 @@
 <template>
-  <div v-if="action !== 'credential'">
+  <div v-if="location !== 'credential'">
     <label for="sortFilter">Sort Options:</label>
     <select name="sortFilter" v-model="sortOption" :id="sortFilter">
       <option
-        v-if="action === 'allCredentials' || action === 'searchup'"
+        v-if="location === 'allCredentials' || location === 'searchup'"
         value="azAscendingService"
       >
         Service Name (Ascending Order)
       </option>
       <option
-        v-if="action === 'allCredentials' || action === 'searchup'"
+        v-if="location === 'allCredentials' || location === 'searchup'"
         value="azDescendingService"
       >
         Service Name (Descending Order)
       </option>
       <option
-        v-if="action === 'allCategories' || action === 'searchup'"
+        v-if="location === 'allCategories' || location === 'searchup'"
         value="azAscendingCategory"
       >
         Category Name (Ascending Order)
       </option>
       <option
-        v-if="action === 'allCategories' || action === 'searchup'"
+        v-if="location === 'allCategories' || location === 'searchup'"
         value="azDescendingCategory"
       >
         Category Name (Descending Order)
       </option>
       <option
-        v-if="action === 'allCredentials' || action === 'searchup'"
+        v-if="location === 'allCredentials' || location === 'searchup'"
         value="dateCreatedAscending"
       >
         Date Created (Ascending Order)
       </option>
       <option
-        v-if="action === 'allCredentials' || action === 'searchup'"
+        v-if="location === 'allCredentials' || location === 'searchup'"
         value="dateCreatedDescending"
       >
         Date Created (Descending Order)
       </option>
       <option
-        v-if="action === 'allCredentials' || action === 'searchup'"
+        v-if="location === 'allCredentials' || location === 'searchup'"
         value="dateUpdatedAscending"
       >
         Date Updated (Ascending Order)
       </option>
       <option
-        v-if="action === 'allCredentials' || action === 'searchup'"
+        v-if="location === 'allCredentials' || location === 'searchup'"
         value="dateUpdatedDescending"
       >
         Date Updated (Descending Order)
       </option>
-      <option v-if="action === 'searchup'" value="byMatchCredential">
+      <option v-if="location === 'searchup'" value="byMatchCredential">
         By Match (Credential)
       </option>
     </select>
 
-    <div v-if="action === 'allCategories'">
+    <div v-if="location === 'allCategories'">
       <label for="withinCategorySortOption">Sorting Within Category: </label>
       <select name="withinCategorySortOption" :id="withinCategorySort" v-model="withinCategorySortOption">
         <option
@@ -93,11 +93,11 @@
   </div>
 
   <div>
-    <button @click="">Import CSV</button>
-    <button @click="exportCSVDecider(action, currentData, sortOption, withinCategorySortOption, (action === 'searchup' ? parsePayload(params): null))">Export CSV</button>
+    <button v-if="location === 'allCategories' || location === 'allCredentials'" @click="createModal(location)">Import CSV</button>
+    <button @click="exportCSVDecider(location, currentData, sortOption, withinCategorySortOption, (location === 'searchup' ? parsePayload(params): null))">Export CSV</button>
   </div>
 
-  <div v-if="action === 'allCategories'">
+  <div v-if="location === 'allCategories'">
     <div
       v-for="category in currentData"
       :key="category.id"
@@ -107,7 +107,7 @@
     </div>
   </div>
 
-  <div v-else-if="action === 'searchup'">
+  <div v-else-if="location === 'searchup'">
     <div
       @click="redirectCredentialQuery(credential)"
       v-for="credential in currentData"
@@ -120,7 +120,7 @@
     </div>
   </div>
 
-  <div v-else-if="action === 'allCredentials'">
+  <div v-else-if="location === 'allCredentials'">
     <div
       @click="redirectCredential(credential.id)"
       v-for="credential in currentData"
@@ -132,7 +132,7 @@
     </div>
   </div>
 
-  <div v-else-if="action === 'credential'">
+  <div v-else-if="location === 'credential'">
     <p>Service Name: {{ rows.ServiceName }}</p>
     <p>Username: {{ rows.Username }}</p>
     <p>
@@ -151,9 +151,10 @@
     <p>Date Last Updated: {{ rows.DateLastUpdated }}</p>
   </div>
 
-  <div v-if="action !== 'credential'">
+  <div v-if="location !== 'credential'">
     <button :disabled="pageNumber === 1" @click="checkDecrement">«</button>
     <input
+      :id="'inputPageNumber'"
       v-model="inputPageNumber"
       type="number"
       min="1"
@@ -164,6 +165,16 @@
       »
     </button>
   </div>
+
+  <Form
+    v-if="location === 'allCategories' || location === 'allCredentials'"
+    :show="showModal"
+    :categoryId="categoryId"
+    :action="action"
+    :currentEntries="currentEntries"
+    @close="closeModal"
+    @rerun="loaderHelper"
+  />
 </template>
 
 <script setup>
@@ -175,11 +186,14 @@ import { categoryPath, credentialPath } from "@/utils/routes.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { sortDecider } from "@/utils/sort";
 import { exportCSVDecider } from "@/utils/exportCSV";
+import { useModal } from "@/composables/useModal.js";
 
-const { categoryId, rows, action, params, credentialMatch } = defineProps({
+const { showModal, action, createModal, closeModal } = useModal();
+
+const { categoryId, rows, location, params, credentialMatch } = defineProps({
   categoryId: Number,
   rows: Array,
-  action: String,
+  location: String,
   params: Object,
   credentialMatch: String,
 });
@@ -262,6 +276,11 @@ function redirectCredentialQuery(credential) {
   });
 }
 
+function loaderHelper(){
+  // Do not return anything
+  return;
+}
+
 // When in credentials of a category
 function redirectToCredentialsOfCategory(categoryId) {
   router.push(categoryPath(categoryId, route.params.user_id));
@@ -270,7 +289,7 @@ function redirectToCredentialsOfCategory(categoryId) {
 // First, when we reach onMounted => we have the data => we need to first paginate it
 onMounted(() => {
   sortOption.value =
-    action === "allCategories" ? "azAscendingCategory" : (action !== 'credential' ? "azAscendingService" : null);
-  withinCategorySortOption.value = action === "allCategories" ? "azAscendingService" : "";
+    location === "allCategories" ? "azAscendingCategory" : (location !== 'credential' ? "azAscendingService" : null);
+  withinCategorySortOption.value = location === "allCategories" ? "azAscendingService" : "";
 });
 </script>
