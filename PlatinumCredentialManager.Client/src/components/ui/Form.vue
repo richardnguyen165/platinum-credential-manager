@@ -146,11 +146,44 @@ function inputHelper() {
   }
 }
 
+/*
+Types of errors:
+
+- Malformed error
+- Service name duplicated
+- Service name empty
+- Service name too long
+- Password empty
+- Password too long
+
+
+- Allow user to choose an simple error list only with counts
+*/
 function ruleHelper() {
   switch(action) {
     case "allCategories":
+      return [
+        { id: 0, text: "Please add the following headers to the first row of the CSV: Category Name, Service Name, Username and Password"},
+        { id: 1, text: "Usernames can be blanked out."},
+        { id: 2, text: "Serivce names that share the same name as with another credential in a category will be rejected."},
+        { id: 3, text: "Service names that are left empty means that credential/row will be rejected."},
+        { id: 4, text: "Categories that are left blanked out will be placed in the 'Miscallaneous' category."},
+        { id: 5, text: "Categories sharing the same name as another category means that credential will be added into that category."},
+        { id: 6, text: "Passwords that are left empty means that credential/row will be rejected."},
+        { id: 7, text: "Duplicate credentials will be ignored."},
+        { id: 8, text: "Any rejection means the CSV file in full will be rejected, and a corresponding error list will be returned to the user highlighting errors."}
+      ]
     case "allCredentials":
-      // TODO: rules
+      return [
+        { id: 0, text: "Please add the following headers to the first row of the CSV: Service Name, Username and Password"},
+        { id: 1, text: "Usernames can be blanked out."},
+        { id: 2, text: "Serivce names that share the same name as with another credential in a category will be rejected."},
+        { id: 3, text: "Service names that are left empty means that credential/row will be rejected."},
+        { id: 4, text: "Credentials that share the same name as with another credential will be rejected."},
+        { id: 5, text: "Passwords that are left empty means that credential/row will be rejected."},
+        { id: 6, text: "Duplicate credentials will be ignored."},
+        { id: 7, text: "Any rejection means the CSV file in full will be rejected, and a corresponding error list will be returned to the user highlighting errors."}
+      ]
     default:
       return [];
   }
