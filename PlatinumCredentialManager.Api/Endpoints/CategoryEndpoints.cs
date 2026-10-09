@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Security.Claims;
+using CsvHelper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Category;
@@ -257,9 +260,32 @@ public static class CategoryEndpoints
         });
 
         // Mass uploading categories and credentials
-        categoryURLGroup.MapPost("/import", async (ImportCategoriesDto importedCredentials, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
+        categoryURLGroup.MapPost("/import", async ([FromForm] ImportCategoriesDto importedCredentials, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
-            return;
+            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (keycloakId is null) return Results.Unauthorized();
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+            if (user is null) return Results.Unauthorized();
+
+            IFormFile file = importedCredentials.File;
+
+            // https://mojoauth.com/dev-guides/parse-and-generate-csv-with-aspnet-core
+            // https://stackoverflow.com/questions/58257222/how-can-i-read-data-as-string-by-csvhelper
+
+            var allLines = new List<string[]>();
+
+            using var reader = new StreamReader(file.OpenReadStream());
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                while (csv.Read())
+                {
+                    allLines.Add(csv.Context.Reader.Parser.Record);
+                }
+            }
+             
         });
 
     }
