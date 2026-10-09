@@ -3,6 +3,7 @@ using PlatinumCredentialManager.Api.Data;
 using PlatinumCredentialManager.Api.Dtos.Credential;
 using Microsoft.EntityFrameworkCore;
 using PlatinumCredentialManager.Api.Models;
+using CsvHelper;
 
 namespace PlatinumCredentialManager.Api.Endpoints;
 
@@ -304,6 +305,7 @@ public static class CredentialEndpoints
         });
 
         // Mass uploading credentials
+        // https://www.thatsoftwaredude.com/codebytes/14090/how-to-parse-csv-files-in-c-a-quick-guide
         credentialURLGroup.MapPost("/import", async (ImportCredentialsDto importedCredentials, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
             return;
