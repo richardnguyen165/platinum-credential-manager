@@ -1,15 +1,15 @@
 import axios from 'axios';
 import { keycloak } from '@/config/keycloak';
 
-// Source: https://skycloak.io/blog/keycloak-vue-js-authentication-guide/
-const http = axios.create({
+// For sending a form
+const sendingForm = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5142',
     headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "multipart/form-data"
     }
 });
 
-http.interceptors.request.use(
+sendingForm.interceptors.request.use(
     async (config) => {
         // If authenticated stated => logged in
         if (keycloak.authenticated) {
@@ -29,11 +29,11 @@ http.interceptors.request.use(
 );
 
 
-http.interceptors.response.use((response) => response, (error) => {
+sendingForm.interceptors.response.use((response) => response, (error) => {
     if (error.response?.status === 401) {
         keycloak.logout();
     }
     return Promise.reject(error);
 });
 
-export default http;
+export default sendingForm;

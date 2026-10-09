@@ -255,5 +255,12 @@ public static class CategoryEndpoints
             await dbContext.SaveChangesAsync();
             return Results.NoContent(); 
         });
+
+        // Mass uploading categories and credentials
+        categoryURLGroup.MapPost("/import", async (ImportCategoriesDto importedCredentials, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
+        {
+            return;
+        });
+
     }
 }

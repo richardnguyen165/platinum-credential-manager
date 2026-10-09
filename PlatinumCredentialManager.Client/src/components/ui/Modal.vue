@@ -29,11 +29,22 @@
           <div class="modal-body" v-for="input in inputs" :key="input.key">
             {{ input.label }}
             <input
+              v-if="inputs[0].type !== 'file'"
               :type="input.type"
               :id="input.key"
               :required="input.required"
               v-model.trim="data[input.key]"
             />
+            <input
+              v-else
+              :type="input.type"
+              :id="input.key"
+              accept=".csv"
+              :required="input.required"
+              @change="handleFileImport"            
+            />
+            <p v-if="inputs[0].type === 'file'">{{ fileMessage }}</p>
+            <p v-if="errorMessage">{{ errorMessage }}</p>
           </div>
 
           <div class="modalError">
@@ -49,6 +60,7 @@
                   emit('close');
                 }
               "
+              :disabled="disableButton"
             >
               OK
             </button>
@@ -61,8 +73,14 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
+
 const data = reactive({});
+const file = ref(null);
+const fileMessage = ref("");
+const errorMessage = ref("");
+const disableButton = ref(null);
+
 // Use reactive to store all of the input keys, and their input values
 
 // Notes for self:
@@ -90,15 +108,45 @@ const { show, inputs, rules, categoryId, credentialId } = defineProps({
 // Passes up ok and close event
 const emit = defineEmits(["ok", "close"]);
 
+// https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
+function handleFileImport(e){
+  errorMessage.value = "";
+
+  const inputFile = e.target.input.files;
+
+  const sizeInMB = inputFile.size / (1024 * 1024);
+  if (sizeInMB > 5){
+    errorMessage.value = `Attepmpted file upload: "${file.name}" exceeds the 5MB limit. Please shorten your file.`
+    disableButton.value = file.value != null;
+    return;
+  }
+
+  disableButton.value = true;
+  file.value = inputFile;
+  fileMessage.value = `${inputFile.name.length > 10 ? inputFile.name.slice(0, 10) : inputFile.name}`
+}
+
 function collectData() {
-  // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
-  if (categoryId != null) data["categoryId"] = categoryId;
-  return data;
+  if (inputs[0].type !== 'file'){
+    // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
+    if (categoryId != null) data["categoryId"] = categoryId;
+    return data;
+  } else {
+    return file;
+  }
 }
 
 function chooseId() {
+  if (inputs[0].type === 'file') return null;
   return credentialId || categoryId;
 }
+
+onMounted(() => {
+  for (const input of inputs){
+    data[input.key] = input["value"];
+  }
+  disableButton.value = inputs[0].type === 'file';
+})
 </script>
 
 <style>

@@ -63,6 +63,9 @@ public static class CredentialEndpoints
 
         // READ/GET All users credentials in (GET /creds)
         // For export csv to find correlating credentials
+        // TODO: CSV import endpoint needs a server-side file size check (max 1MB)
+        // TODO Create csv import endpoint
+
         credentialURLGroup.MapGet("/", async (CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -300,6 +303,11 @@ public static class CredentialEndpoints
             .ToListAsync());
         });
 
+        // Mass uploading credentials
+        credentialURLGroup.MapPost("/import", async (ImportCredentialsDto importedCredentials, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
+        {
+            return;
+        });
 
     }
 }

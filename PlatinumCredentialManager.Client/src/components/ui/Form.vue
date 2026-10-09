@@ -6,6 +6,7 @@
       :inputs="allInputs"
       :categoryId="categoryId"
       :credentialId="credentialId"
+      :rules="rules"
       @close="emit('close')"
       @ok="emitHelper"
     >
@@ -27,11 +28,13 @@ import Modal from "./Modal.vue";
 
 import {
   deleteCategory,
+  importCategories,
   postCategory,
   putCategory,
 } from "@/services/categoryService.js";
 import {
   deleteCredential,
+  importCredentials,
   postCredential,
   putCredential,
 } from "@/services/credentialService.js";
@@ -141,6 +144,17 @@ function inputHelper() {
         },
       ];
 
+    case "allCredentials":
+    case "allCategories":
+      return [
+        {
+          key: "importCSV",
+          label: "Import CSV",
+          type: "file",
+          required: true,
+          value: "",
+        }
+      ];
     default:
       return [];
   }
@@ -189,7 +203,7 @@ function ruleHelper() {
   }
 }
 
-// TODO: display error message
+// TODO: display error message => these will eventually need to show the data, and check if it can rerun, and pass to the errorMessage at top
 async function emitHelper(data = {}, id = null) {
   switch (action) {
     case "create-category":
@@ -213,7 +227,10 @@ async function emitHelper(data = {}, id = null) {
       router.push(categoryPath(categoryId, route.params.user_id));
       return;
     case "allCategories":
+      await importCategories(data);
+      return;
     case "allCredentials":
+      await importCredentials(data);
       return;
     default:
       console.error(`Unknown form action ${action}`);

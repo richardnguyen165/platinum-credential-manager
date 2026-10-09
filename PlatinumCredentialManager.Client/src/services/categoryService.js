@@ -1,4 +1,5 @@
 import http from "./http";
+import sendingForm from "./sendingForm";
 
 export async function getCategories(){
     const { data } = await http.get(`/category`);
@@ -27,5 +28,13 @@ export async function deleteCategory(categoryId) {
 
 export async function exportCategories(){
     const { data } = await http.get('/category/export');
+    return data;
+}
+
+export async function importCategories(data){
+    let bodyFormData = new FormData();
+    bodyFormData.append('file', data);
+
+    const { data } = await sendingForm.post("/category/import", bodyFormData);
     return data;
 }
