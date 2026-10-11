@@ -184,8 +184,8 @@ function ruleHelper() {
         { id: 4, text: "Categories that are left blanked out will be placed in the 'Miscallaneous' category."},
         { id: 5, text: "Categories sharing the same name as another category means that credential will be added into that category."},
         { id: 6, text: "Passwords that are left empty means that credential/row will be rejected."},
-        { id: 7, text: "Duplicate credentials will be ignored."},
-        { id: 8, text: "Any rejection means the CSV file in full will be rejected, and a corresponding error list will be returned to the user highlighting errors."}
+        { id: 7, text: "Credentials that share a same service name with another credential will be ignored."},
+        { id: 8, text: "Any rejection means the CSV file in full will be rejected, and a corresponding error count will be returned to the user highlighting errors."}
       ]
     case "allCredentials":
       return [

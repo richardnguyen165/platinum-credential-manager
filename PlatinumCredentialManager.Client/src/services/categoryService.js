@@ -31,6 +31,7 @@ export async function exportCategories(){
     return data;
 }
 
+// TODO: Services, sends different errors, note if unauthenticated has to log out
 export async function importCategories(data){
     let bodyFormData = new FormData();
     bodyFormData.append('file', data);
