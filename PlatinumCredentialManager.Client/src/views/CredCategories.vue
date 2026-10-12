@@ -36,8 +36,8 @@ const successfullyLoaded = ref(true);
 
 async function categoryLoaderHelper() {
   try {
-    const user = await getUser();
-    allCategories.value = user.categories;
+    const { data } = await getUser();
+    allCategories.value = data.categories;
   } catch (error) {
     console.error("Failed to retrive credential categories", error);
     successfullyLoaded.value = false;

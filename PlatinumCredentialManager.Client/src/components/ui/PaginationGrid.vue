@@ -94,7 +94,7 @@
 
   <div>
     <button v-if="location === 'allCategories' || location === 'allCredentials'" @click="createModal(location)">Import CSV</button>
-    <button @click="exportCSVDecider(location, currentData, sortOption, withinCategorySortOption, (location === 'searchup' ? parsePayload(params): null))">Export CSV</button>
+    <button @click="exportCSVDecider(location, rows, sortOption, withinCategorySortOption, (location === 'searchup' ? parsePayload(params): null))">Export CSV</button>
   </div>
 
   <div v-if="location === 'allCategories'">

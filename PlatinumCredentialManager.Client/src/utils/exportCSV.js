@@ -60,7 +60,7 @@ async function exportCategoriesAsCSV(sortOption, withinCategorySortOption){
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`, "All Credentials \n"];
 
-    const allCategories = await exportCategories();
+    const { data: allCategories } = await exportCategories();
     const flattenedCredentials = []
 
     for (const category of allCategories){
@@ -72,9 +72,7 @@ async function exportCategoriesAsCSV(sortOption, withinCategorySortOption){
             })
         }
     }
-
-    console.log(flattenedCredentials);
-
+    
     const data = sortDecider(sortOption, withinCategorySortOption, flattenedCredentials);
 
     // https://www.geeksforgeeks.org/javascript/how-to-create-and-download-csv-file-in-javascript/
@@ -110,7 +108,7 @@ async function exportCredentialsAsCSV(credentials) {
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
 
-    const allCredentials = await getAllCredentials();
+    const { data: allCredentials } = await getAllCredentials();
 
     const data = credentials.map(findPassword);
 
@@ -198,11 +196,11 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     csvRows.push(searchParams.join(","));
 
     // Tie passwords to credentials
-    const allCredentials = await getAllCredentials();
+    const { data: allCredentials } = await getAllCredentials();
     const data = credentials.map(findUserAndPassword)
 
     function findUserAndPassword(credential){
-        const firstElement = allCredentials.find(c => c.id === credential.id);
+        const firstElement = allCredentials.find(c => c.id === credential.credentialId);
         return {
             ...credential,
             "username": firstElement.username,

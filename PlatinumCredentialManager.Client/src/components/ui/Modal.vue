@@ -29,7 +29,7 @@
           <div class="modal-body" v-for="input in inputs" :key="input.key">
             {{ input.label }}
             <input
-              v-if="inputs[0].type !== 'file'"
+              v-if="inputs.length > 0 && inputs[0].type !== 'file'"
               :type="input.type"
               :id="input.key"
               :required="input.required"
@@ -43,7 +43,7 @@
               :required="input.required"
               @change="handleFileImport"            
             />
-            <p v-if="inputs[0].type === 'file'">{{ fileMessage }}</p>
+            <p v-if="inputs.length > 0 && inputs[0].type === 'file'">{{ fileMessage }}</p>
             <p v-if="errorMessage">{{ errorMessage }}</p>
           </div>
 
@@ -73,13 +73,13 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref, watch } from "vue";
 
-const data = reactive({});
-const file = ref(null);
-const fileMessage = ref("");
-const errorMessage = ref("");
-const disableButton = ref(null);
+let data = reactive({});
+let file = ref(null);
+let fileMessage = ref("");
+let errorMessage = ref("");
+let disableButton = ref(null);
 
 // Use reactive to store all of the input keys, and their input values
 
@@ -116,7 +116,7 @@ function handleFileImport(e){
 
   const sizeInMB = inputFile.size / (1024 * 1024);
   if (sizeInMB > 5){
-    errorMessage.value = `Attepmpted file upload: "${file.name}" exceeds the 5MB limit. Please shorten your file.`
+    errorMessage.value = `Attepmpted file upload: "${file.value.name}" exceeds the 5MB limit. Please shorten your file.`
     disableButton.value = file.value != null;
     return;
   }
@@ -127,7 +127,7 @@ function handleFileImport(e){
 }
 
 function collectData() {
-  if (inputs[0].type !== 'file'){
+  if (inputs.length > 0 && inputs[0].type !== 'file'){
     // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
     if (categoryId != null) data["categoryId"] = categoryId;
     return data;
@@ -137,16 +137,29 @@ function collectData() {
 }
 
 function chooseId() {
-  if (inputs[0].type === 'file') return null;
+  if (inputs.length > 0 && inputs[0].type === 'file') return null;
   return credentialId || categoryId;
 }
 
-onMounted(() => {
-  for (const input of inputs){
-    data[input.key] = input["value"];
+
+// You nee.d to reset defaults once show appears
+watch(() => show, (newShow) => {
+  if (newShow){
+    data = {}
+    file.value = null;
+    fileMessage.value = "";
+    errorMessage .value = "";
+    disableButton.value = null;
+
+    if (inputs.length > 0 ) {
+      for (const input of inputs){
+        data[input.key] = input["value"];
+      }
+      disableButton.value = inputs[0]['type'] === 'file'
+    }
   }
-  disableButton.value = inputs[0].type === 'file';
 })
+
 </script>
 
 <style>

@@ -181,8 +181,8 @@ function ruleHelper() {
         { id: 1, text: "Usernames can be blanked out."},
         { id: 2, text: "Serivce names that share the same name as with another credential in a category will be rejected."},
         { id: 3, text: "Service names that are left empty means that credential/row will be rejected."},
-        { id: 4, text: "Categories that are left blanked out will be placed in the 'Miscallaneous' category."},
-        { id: 5, text: "Categories sharing the same name as another category means that credential will be added into that category."},
+        { id: 4, text: "Categories that are left blanked out means that credential/row will be rejected."},
+        { id: 5, text: "Credential that have a category sharing the same name as another category means that credential will be added into that category."},
         { id: 6, text: "Passwords that are left empty means that credential/row will be rejected."},
         { id: 7, text: "Credentials that share a same service name with another credential will be ignored."},
         { id: 8, text: "Any rejection means the CSV file in full will be rejected, and a corresponding error count will be returned to the user highlighting errors."}
@@ -226,10 +226,10 @@ async function emitHelper(data = {}, id = null) {
       await deleteCredential(id);
       router.push(categoryPath(categoryId, route.params.user_id));
       return;
-    case "allCategories":
+    case "allCategoriesImportCSV":
       await importCategories(data);
       return;
-    case "allCredentials":
+    case "allCredentialsImportCSV":
       await importCredentials(data);
       return;
     default:

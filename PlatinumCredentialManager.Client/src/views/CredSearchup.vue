@@ -63,7 +63,7 @@
     <PaginationGrid
       :rows="credentials"
       :params="data"
-      :location="searchup"
+      :location="'searchup'"
       :credential-match="data.ServiceName"
     />
   </div>
@@ -129,7 +129,8 @@ async function searchForCredentials() {
 
   const payload = parsePayload(data);
 
-  credentials.value = await searchCredential(payload);
+  const { data: extractedData } = await searchCredential(payload);
+  credentials.value = extractedData;
 
   // Updates the sort, since without it, it would use the other service name value, and it would keep updating as typing (only change it when submitting the form)
   submittedServiceName.value = payload["ServiceName"] ?? "";
@@ -145,13 +146,14 @@ onMounted(async () => {
   data["CategoryName"] = route.query.CategoryName ?? "";
   data["ServiceName"] = route.query.ServiceName ?? "";
   data["CreateUpdateChoice"] =
-    route.query.CreateUpdateChoice ?? "lastSevenDays";
+  route.query.CreateUpdateChoice ?? "lastSevenDays";
   data["UserDateChoice"] = route.query.UserDateChoice ?? "Create";
   data["StartDate"] = route.query.StartDate ?? "";
   data["EndDate"] = route.query.EndDate ?? "";
 
   const payload = parsePayload(data);
 
-  credentials.value = await searchCredential(payload);
+  const { data: extractedData } = await searchCredential(payload);
+  credentials.value = extractedData;
 });
 </script>

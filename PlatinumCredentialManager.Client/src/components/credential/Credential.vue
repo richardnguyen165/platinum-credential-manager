@@ -62,7 +62,7 @@ function goBackPrevious() {
 
 async function credentialLoaderHelper() {
   try {
-    const data = await getCredential(credId);
+    const { data } = await getCredential(credId);
 
     currentEntries.CategoryName = data.categoryName;
     currentEntries.ServiceName = data.serviceName;

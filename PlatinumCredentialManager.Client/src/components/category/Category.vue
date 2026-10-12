@@ -57,7 +57,7 @@ const { categoryId } = defineProps({
 
 async function loaderHelper() {
   try {
-    const data = await getCategory(categoryId);
+    const { data } = await getCategory(categoryId);
     allCredentials.value = data.credentials;
     currentEntries.CategoryName = data.categoryName;
     isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";

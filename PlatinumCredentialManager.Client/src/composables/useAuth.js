@@ -14,8 +14,8 @@ keycloak.onAuthSuccess = async () => {
     authState.username = keycloak.tokenParsed?.preferred_username ?? ''
 
     try {
-        const user = await postNewUser();
-        authState.userId = user.id;
+        const { data } = await postNewUser();
+        authState.userId = data.id;
     } catch (error) {
         console.error('Failed to provision user', error)
     }
