@@ -103,6 +103,7 @@ export async function importCredentials(file){
     try {
         let bodyFormData = new FormData();
         bodyFormData.append('file', file);
+        console.log(bodyFormData);
 
         const response = await sendingForm.post("/creds/import", bodyFormData);
         const { data } = response;  

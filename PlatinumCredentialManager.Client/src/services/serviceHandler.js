@@ -61,7 +61,7 @@ export async function serviceHandler(action) {
     else{
         return {
             "valid": true,
-            "data": r
+            "data": response["data"]
         };
     }
 }

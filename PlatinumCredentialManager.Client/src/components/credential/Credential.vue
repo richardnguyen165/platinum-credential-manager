@@ -12,6 +12,7 @@
       :rows="currentEntries"
       :location="'credential'"
       :categoryId="categoryId"
+      @rerun="credentialLoaderHelper"
     />
     <Form
       :show="showModal"

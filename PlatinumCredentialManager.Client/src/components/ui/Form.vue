@@ -14,6 +14,11 @@
         <h3>{{ title }}</h3>
       </template>
 
+      <template #image v-if="action === 'allCategories' || action === 'allCredentials'">
+        <img alt="CSV instructions" v-show="action === 'allCategories'" src="/img/importCategory.png" />
+        <img alt="CSV instructions" v-show="action === 'allCredentials'" src="/img/importCredentials.png" />
+      </template>
+
       <template #description>
         <p>{{ description }}</p>
       </template>
@@ -226,10 +231,10 @@ async function emitHelper(data = {}, id = null) {
       await deleteCredential(id);
       router.push(categoryPath(categoryId, route.params.user_id));
       return;
-    case "allCategoriesImportCSV":
+    case "allCategories":
       await importCategories(data);
       return;
-    case "allCredentialsImportCSV":
+    case "allCredentials":
       await importCredentials(data);
       return;
     default:

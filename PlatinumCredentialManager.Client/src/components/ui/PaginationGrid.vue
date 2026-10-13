@@ -182,11 +182,12 @@ import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import { paginateData } from "@/utils/pagination";
-import { categoryPath, credentialPath } from "@/utils/routes.js";
+import { categoriesPath, categoryPath, credentialPath } from "@/utils/routes.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { sortDecider } from "@/utils/sort";
 import { exportCSVDecider } from "@/utils/exportCSV";
 import { useModal } from "@/composables/useModal.js";
+import Form from "./Form.vue";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -207,6 +208,8 @@ const withinCategorySortOption = ref("");
 
 const router = useRouter();
 const route = useRoute();
+
+const emit = defineEmits(["rerun"]);
 
 // for credential
 const showPassword = ref(false);
@@ -276,9 +279,9 @@ function redirectCredentialQuery(credential) {
   });
 }
 
+// for importing a csv
 function loaderHelper(){
-  // Do not return anything
-  return;
+  emit('rerun');
 }
 
 // When in credentials of a category

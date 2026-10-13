@@ -55,9 +55,9 @@ public static class CategoryEndpoints
             string noSpaceCSV = lowerCaseTrimmedCSV.Replace(" ", "");
 
             // header from imported csv
-            string lowerCaseTrimmedColumn = CSVHEADERS[i].Trim().ToLower();
+            string lowerCaseTrimmedColumn = header[i].Trim().ToLower();
 
-            bool headerEquivalentResult = (lowerCaseTrimmedColumn == lowerCaseTrimmedCSV) && (lowerCaseTrimmedColumn == underscoreCSV) && (lowerCaseTrimmedColumn == noSpaceCSV);
+            bool headerEquivalentResult = (lowerCaseTrimmedColumn == lowerCaseTrimmedCSV) || (lowerCaseTrimmedColumn == underscoreCSV) || (lowerCaseTrimmedColumn == noSpaceCSV);
 
             if (!headerEquivalentResult)
             {
@@ -549,11 +549,10 @@ public static class CategoryEndpoints
                 {
                     bool rowResult = credentialCheck(line, errorCounts, allCredentialNames, ref newCredentialNames, ref hasErrors);
 
-                    if (rowResult)
+                    if (!rowResult)
                     {
                         string categoryName = line[0].Trim();
-                        // If new category in both in the csv and the existing ones
-                        if (!allCategoryNames.Contains(categoryName) && !newCategoryNames.Add(categoryName))
+                        if (!allCategoryNames.Contains(categoryName) && !newCategoryNames.Contains(categoryName))
                         {
                             newCategoryNames.Add(categoryName);
                         }
@@ -592,8 +591,6 @@ public static class CategoryEndpoints
                     dbContext.Categories.Add(category);
                 }
 
-                await dbContext.SaveChangesAsync();
-
                 // Two: Create new credentials, row by row
 
                 lineCounter = 0;
@@ -602,7 +599,7 @@ public static class CategoryEndpoints
                     if (lineCounter == 0)
                     { 
                         lineCounter += 1;
-                        break;   
+                        continue;   
                     }
 
                     string categoryName = line[0].Trim();
@@ -624,7 +621,7 @@ public static class CategoryEndpoints
 
                     Credential credential;
 
-                    if (username is not null)
+                    if (username != "")
                     {
                         credential = new()
                         {

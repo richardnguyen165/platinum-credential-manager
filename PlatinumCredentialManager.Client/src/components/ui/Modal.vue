@@ -14,15 +14,12 @@
             <slot name="description"></slot>
           </div>
 
-
-          <!-- TODO -->
           <div class="modal-image">
             <slot name="image"></slot>
           </div>
 
-          <!-- TODO -->
           <ul class="modal-rules" v-for="rule in rules" :key="rule.key">
-            <li></li>
+            <li>{{ rule.text }}</li>
           </ul>
 
           <!-- for inputs -->
@@ -41,7 +38,7 @@
               :id="input.key"
               accept=".csv"
               :required="input.required"
-              @change="handleFileImport"            
+              @change="(e) => handleFileImport(e)"            
             />
             <p v-if="inputs.length > 0 && inputs[0].type === 'file'">{{ fileMessage }}</p>
             <p v-if="errorMessage">{{ errorMessage }}</p>
@@ -79,7 +76,7 @@ let data = reactive({});
 let file = ref(null);
 let fileMessage = ref("");
 let errorMessage = ref("");
-let disableButton = ref(null);
+let disableButton = ref(true);
 
 // Use reactive to store all of the input keys, and their input values
 
@@ -111,17 +108,23 @@ const emit = defineEmits(["ok", "close"]);
 // https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
 function handleFileImport(e){
   errorMessage.value = "";
+  console.log(e.target.files);
 
-  const inputFile = e.target.input.files;
+  const inputFile = e.target.files[0];
 
-  const sizeInMB = inputFile.size / (1024 * 1024);
-  if (sizeInMB > 5){
-    errorMessage.value = `Attepmpted file upload: "${file.value.name}" exceeds the 5MB limit. Please shorten your file.`
-    disableButton.value = file.value != null;
+  if (inputFile == undefined){
     return;
   }
 
-  disableButton.value = true;
+  const sizeInMB = inputFile.size / (1024 * 1024);
+  if (sizeInMB > 5){
+    errorMessage.value = `Attepmpted file upload: "${inputFile.name}" exceeds the 5MB limit. Please shorten your file.`
+    disableButton.value = true;
+    file.value = null;
+    return;
+  }
+
+  disableButton.value = false;
   file.value = inputFile;
   fileMessage.value = `${inputFile.name.length > 10 ? inputFile.name.slice(0, 10) : inputFile.name}`
 }
@@ -132,7 +135,8 @@ function collectData() {
     if (categoryId != null) data["categoryId"] = categoryId;
     return data;
   } else {
-    return file;
+    console.log(file.value);
+    return file.value;
   }
 }
 
@@ -149,7 +153,7 @@ watch(() => show, (newShow) => {
     file.value = null;
     fileMessage.value = "";
     errorMessage .value = "";
-    disableButton.value = null;
+    disableButton.value = false;
 
     if (inputs.length > 0 ) {
       for (const input of inputs){
@@ -179,7 +183,7 @@ watch(() => show, (newShow) => {
 }
 
 .modal-container {
-  width: 300px;
+  width: 700px;
   margin: auto;
   padding: 50px 50px;
   background-color: wheat;

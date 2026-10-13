@@ -103,7 +103,7 @@ export async function importCategories(file){
         let bodyFormData = new FormData();
         bodyFormData.append('file', file);
 
-        const response = await sendingForm.post("/category/import", bodyFormData);
+        const response = await sendingForm.post("/category/import",  bodyFormData);
         const { data } = response;
 
         return {
