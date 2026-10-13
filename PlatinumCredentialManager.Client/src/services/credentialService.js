@@ -99,13 +99,12 @@ export async function searchCredential(queryParams){
 }
 
 // https://stackoverflow.com/questions/47630163/axios-post-request-to-send-form-data
-export async function importCredentials(file){
+export async function importCredentials(file, categoryId){
     try {
         let bodyFormData = new FormData();
         bodyFormData.append('file', file);
-        console.log(bodyFormData);
 
-        const response = await sendingForm.post("/creds/import", bodyFormData);
+        const response = await sendingForm.post(`/creds/import/${categoryId}`, bodyFormData);
         const { data } = response;  
         return {
             data,

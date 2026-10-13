@@ -233,10 +233,10 @@ async function emitHelper(data = {}, id = null) {
       return;
     case "allCategories":
       await importCategories(data);
-      return;
+      break;
     case "allCredentials":
-      await importCredentials(data);
-      return;
+      await importCredentials(data, id);
+      break;
     default:
       console.error(`Unknown form action ${action}`);
       return;

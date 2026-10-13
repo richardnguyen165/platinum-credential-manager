@@ -209,12 +209,13 @@ const withinCategorySortOption = ref("");
 const router = useRouter();
 const route = useRoute();
 
-const emit = defineEmits(["rerun"]);
+const emit = defineEmits(["close", "rerun"]);
 
 // for credential
 const showPassword = ref(false);
 
 watch(sortOption, () => changeData());
+watch(() => rows, () => changeData()); // for import csv if new things are added
 
 function changeData(){
   allData.value = paginateData(

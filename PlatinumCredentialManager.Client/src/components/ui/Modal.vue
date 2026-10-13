@@ -141,7 +141,7 @@ function collectData() {
 }
 
 function chooseId() {
-  if (inputs.length > 0 && inputs[0].type === 'file') return null;
+  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId || null;
   return credentialId || categoryId;
 }
 

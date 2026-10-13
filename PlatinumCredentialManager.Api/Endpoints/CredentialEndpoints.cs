@@ -40,9 +40,9 @@ public static class CredentialEndpoints
             string noSpaceCSV = lowerCaseTrimmedCSV.Replace(" ", "");
 
             // header from imported csv
-            string lowerCaseTrimmedColumn = CSVHEADERS[i].Trim().ToLower();
+            string lowerCaseTrimmedColumn = header[i].Trim().ToLower();
 
-            bool headerEquivalentResult = (lowerCaseTrimmedColumn == lowerCaseTrimmedCSV) && (lowerCaseTrimmedColumn == underscoreCSV) && (lowerCaseTrimmedColumn == noSpaceCSV);
+            bool headerEquivalentResult = (lowerCaseTrimmedColumn == lowerCaseTrimmedCSV) || (lowerCaseTrimmedColumn == underscoreCSV) || (lowerCaseTrimmedColumn == noSpaceCSV);
 
             if (!headerEquivalentResult)
             {
@@ -57,14 +57,14 @@ public static class CredentialEndpoints
             bool rowError = false;
 
             // Checking cannot proceed without correct number of entries
-            if (credential.Length < 4)
+            if (credential.Length < 3)
             {
                 errorCounts["missingRowEntryError"] += 1;   
                 hasErrors = true;
                 rowError = true;
                 return rowError;
             }
-            if (credential.Length > 4)
+            if (credential.Length > 3)
             {
                 errorCounts["tooManyRowEntriesError"] += 1;
                 hasErrors = true;
@@ -79,19 +79,18 @@ public static class CredentialEndpoints
                 hasErrors = true;
                 rowError = true;
             }
-            // check for duplicate names within a csv
             else
             {
                 newCredentialNames.Add(credential[0].Trim());
             }
 
-            if (credential[1].Trim().Length == 0)
+            if (credential[0].Trim().Length == 0)
             {
                 errorCounts["noServiceName"] += 1;
                 hasErrors = true;
                 rowError = true;
             }
-            if (credential[1].Trim().Length > 100)
+            if (credential[0].Trim().Length > 100)
             {
                 errorCounts["serviceNameTooLong"] += 1;
                 hasErrors = true;
@@ -99,7 +98,7 @@ public static class CredentialEndpoints
             }
 
             // Username
-            if (credential[2].Trim().Length > 100)
+            if (credential[1].Trim().Length > 100)
             {
                 errorCounts["usernameTooLong"] += 1;
                 hasErrors = true;
@@ -107,13 +106,13 @@ public static class CredentialEndpoints
             }
 
             // Password
-            if (credential[3].Trim().Length == 0)
+            if (credential[2].Trim().Length == 0)
             {
                 errorCounts["noPassword"] += 1;
                 hasErrors = true;
                 rowError = true;
             }
-            if (credential[3].Trim().Length > 100)
+            if (credential[2].Trim().Length > 100)
             {
                 errorCounts["passwordTooLong"] += 1;
                 hasErrors = true;
@@ -576,11 +575,11 @@ public static class CredentialEndpoints
                 {
                     bool rowResult = credentialCheck(line, errorCounts, allCredentialNames, ref newCredentialNames, ref hasErrors);
 
-                    if (rowResult)
+                    if (!rowResult)
                     {
                         string serviceName = line[0].Trim();
                         // If new category in both in the csv and the existing ones
-                        if (!allCredentialNames.Contains(serviceName) && !newCredentialNames.Add(serviceName))
+                        if (!allCredentialNames.Contains(serviceName) && !newCredentialNames.Contains(serviceName))
                         {
                             newCredentialNames.Add(serviceName);
                         }
@@ -609,20 +608,19 @@ public static class CredentialEndpoints
                     if (lineCounter == 0)
                     { 
                         lineCounter += 1;
-                        break;   
+                        continue;   
                     }
 
-                    string categoryName = line[0].Trim();
-                    string serviceName = line[1].Trim();
-                    string username = line[2].Trim();
-                    string password = line[3].Trim();
+                    string serviceName = line[0].Trim();
+                    string username = line[1].Trim();
+                    string password = line[2].Trim();
 
                     Category correlatedCategory = await dbContext.Categories
                     .FirstOrDefaultAsync(cr => cr.Id == categoryId && cr.UserId == user.Id);
 
                     Credential credential;
 
-                    if (username is not null)
+                    if (username != "")
                     {
                         credential = new()
                         {

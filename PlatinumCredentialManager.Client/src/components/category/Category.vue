@@ -14,6 +14,7 @@
       :categoryId="categoryId"
       :rows="allCredentials"
       :location="'allCredentials'"
+      @rerun="loaderHelper"
     />
     <Form
       :show="showModal"
