@@ -179,7 +179,7 @@ public static class CategoryEndpoints
 
             return Results.Ok(await dbContext.Categories
             .Where(category => category.UserId == user.Id)
-            .Select(category => new GetAllCategoryDto(category.CategoryName))
+            .Select(category => new GetAllCategoryDto(category.CategoryName, category.Id))
             .AsNoTracking()
             .ToListAsync());
         });

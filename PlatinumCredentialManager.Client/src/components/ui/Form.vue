@@ -27,12 +27,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import Modal from "./Modal.vue";
 
 import {
   deleteCategory,
+  getCategories,
   importCategories,
   postCategory,
   putCategory,
@@ -43,7 +44,7 @@ import {
   postCredential,
   putCredential,
 } from "@/services/credentialService.js";
-import { categoriesPath, categoryPath } from "@/utils/routes.js";
+import { categoriesPath, categoryPath, credentialPath } from "@/utils/routes.js";
 
 const { show, action, categoryId, credentialId, currentEntries } = defineProps({
   show: Boolean,
@@ -64,6 +65,16 @@ const description = computed(() => descriptionHelper());
 const rules = computed(() => ruleHelper());
 
 const errorMessage = ref("");
+let allCategories = ref([]);
+
+watch(() => show, async () => {
+  if (action === 'edit-credential'){
+    const { data } = await getCategories();
+    allCategories.value = data;
+  } else {
+    allCategories.value = [];
+  }
+})
 
 function titleHelper() {
   switch (action) {
@@ -110,22 +121,7 @@ function descriptionHelper() {
 }
 
 function inputHelper() {
-  switch (action) {
-    case "create-category":
-    case "edit-category":
-      return [
-        {
-          key: "CategoryName",
-          label: "Category Name",
-          type: "text",
-          required: true,
-          value: currentEntries?.CategoryName,
-        },
-      ];
-
-    case "create-credential":
-    case "edit-credential":
-      return [
+  const credentialArray = [
         {
           key: "ServiceName",
           label: "Service Name",
@@ -147,8 +143,45 @@ function inputHelper() {
           required: false,
           value: currentEntries?.Password,
         },
-      ];
+  ];
 
+  let categoryOptions = {
+      key: "CategoryId",
+      label: "Category",
+      type: "select",
+      value: categoryId
+  };
+
+  if (action === "edit-credential"){
+    const allOptions = [];
+
+    for (const categorySet of allCategories.value){
+      allOptions.push({
+        label: categorySet["categoryName"],
+        id: categorySet["id"],
+        selected: categoryId === categorySet["id"]
+      })
+    }
+
+    categoryOptions["options"] = allOptions;
+  }
+    
+  switch (action) {
+    case "create-category":
+    case "edit-category":
+      return [
+        {
+          key: "CategoryName",
+          label: "Category Name",
+          type: "text",
+          required: true,
+          value: currentEntries?.CategoryName,
+        },
+      ];
+    case "edit-credential":
+      return [categoryOptions, ...credentialArray];
+    case "create-credential":
+      return credentialArray;
     case "allCredentials":
     case "allCategories":
       return [
@@ -226,6 +259,7 @@ async function emitHelper(data = {}, id = null) {
       break;
     case "edit-credential":
       await putCredential(id, data);
+      if (data.categoryId !== categoryId) router.replace(credentialPath(id, data.categoryId, route.params.user_id));
       break;
     case "delete-credential":
       await deleteCredential(id);
@@ -244,6 +278,6 @@ async function emitHelper(data = {}, id = null) {
 
   // All the other cases do not return, so they run emit regardless
   // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-  emit("rerun");
+  if (action !== "edit-credential" || (action === "edit-credential" && data.categoryId === categoryId)) emit("rerun");
 }
 </script>

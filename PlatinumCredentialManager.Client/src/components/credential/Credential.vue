@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import Form from "../ui/Form.vue";
@@ -52,6 +52,8 @@ const route = useRoute();
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const currentEntries = reactive({});
+
+watch(() => categoryId, credentialLoaderHelper);
 
 function goBackPrevious() {
   if (Object.keys(query).length > 0) {

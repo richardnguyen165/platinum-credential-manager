@@ -21,17 +21,22 @@
           <ul class="modal-rules" v-for="rule in rules" :key="rule.key">
             <li>{{ rule.text }}</li>
           </ul>
-
+          
           <!-- for inputs -->
           <div class="modal-body" v-for="input in inputs" :key="input.key">
-            {{ input.label }}
+            <label :for="input.key">{{ input.label }}</label>
             <input
-              v-if="inputs.length > 0 && inputs[0].type !== 'file'"
+              v-if="inputs.length > 0 && inputs[0].type !== 'file' && input.type !== 'select'"
               :type="input.type"
               :id="input.key"
               :required="input.required"
               v-model.trim="data[input.key]"
             />
+            <select v-else-if="input.type === 'select'" :id="input.key" name="input.key" @change="selectedCategory"> 
+              <option :value="option.id" v-for="option in input.options" :key="option.id" :selected="option.selected">
+                {{ option.label }}
+              </option>
+            </select>
             <input
               v-else
               :type="input.type"
@@ -105,6 +110,10 @@ const { show, inputs, rules, categoryId, credentialId } = defineProps({
 // Passes up ok and close event
 const emit = defineEmits(["ok", "close"]);
 
+function selectedCategory(e){
+  data["categoryId"] = e.target.value;
+}
+
 // https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
 function handleFileImport(e){
   errorMessage.value = "";
@@ -130,9 +139,11 @@ function handleFileImport(e){
 }
 
 function collectData() {
-  if (inputs.length > 0 && inputs[0].type !== 'file'){
+  if (inputs[0].type === 'select'){
+    return data;
+  } else if (inputs.length > 0 && inputs[0].type !== 'file'){
     // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
-    if (categoryId != null) data["categoryId"] = categoryId;
+    if (categoryId != null && inputs[0].type !== 'select') data["categoryId"] = categoryId;
     return data;
   } else {
     console.log(file.value);
@@ -159,6 +170,7 @@ watch(() => show, (newShow) => {
       for (const input of inputs){
         data[input.key] = input["value"];
       }
+      console.log(data);
       disableButton.value = inputs[0]['type'] === 'file'
     }
   }

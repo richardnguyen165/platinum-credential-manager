@@ -4,5 +4,6 @@ namespace PlatinumCredentialManager.Api.Dtos.Category;
 
 public record class GetAllCategoryDto
 (
-    [Required][StringLength(100)] string CategoryName
+    [Required][StringLength(100)] string CategoryName,
+    [Required] int Id
 );

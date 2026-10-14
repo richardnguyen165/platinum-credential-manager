@@ -133,6 +133,7 @@
   </div>
 
   <div v-else-if="location === 'credential'">
+    <div>Category Name: {{ rows.CategoryName }}</div>
     <p>Service Name: {{ rows.ServiceName }}</p>
     <p>Username: {{ rows.Username }}</p>
     <p>
@@ -161,7 +162,7 @@
       :max="allData.length"
       @keyup.enter="goToPage"
     />
-    <button :disabled="pageNumber === allData.length" @click="checkIncrement">
+    <button :disabled="allData.length === 0 || pageNumber === allData.length" @click="checkIncrement">
       »
     </button>
   </div>
@@ -218,12 +219,14 @@ watch(sortOption, () => changeData());
 watch(() => rows, () => changeData()); // for import csv if new things are added
 
 function changeData(){
-  allData.value = paginateData(
-    sortDecider(sortOption.value, null, rows, credentialMatch),
-  );
-  pageNumber.value = 1;
-  currentData.value = allData.value[pageNumber.value - 1];
-  inputPageNumber.value = pageNumber.value;
+  if (location !== 'credential'){
+    allData.value = paginateData(
+      sortDecider(sortOption.value, null, rows, credentialMatch),
+    );
+    pageNumber.value = 1;
+    currentData.value = allData.value[pageNumber.value - 1];
+    inputPageNumber.value = pageNumber.value;
+  }
 }
 
 
