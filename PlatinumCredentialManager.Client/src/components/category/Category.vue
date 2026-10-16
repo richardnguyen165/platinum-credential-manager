@@ -2,7 +2,7 @@
   <Header></Header>
   <div v-if="isLoading">Loading Credentials...</div>
   <div v-else-if="!isLoading && !successfullyLoaded">
-    Error: Loading credentials failed!
+    {{ errorMessage }}
   </div>
   <div v-else>
     <p>Category Name: {{ currentEntries.CategoryName }}</p>
@@ -34,7 +34,6 @@ import PaginationGrid from "../ui/PaginationGrid.vue";
 
 import { onMounted, ref, reactive } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { getCategory } from "@/services/categoryService.js";
 import { categoriesPath } from "@/utils/routes.js";
 import { useModal } from "@/composables/useModal.js";
 
@@ -44,6 +43,7 @@ const isMiscallaneous = ref(null);
 const allCredentials = ref(null);
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
+const errorMessage = ref("");
 const router = useRouter();
 const route = useRoute();
 const currentEntries = reactive({});
@@ -58,10 +58,19 @@ const { categoryId } = defineProps({
 
 async function loaderHelper() {
   try {
-    const { data } = await getCategory(categoryId);
-    allCredentials.value = data.credentials;
-    currentEntries.CategoryName = data.categoryName;
-    isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";
+    const payload = {
+      categoryId
+    }
+
+    const { valid, data } = await serviceHandler('get-category', payload);
+
+    if (valid) {
+      allCredentials.value = data.credentials;
+      currentEntries.CategoryName = data.categoryName;
+      isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";
+    } else {
+      errorMessage.value=`${data.title}\n${data.detail}`
+    }
   } catch (error) {
     console.error("Failed to retrive credentals", error);
     successfullyLoaded.value = false;

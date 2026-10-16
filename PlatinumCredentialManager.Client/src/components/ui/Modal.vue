@@ -46,7 +46,6 @@
               @change="(e) => handleFileImport(e)"            
             />
             <p v-if="inputs.length > 0 && inputs[0].type === 'file'">{{ fileMessage }}</p>
-            <p v-if="errorMessage">{{ errorMessage }}</p>
           </div>
 
           <div class="modalError">

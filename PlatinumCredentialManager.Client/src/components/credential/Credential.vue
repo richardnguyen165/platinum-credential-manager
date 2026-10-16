@@ -2,7 +2,7 @@
   <Header></Header>
   <div v-if="isLoading">Loading Credential...</div>
   <div v-else-if="!isLoading && !successfullyLoaded">
-    Error: Loading credential failed!
+    {{ errorMessage }}
   </div>
   <div v-else>
     <button @click="goBackPrevious">Go Back</button>
@@ -34,9 +34,9 @@ import Form from "../ui/Form.vue";
 import Header from "../layout/Header.vue";
 import PaginationGrid from "../ui/PaginationGrid.vue";
 
-import { getCredential } from "@/services/credentialService.js";
 import { categoryPath, searchUpPath } from "@/utils/routes.js";
 import { useModal } from "@/composables/useModal.js";
+import { serviceHandler } from "@/services/serviceHandler.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -51,6 +51,7 @@ const route = useRoute();
 
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
+const errorMessage = ref("");
 const currentEntries = reactive({});
 
 watch(() => categoryId, credentialLoaderHelper);
@@ -65,14 +66,22 @@ function goBackPrevious() {
 
 async function credentialLoaderHelper() {
   try {
-    const { data } = await getCredential(credId);
+    const payload = {
+      credId
+    }
 
-    currentEntries.CategoryName = data.categoryName;
-    currentEntries.ServiceName = data.serviceName;
-    currentEntries.Username = data.username;
-    currentEntries.Password = data.password;
-    currentEntries.DateCreated = data.dateCreated;
-    currentEntries.DateLastUpdated = data.dateLastUpdated;
+    const { valid, data } = await serviceHandler('get-credential', payload);
+    
+    if (valid){
+      currentEntries.CategoryName = data.categoryName;
+      currentEntries.ServiceName = data.serviceName;
+      currentEntries.Username = data.username;
+      currentEntries.Password = data.password;
+      currentEntries.DateCreated = data.dateCreated;
+      currentEntries.DateLastUpdated = data.dateLastUpdated;
+    } else {
+      errorMessage.value=`${data.title}\n${data.detail}`
+    }
   } catch (error) {
     console.error("Failed to retrive credential", error);
     successfullyLoaded.value = false;

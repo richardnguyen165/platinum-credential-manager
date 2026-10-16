@@ -1,6 +1,6 @@
 import { exportCategories } from "@/services/categoryService";
-import { getAllCredentials } from "@/services/credentialService";
 import { sortDecider } from "./sort";
+import { serviceHandler } from "@/services/serviceHandler";
 
 export async function exportCSVDecider(action, data, sortOption, withinCategorySortOption, params){
     if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
@@ -108,7 +108,12 @@ async function exportCredentialsAsCSV(credentials) {
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
 
-    const { data: allCredentials } = await getAllCredentials();
+    const response = await serviceHandler('getAllCredentials');
+    if (!response.valid){
+        alert(`${data.title}\n${data.detail}`);
+        return;
+    }
+    const allCredentials = response.data;
 
     const data = credentials.map(findPassword);
 
@@ -196,7 +201,14 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     csvRows.push(searchParams.join(","));
 
     // Tie passwords to credentials
-    const { data: allCredentials } = await getAllCredentials();
+    const response = await serviceHandler('getAllCredentials');
+    if (!response.valid){
+        alert(`${data.title}\n${data.detail}`);
+        return;
+    }
+
+    const allCredentials = response.data;
+
     const data = credentials.map(findUserAndPassword)
 
     function findUserAndPassword(credential){

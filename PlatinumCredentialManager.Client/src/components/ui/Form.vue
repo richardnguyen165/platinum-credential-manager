@@ -14,13 +14,17 @@
         <h3>{{ title }}</h3>
       </template>
 
+      <template #description>
+        <p>{{ description }}</p>
+      </template>
+
       <template #image v-if="action === 'allCategories' || action === 'allCredentials'">
         <img alt="CSV instructions" v-show="action === 'allCategories'" src="/img/importCategory.png" />
         <img alt="CSV instructions" v-show="action === 'allCredentials'" src="/img/importCredentials.png" />
       </template>
 
-      <template #description>
-        <p>{{ description }}</p>
+      <template #modalErrorMessage>
+        <p>{{ errorMessage }}</p>
       </template>
     </Modal>
   </Teleport>
@@ -32,19 +36,10 @@ import { useRouter, useRoute } from "vue-router";
 import Modal from "./Modal.vue";
 
 import {
-  deleteCategory,
-  getCategories,
-  importCategories,
-  postCategory,
-  putCategory,
+  getCategories
 } from "@/services/categoryService.js";
-import {
-  deleteCredential,
-  importCredentials,
-  postCredential,
-  putCredential,
-} from "@/services/credentialService.js";
 import { categoriesPath, categoryPath, credentialPath } from "@/utils/routes.js";
+import { serviceHandler } from "@/services/serviceHandler.js";
 
 const { show, action, categoryId, credentialId, currentEntries } = defineProps({
   show: Boolean,
@@ -242,35 +237,57 @@ function ruleHelper() {
 }
 
 // TODO: display error message => these will eventually need to show the data, and check if it can rerun, and pass to the errorMessage at top
-async function emitHelper(data = {}, id = null) {
-  switch (action) {
-    case "create-category":
-      await postCategory(data);
-      break;
+async function emitHelper(payload = {}, id = null) {
+  let canRerun = false;
+  let response, reparsedPayload;
+
+  switch(action){
     case "edit-category":
-      await putCategory(id, data);
+    case "edit-credential":
+    case "allCredentials":
+      reparsedPayload = {
+        id,
+        "data": payload
+      }
       break;
     case "delete-category":
-      await deleteCategory(id);
-      router.push(categoriesPath(route.params.user_id));
-      return;
-    case "create-credential":
-      await postCredential(data);
+    case "delete-credential":
+      reparsedPayload = {
+        id
+      }
       break;
+    default:
+      reparsedPayload = {...payload};
+  }
+
+  switch (action) {
+    case "create-category":
+    case "create-credential":
+    case "edit-category":
+    case "allCategories":
+    case "allCredentials":
+      response = await serviceHandler(action, reparsedPayload);
+      canRerun = response.valid;
+      if (!response.valid) errorMessage.value=`${data.title}\n${data.detail}`
+      break;
+    case "delete-category":
+      response = await serviceHandler(action, reparsedPayload);
+      canRerun = response.valid;
+      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      if (response.valid) router.push(categoriesPath(route.params.user_id));
+      return;
     case "edit-credential":
-      await putCredential(id, data);
-      if (data.categoryId !== categoryId) router.replace(credentialPath(id, data.categoryId, route.params.user_id));
+      response = await serviceHandler(action, reparsedPayload);
+      canRerun = response.valid;
+      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      if (response.valid && data.categoryId !== categoryId) router.replace(credentialPath(id, data.categoryId, route.params.user_id));
       break;
     case "delete-credential":
-      await deleteCredential(id);
-      router.push(categoryPath(categoryId, route.params.user_id));
+      response = await serviceHandler(action, reparsedPayload);
+      canRerun = response.valid;
+      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      if (response.valid) router.push(categoryPath(categoryId, route.params.user_id));
       return;
-    case "allCategories":
-      await importCategories(data);
-      break;
-    case "allCredentials":
-      await importCredentials(data, id);
-      break;
     default:
       console.error(`Unknown form action ${action}`);
       return;
@@ -278,6 +295,6 @@ async function emitHelper(data = {}, id = null) {
 
   // All the other cases do not return, so they run emit regardless
   // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-  if (action !== "edit-credential" || (action === "edit-credential" && data.categoryId === categoryId)) emit("rerun");
+  if ((action !== "edit-credential" && canRerun) || (action === "edit-credential" && data.categoryId === categoryId)) emit("rerun");
 }
 </script>

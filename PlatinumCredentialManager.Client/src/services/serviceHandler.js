@@ -1,10 +1,10 @@
 import { keycloak } from "@/config/keycloak";
-import { deleteCategory, exportCategories, getCategory } from "./categoryService";
-import { getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "./credentialService";
+import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "./categoryService";
+import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "./credentialService";
 import { getUser, postNewUser } from "./userService";
 
 
-export async function serviceHandler(action) {
+export async function serviceHandler(action, payload = null) {
     let response;
 
     switch(action){
@@ -14,8 +14,20 @@ export async function serviceHandler(action) {
         case "post-new-user":
             response = await postNewUser();
             break;
+        case "allCategories":
+            response = await importCategories(payload);
+            break;
+        case "create-category":
+            response = await postCategory(payload);
+            break;
         case "get-category":
-            response = await getCategory();
+            response = await getCategory(payload["id"]);
+            break;
+        case "edit-category":
+            response = await putCategory(payload["id"], payload["data"]);
+            break;
+        case "delete-category":
+            response = await deleteCategory(payload["id"]);
             break;
         case "export-categories":
             response = await exportCategories();
@@ -24,22 +36,25 @@ export async function serviceHandler(action) {
             response = await getAllCredentials();
             break;
         case "search-credential":
-            response = await searchCredential();
+            response = await searchCredential(payload);
             break;
         case "get-credential":
-            response = await getCredential();
+            response = await getCredential(payload["credId"]);
             break;
-        case "delete-category":
-            response = await deleteCategory();
+        case "edit-credential":
+            response = await putCredential(payload["id"], payload["data"]);
             break;
-        case "import-credentials":
-            response = await importCredentials();
+        case "delete-credential":
+            response = await deleteCredential(payload["id"]);
             break;
-        case "post-credential":
-            response = await postCredential();
+        case "allCredentials":
+            response = await importCredentials(payload["data"], payload["id"]);
             break;
-        case "put-credential":
-            response = await putCredential();
+        case "create-credential":
+            response = await postCredential(payload);
+            break;
+        case "edit-credential":
+            response = await putCredential(payload["id"], payload["data"]);
             break;
     }
 

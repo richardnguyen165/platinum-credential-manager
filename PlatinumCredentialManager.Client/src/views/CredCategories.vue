@@ -3,7 +3,7 @@
   <div>Credential Categories</div>
   <div v-if="isLoading">Loading Credential Categories...</div>
   <div v-else-if="!isLoading && !successfullyLoaded">
-    Error: Loading credential categories failed!
+    {{ errorMessage }}
   </div>
   <div v-else>
     <button @click="createModal('create-category')">Create Category</button>
@@ -29,19 +29,25 @@ import Form from "@/components/ui/Form.vue";
 import Header from "@/components/layout/Header.vue";
 import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 
-import { getUser } from "@/services/userService";
 import { useModal } from "@/composables/useModal";
+import { serviceHandler } from "@/services/serviceHandler";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
 const allCategories = ref(null);
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
+const errorMessage = ref("");
 
 async function categoryLoaderHelper() {
   try {
-    const { data } = await getUser();
-    allCategories.value = data.categories;
+    const { valid, data } = await serviceHandler('get-user');
+    
+    if (valid){
+      allCategories.value = data.categories;
+    } else {
+      errorMessage.value = `${data.title}\n${data.detail}`
+    }
   } catch (error) {
     console.error("Failed to retrive credential categories", error);
     successfullyLoaded.value = false;

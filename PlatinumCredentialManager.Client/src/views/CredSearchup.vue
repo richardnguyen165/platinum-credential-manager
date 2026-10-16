@@ -54,6 +54,9 @@
   <div v-else-if="credentials.length === 0">
     No credentials found with the following inputs above!
   </div>
+  <div v-else-if="errorMessage !== ''">
+    {{ errorMessage }}
+  </div>
   <div v-else>
     <div>
       Found {{ credentials.length }} result{{
@@ -73,10 +76,10 @@
 import Header from "@/components/layout/Header.vue";
 import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 
-import { searchCredential } from "@/services/credentialService";
 import { ref, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { parsePayload } from "@/utils/parsePayload";
+import { serviceHandler } from "@/services/serviceHandler";
 
 const router = useRouter();
 const route = useRoute(); // for query parameters
@@ -91,6 +94,7 @@ const data = reactive({
 const formErrorMessage = ref("");
 const credentials = ref([]);
 const submittedServiceName = ref("");
+const errorMessage = ref("");
 
 // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
 function todaysDate() {
@@ -129,7 +133,12 @@ async function searchForCredentials() {
 
   const payload = parsePayload(data);
 
-  const { data: extractedData } = await searchCredential(payload);
+  const { valid, data: extractedData } = await serviceHandler("search-credential", payload);
+  if (valid) {
+    credentials.value = extractedData;
+  } else {
+    errorMessage.value = `${data.title}\n${data.detail}`
+  }
   credentials.value = extractedData;
 
   // Updates the sort, since without it, it would use the other service name value, and it would keep updating as typing (only change it when submitting the form)
@@ -153,7 +162,11 @@ onMounted(async () => {
 
   const payload = parsePayload(data);
 
-  const { data: extractedData } = await searchCredential(payload);
-  credentials.value = extractedData;
+  const { valid, data: extractedData } = await serviceHandler("search-credential", payload);
+  if (valid) {
+    credentials.value = extractedData;
+  } else {
+    errorMessage.value = `${data.title}\n${data.detail}`
+  }
 });
 </script>
