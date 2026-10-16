@@ -20,6 +20,7 @@
       :credentialId="credId"
       :action="action"
       :currentEntries="currentEntries"
+      :query="query"
       @close="closeModal"
       @rerun="credentialLoaderHelper"
     />

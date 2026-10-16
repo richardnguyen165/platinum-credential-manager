@@ -376,6 +376,17 @@ public static class CredentialEndpoints
 
             var updatedCredentialServiceName = updatedCredential.ServiceName;
 
+            bool userOwnsCategory = await dbContext.Categories.AnyAsync(c => c.Id == updatedCredential.CategoryId && c.UserId == user.Id);
+
+            if (!userOwnsCategory)
+            {
+                return Results.Problem(
+                    detail:"User cannot update a credential they do not own!",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "400 Bad Request"
+                );
+            }
+
             bool nameTakenStatus = await dbContext.Credentials
             .AnyAsync(credential =>
                 // Check if any other credential (EXCLUDING itself, has the same name)
@@ -384,16 +395,6 @@ public static class CredentialEndpoints
                 && (credential.ServiceName == updatedCredentialServiceName)
                 && credential.Category.UserId == user.Id
             );
-            bool userOwnsCategory = await dbContext.Categories.AnyAsync(c => c.Id == updatedCredential.CategoryId && c.UserId == user.Id);
-
-            if (!userOwnsCategory)
-            {
-                return Results.Problem(
-                    detail:"User cannot update category they do not own!",
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: "400 Bad Request"
-                );
-            }
 
             if (nameTakenStatus)
             {

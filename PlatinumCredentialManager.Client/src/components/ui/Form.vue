@@ -7,6 +7,7 @@
       :categoryId="categoryId"
       :credentialId="credentialId"
       :rules="rules"
+      :canClose = "canClose"
       @close="emit('close')"
       @ok="emitHelper"
     >
@@ -31,22 +32,24 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import Modal from "./Modal.vue";
 
 import {
   getCategories
 } from "@/services/categoryService.js";
-import { categoriesPath, categoryPath, credentialPath } from "@/utils/routes.js";
+import { categoriesPath, categoryPath, credentialPath, searchUpPath } from "@/utils/routes.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
+import { parsePayload } from "@/utils/parsePayload.js";
 
-const { show, action, categoryId, credentialId, currentEntries } = defineProps({
+const { show, action, categoryId, credentialId, currentEntries, query } = defineProps({
   show: Boolean,
   action: String,
   categoryId: Number,
   credentialId: Number,
   currentEntries: Object,
+  query: Object
 });
 const emit = defineEmits(["close", "rerun"]);
 
@@ -61,8 +64,10 @@ const rules = computed(() => ruleHelper());
 
 const errorMessage = ref("");
 let allCategories = ref([]);
+let canClose = ref(false);
 
 watch(() => show, async () => {
+  errorMessage.value = "";
   if (action === 'edit-credential'){
     const { data } = await getCategories();
     allCategories.value = data;
@@ -141,7 +146,7 @@ function inputHelper() {
   ];
 
   let categoryOptions = {
-      key: "CategoryId",
+      key: "categoryId",
       label: "Category",
       type: "select",
       value: categoryId
@@ -238,7 +243,7 @@ function ruleHelper() {
 
 // TODO: display error message => these will eventually need to show the data, and check if it can rerun, and pass to the errorMessage at top
 async function emitHelper(payload = {}, id = null) {
-  let canRerun = false;
+  canClose.value = false;
   let response, reparsedPayload;
 
   switch(action){
@@ -267,36 +272,54 @@ async function emitHelper(payload = {}, id = null) {
     case "allCategories":
     case "allCredentials":
       response = await serviceHandler(action, reparsedPayload);
-      canRerun = response.valid;
-      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      canClose.value = response.valid;
+      if (!canClose.value) errorMessage.value=`${response.data.title}\n${response.data.detail}`
       break;
     case "delete-category":
       response = await serviceHandler(action, reparsedPayload);
       if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
       if (response.valid) router.push(categoriesPath(route.params.user_id));
-      return;
+      return
     case "edit-credential":
       response = await serviceHandler(action, reparsedPayload);
-      canRerun = response.valid;
-      console.log(reparsedPayload);
-      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
-      if (response.valid && reparsedPayload.data.categoryId !== categoryId) router.replace(credentialPath(id, reparsedPayload.data.categoryId, route.params.user_id));
+      canClose.value = response.valid;
+      if (!canClose.value) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      if (canClose.value && reparsedPayload.data.categoryId !== categoryId){
+        if (query){
+          router.push({
+            path: credentialPath(
+              id,
+              reparsedPayload.data.categoryId,
+              route.params.user_id,
+            ),
+            query: parsePayload(query)
+          });
+        } else  {
+          router.replace(credentialPath(id, reparsedPayload.data.categoryId, route.params.user_id));
+        }
+      }
       break;
     case "delete-credential":
       response = await serviceHandler(action, reparsedPayload);
       if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
-      if (response.valid) router.push(categoryPath(categoryId, route.params.user_id));
+      if (response.valid){
+        if (query) {
+          router.push({
+            path: searchUpPath(route.params.user_id),
+            query: parsePayload(query)
+          });
+        } else {
+          router.push(categoryPath(categoryId, route.params.user_id));
+        }
+      }
       return;
     default:
       console.error(`Unknown form action ${action}`);
-      return;
+      return
   }
 
-  console.log(reparsedPayload);
-  console.log(reparsedPayload.data.categoryId === categoryId);
-  console.log()
   // All the other cases do not return, so they run emit regardless
   // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-  if ((action !== "edit-credential" && canRerun) || (action === "edit-credential" && reparsedPayload.data.CategoryId === categoryId && canRerun)) emit("rerun");
+  if ((action !== "edit-credential" && canClose.value) || (action === "edit-credential" && reparsedPayload.data.categoryId === categoryId && canClose.value)) emit("rerun");
 }
 </script>
