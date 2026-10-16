@@ -36,6 +36,7 @@ import { onMounted, ref, reactive } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { categoriesPath } from "@/utils/routes.js";
 import { useModal } from "@/composables/useModal.js";
+import { serviceHandler } from "@/services/serviceHandler.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -59,11 +60,11 @@ const { categoryId } = defineProps({
 async function loaderHelper() {
   try {
     const payload = {
-      categoryId
+      "id": categoryId
     }
 
     const { valid, data } = await serviceHandler('get-category', payload);
-
+    console.log(data);
     if (valid) {
       allCredentials.value = data.credentials;
       currentEntries.CategoryName = data.categoryName;

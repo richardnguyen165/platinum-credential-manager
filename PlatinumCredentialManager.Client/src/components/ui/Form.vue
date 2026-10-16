@@ -268,23 +268,22 @@ async function emitHelper(payload = {}, id = null) {
     case "allCredentials":
       response = await serviceHandler(action, reparsedPayload);
       canRerun = response.valid;
-      if (!response.valid) errorMessage.value=`${data.title}\n${data.detail}`
+      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
       break;
     case "delete-category":
       response = await serviceHandler(action, reparsedPayload);
-      canRerun = response.valid;
       if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
       if (response.valid) router.push(categoriesPath(route.params.user_id));
       return;
     case "edit-credential":
       response = await serviceHandler(action, reparsedPayload);
       canRerun = response.valid;
+      console.log(reparsedPayload);
       if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
-      if (response.valid && data.categoryId !== categoryId) router.replace(credentialPath(id, data.categoryId, route.params.user_id));
+      if (response.valid && reparsedPayload.data.categoryId !== categoryId) router.replace(credentialPath(id, reparsedPayload.data.categoryId, route.params.user_id));
       break;
     case "delete-credential":
       response = await serviceHandler(action, reparsedPayload);
-      canRerun = response.valid;
       if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
       if (response.valid) router.push(categoryPath(categoryId, route.params.user_id));
       return;
@@ -293,8 +292,11 @@ async function emitHelper(payload = {}, id = null) {
       return;
   }
 
+  console.log(reparsedPayload);
+  console.log(reparsedPayload.data.categoryId === categoryId);
+  console.log()
   // All the other cases do not return, so they run emit regardless
   // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-  if ((action !== "edit-credential" && canRerun) || (action === "edit-credential" && data.categoryId === categoryId)) emit("rerun");
+  if ((action !== "edit-credential" && canRerun) || (action === "edit-credential" && reparsedPayload.data.CategoryId === categoryId && canRerun)) emit("rerun");
 }
 </script>

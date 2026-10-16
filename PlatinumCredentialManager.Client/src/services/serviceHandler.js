@@ -39,7 +39,7 @@ export async function serviceHandler(action, payload = null) {
             response = await searchCredential(payload);
             break;
         case "get-credential":
-            response = await getCredential(payload["credId"]);
+            response = await getCredential(payload["id"]);
             break;
         case "edit-credential":
             response = await putCredential(payload["id"], payload["data"]);
@@ -52,9 +52,6 @@ export async function serviceHandler(action, payload = null) {
             break;
         case "create-credential":
             response = await postCredential(payload);
-            break;
-        case "edit-credential":
-            response = await putCredential(payload["id"], payload["data"]);
             break;
     }
 

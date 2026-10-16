@@ -110,7 +110,7 @@ const { show, inputs, rules, categoryId, credentialId } = defineProps({
 const emit = defineEmits(["ok", "close"]);
 
 function selectedCategory(e){
-  data["categoryId"] = e.target.value;
+  data["categoryId"] = Number(e.target.value);
 }
 
 // https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
@@ -138,7 +138,8 @@ function handleFileImport(e){
 }
 
 function collectData() {
-  if (inputs[0].type === 'select'){
+  if (inputs.length > 0 && inputs[0].type === 'select'){
+    delete data.CategoryId;
     return data;
   } else if (inputs.length > 0 && inputs[0].type !== 'file'){
     // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
