@@ -42,6 +42,7 @@ import {
 import { categoriesPath, categoryPath, credentialPath, searchUpPath } from "@/utils/routes.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { parsePayload } from "@/utils/parsePayload.js";
+import { useToast } from "vue-toastification";
 
 const { show, action, categoryId, credentialId, currentEntries, query } = defineProps({
   show: Boolean,
@@ -241,7 +242,35 @@ function ruleHelper() {
   }
 }
 
-// TODO: display error message => these will eventually need to show the data, and check if it can rerun, and pass to the errorMessage at top
+function toastSuccessHelper(action) {
+  const toast = useToast();
+
+  switch(action){
+    case "edit-category":
+      toast.success("Category edited successfully!");
+      break;
+    case "edit-credential":
+      toast.success("Credential edited successfuly!");
+      break;
+    case "allCredentials":
+    case "allCategories":
+      toast.success("Import successful!");
+      break;
+    case "delete-category":
+      toast.success("Category has been deleted.");
+      break;
+    case "delete-credential":
+      toast.success("Credenital has been deleted.");
+      break;
+    case "create-category":
+      toast.success("Category has been created!");
+      break;
+    case "create-credential":
+      toast.success("Credential has been created!");
+      break;
+  }
+}
+
 async function emitHelper(payload = {}, id = null) {
   canClose.value = false;
   let response, reparsedPayload;
@@ -269,22 +298,46 @@ async function emitHelper(payload = {}, id = null) {
     case "create-category":
     case "create-credential":
     case "edit-category":
+      response = await serviceHandler(action, reparsedPayload);
+      canClose.value = response.valid;
+      if (!canClose.value) {
+        errorMessage.value=`${response.data.title}: ${response.data.detail}`
+        useToast().error(errorMessage.value);
+      } else {
+        toastSuccessHelper(action);
+      }
+      break;
     case "allCategories":
     case "allCredentials":
       response = await serviceHandler(action, reparsedPayload);
       canClose.value = response.valid;
-      if (!canClose.value) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      if (!canClose.value) {
+        // TOD: Figure out something for the error list for invalid csvs
+        errorMessage.value=`${response.data.title}: ${response.data.detail}`
+        useToast().error(errorMessage.value);
+      } else {
+        toastSuccessHelper(action);
+      }
       break;
     case "delete-category":
       response = await serviceHandler(action, reparsedPayload);
-      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
-      if (response.valid) router.push(categoriesPath(route.params.user_id));
+      if (!response.valid) {
+        errorMessage.value=`${response.data.title}: ${response.data.detail}`
+        useToast().error(errorMessage.value);
+      } else {
+        toastSuccessHelper(action);
+        router.push(categoriesPath(route.params.user_id));
+      }
       return
     case "edit-credential":
       response = await serviceHandler(action, reparsedPayload);
       canClose.value = response.valid;
-      if (!canClose.value) errorMessage.value=`${response.data.title}\n${response.data.detail}`
+      if (!canClose.value) {
+        errorMessage.value=`${response.data.title}: ${response.data.detail}`
+        useToast().error(errorMessage.value);
+      }
       if (canClose.value && reparsedPayload.data.categoryId !== categoryId){
+        toastSuccessHelper(action);
         if (query){
           router.push({
             path: credentialPath(
@@ -301,8 +354,11 @@ async function emitHelper(payload = {}, id = null) {
       break;
     case "delete-credential":
       response = await serviceHandler(action, reparsedPayload);
-      if (!response.valid) errorMessage.value=`${response.data.title}\n${response.data.detail}`
-      if (response.valid){
+      if (!response.valid) {
+        errorMessage.value=`${response.data.title}: ${response.data.detail}`
+        useToast().error(errorMessage.value);
+      } else {
+        toastSuccessHelper(action);
         if (query) {
           router.push({
             path: searchUpPath(route.params.user_id),
@@ -315,6 +371,7 @@ async function emitHelper(payload = {}, id = null) {
       return;
     default:
       console.error(`Unknown form action ${action}`);
+      useToast().error("Error in form: Unknown form action");
       return
   }
 

@@ -31,6 +31,7 @@ import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 
 import { useModal } from "@/composables/useModal";
 import { serviceHandler } from "@/services/serviceHandler";
+import { useToast } from "vue-toastification";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -45,8 +46,10 @@ async function categoryLoaderHelper() {
     
     if (valid){
       allCategories.value = data.categories;
+      useToast().success("Categories loaded in!");
     } else {
       errorMessage.value = `${data.title}\n${data.detail}`
+      useToast().error(errorMessage.value);
     }
   } catch (error) {
     console.error("Failed to retrive credential categories", error);

@@ -37,6 +37,7 @@ import { useRouter, useRoute } from "vue-router";
 import { categoriesPath } from "@/utils/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
+import { useToast } from "vue-toastification";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -69,8 +70,10 @@ async function loaderHelper() {
       allCredentials.value = data.credentials;
       currentEntries.CategoryName = data.categoryName;
       isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";
+      useToast().success(`Credentials loaded for ${currentEntries.CategoryName}!`);
     } else {
       errorMessage.value=`${data.title}\n${data.detail}`
+      useToast().error(errorMessage.value);
     }
   } catch (error) {
     console.error("Failed to retrive credentals", error);

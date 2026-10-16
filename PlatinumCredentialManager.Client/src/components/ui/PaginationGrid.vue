@@ -183,7 +183,7 @@ import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import { paginateData } from "@/utils/pagination";
-import { categoriesPath, categoryPath, credentialPath } from "@/utils/routes.js";
+import { categoryPath, credentialPath } from "@/utils/routes.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { sortDecider } from "@/utils/sort";
 import { exportCSVDecider } from "@/utils/exportCSV";
@@ -228,7 +228,6 @@ function changeData(){
     inputPageNumber.value = pageNumber.value;
   }
 }
-
 
 function goToPage() {
   if (!Number.isInteger(inputPageNumber.value)) {

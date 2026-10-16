@@ -35,6 +35,8 @@ import Form from "../ui/Form.vue";
 import Header from "../layout/Header.vue";
 import PaginationGrid from "../ui/PaginationGrid.vue";
 
+import { useToast } from 'vue-toastification'
+
 import { categoryPath, searchUpPath } from "@/utils/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
@@ -80,8 +82,10 @@ async function credentialLoaderHelper() {
       currentEntries.Password = data.password;
       currentEntries.DateCreated = data.dateCreated;
       currentEntries.DateLastUpdated = data.dateLastUpdated;
+      useToast().success("Credential loaded!");
     } else {
-      errorMessage.value=`${data.title}\n${data.detail}`
+      errorMessage.value=`${data.title}: ${data.detail}`
+      useToast().error(errorMessage.value);
     }
   } catch (error) {
     console.error("Failed to retrive credential", error);

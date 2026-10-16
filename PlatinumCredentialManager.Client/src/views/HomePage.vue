@@ -7,6 +7,7 @@
 <script setup>
     import { watch } from 'vue'
     import { useRouter } from 'vue-router'
+    import { useToast } from 'vue-toastification';
     
     import useAuth from '@/composables/useAuth'
     import { homepagePath } from '@/utils/routes';
@@ -18,6 +19,7 @@
     // If userId in authState is defined (meaning successful request), redirect to user's homepage
     watch(() => authState.userId, (userId) => {
         if (userId) router.push(homepagePath(userId))
+        useToast().success("Logged in!");
     }, { immediate: true })
 
     // Redirects

@@ -1,15 +1,22 @@
 import { createApp } from 'vue'
 import { keycloak } from './config/keycloak.js'
 import { createPinia } from 'pinia'
+import Toast from 'vue-toastification'
 
 import App from './App.vue'
 import router from './router/index.js'
+import 'vue-toastification/dist/index.css'
 
 const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
+
+app.use(Toast, {
+  position: 'top-right',
+  timeout: 5000
+})
 
 keycloak
   .init({

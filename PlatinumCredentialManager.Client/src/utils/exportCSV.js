@@ -1,12 +1,23 @@
 import { exportCategories } from "@/services/categoryService";
 import { sortDecider } from "./sort";
 import { serviceHandler } from "@/services/serviceHandler";
+import { ExportError } from "./ExportError";
+import { useToast } from 'vue-toastification'
 
 export async function exportCSVDecider(action, data, sortOption, withinCategorySortOption, params){
-    if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
-    else if (action === 'allCredentials') await exportCredentialsAsCSV(data);
-    else if (action === 'credential') await exportCredentialAsCSV(data);
-    else await exportSearchCredentialsAsCSV(data, params);
+    try {
+        if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
+        else if (action === 'allCredentials') await exportCredentialsAsCSV(data);
+        else if (action === 'credential') await exportCredentialAsCSV(data);
+        else await exportSearchCredentialsAsCSV(data, params);
+    } catch (error) {
+        const toast = useToast();
+        if (error instanceof ExportError){
+            toast.error(error.message);
+        } else {
+            toast.warning(error.message);
+        }
+    }
 };
 
 function currentDateAndTime() {
@@ -18,16 +29,37 @@ function currentDateAndTime() {
 
 async function fileWriter(title, blob) {
     if (window.hasOwnProperty('showSaveFilePicker')){
+        let writable;
         try{
             const fileHandle = await getSaveFilePicker(title);
 
             // https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle
-            const writable = await fileHandle.createWritable();
+            writable = await fileHandle.createWritable();
 
             await writable.write(blob);
-            await writable.close();
         } catch (error) {
-            console.error(error);
+            if (error.name === 'AbortError'){
+                const toast = useToast();
+                toast.info("Cancelling export.")
+                // will implement a toast here - this is not supposed to be an error
+                return;
+            } else if (error.name === 'SecurityError'){
+                throw new ExportError("File picker opened for too long, or file picker opened from insecure page")
+            } else if (error.name === 'NotAllowedError'){
+                throw new ExportError("Permission to write to file denied");
+            } else if (error.name === "NotAllowedError"){
+                throw new ExportError("Browser or user blocked the picker");
+            } else if (error.name === "NoModificationAllowedError"){
+                throw new ExportError("File is locked or in use."); 
+            } else if  (error.name === "QuotaExceededError") {
+                throw new ExportError("Disk is full or storage limit hit");
+            } else if (error.name === 'TypeError'){
+                throw error;
+            } else {
+                throw error;
+            }
+        } finally {
+            await writable.close();
         }
     // firefox and safari don't open the window
     } else {

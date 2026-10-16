@@ -80,6 +80,7 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { parsePayload } from "@/utils/parsePayload";
 import { serviceHandler } from "@/services/serviceHandler";
+import { useToast } from 'vue-toastification'
 
 const router = useRouter();
 const route = useRoute(); // for query parameters
@@ -138,6 +139,8 @@ async function searchForCredentials() {
     credentials.value = extractedData;
   } else {
     errorMessage.value = `${data.title}\n${data.detail}`
+    useToast().error(errorMessage.value);
+    return;
   }
   credentials.value = extractedData;
 
@@ -167,6 +170,7 @@ onMounted(async () => {
     credentials.value = extractedData;
   } else {
     errorMessage.value = `${data.title}\n${data.detail}`
+    useToast().error(errorMessage.value);
   }
 });
 </script>
