@@ -312,9 +312,10 @@ async function emitHelper(payload = {}, id = null) {
       response = await serviceHandler(action, reparsedPayload);
       canClose.value = response.valid;
       if (!canClose.value) {
-        // TOD: Figure out something for the error list for invalid csvs
-        errorMessage.value=`${response.data.title}: ${response.data.detail}`
-        useToast().error(errorMessage.value);
+        useToast().error("Invalid CSV import!");
+        // TODO: Figure out something for the error list for invalid csvs
+        errorMessage.value=`Please read the following details below to determine fixes to your cSV`
+
       } else {
         toastSuccessHelper(action);
       }
