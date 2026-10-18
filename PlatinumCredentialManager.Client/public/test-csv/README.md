@@ -20,7 +20,7 @@ Two import modes, two sets of files:
 
 ## Valid files: credential import
 
-Import each into a fresh/empty category unless noted, since duplicate service names within a category are rejected.
+All valid credential files use different service names, so you can import every one of them, one after another, into the SAME category without a duplicate conflict (checked with a script). The same holds for the valid category files within one account. Do not re-import the same file twice, since that is the duplicate case.
 
 | File | Expected |
 |---|---|
@@ -32,7 +32,7 @@ Import each into a fresh/empty category unless noted, since duplicate service na
 | valid-header-no-space | VALID. `ServiceName` is accepted |
 | valid-whitespace-trimmed | VALID. Stored values have no leading/trailing spaces. The second row has a blank username |
 | valid-quoted-fields | VALID. Commas and `""` escaped quotes inside quotes are kept: username `ali"ce`, password `pw,with,commas` |
-| valid-case-sensitive-names | VALID, 3 credentials (`Facebook`, `facebook`, `FACEBOOK`). OBSERVE: names are compared case-sensitively |
+| valid-case-sensitive-names | VALID, 3 credentials (`Gmail`, `gmail`, `GMAIL`). OBSERVE: names are compared case-sensitively |
 | valid-unicode | VALID. Accents, Japanese and emoji round-trip unchanged |
 | valid-special-char-passwords | VALID. Passwords stored as plain text, shown escaped (check no XSS and no SQL effects) |
 | valid-crlf-line-endings | VALID, 2 credentials |
@@ -82,7 +82,7 @@ Import each into a fresh/empty category unless noted, since duplicate service na
 | valid-single-row | VALID. Creates Shopping (1) |
 | valid-blank-username | VALID, 2 credentials with no username |
 | valid-merge-into-existing-category | Import AFTER valid-basic. VALID. Adds to the existing Social (2 new) and Banking (1 new). No duplicate categories are created |
-| valid-same-service-different-categories | VALID. Same service name in 3 different categories is allowed |
+| valid-same-service-different-categories | VALID. Same service name (`Dropbox`) in 3 different categories is allowed |
 | valid-max-length-100 | VALID. 4 credentials, each with one 100-char field (category, service, username, password) |
 | valid-new-category-gaming | VALID. Creates Gaming (4) |
 | valid-new-category-streaming | VALID. Creates Streaming Services (4) |
