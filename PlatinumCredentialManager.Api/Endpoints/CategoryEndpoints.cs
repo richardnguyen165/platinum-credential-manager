@@ -33,14 +33,14 @@ public static class CategoryEndpoints
         // Checking cannot proceed without correct number of entries
         if (header.Length < 4)
         {
-            errorCounts["missingColumnError"] = 1;
+            errorCounts["missingColumnError"] = 4 - header.Length;
             hasErrors = true;
             return;
         }
 
         if (header.Length > 4)
         {
-            errorCounts["tooManyColumnError"] = 1;    
+            errorCounts["tooManyColumnError"] = header.Length - 4;    
             hasErrors = true;
             return;
         }
@@ -72,7 +72,7 @@ public static class CategoryEndpoints
         bool rowError = false;
 
         // Checking cannot proceed without correct number of entries
-        if (credential.Length < 4)
+        if (credential.Length <= 2)
         {
             errorCounts["missingRowEntryError"] += 1;   
             hasErrors = true;
@@ -467,8 +467,8 @@ public static class CategoryEndpoints
             IDictionary<string, int> errorCounts = new Dictionary<string, int>();
             IFormFile file = importedCredentials.File;
 
-            errorCounts.Add("emptyfile", 0);
-            errorCounts.Add("noCredenitals", 0);
+            errorCounts.Add("emptyFile", 0);
+            errorCounts.Add("noCredentials", 0);
 
             // Check the header
             errorCounts.Add("missingColumnError", 0);
@@ -509,7 +509,7 @@ public static class CategoryEndpoints
 
             if (allLines.Count == 0)
             {
-                errorCounts["emptyfile"] += 1;
+                errorCounts["emptyFile"] += 1;
                 return Results.Problem(
                     detail: "Empty file. Please fill out the file.",
                     statusCode: StatusCodes.Status400BadRequest,
@@ -536,6 +536,7 @@ public static class CategoryEndpoints
             HashSet<(string CategoryName, string ServiceName)> newCredentialNames = new HashSet<(string CategoryName, string ServiceName)>();
 
             bool hasErrors = false;
+            bool hasCredentials = false;
 
             // Validate each line
             int lineCounter = 0;
@@ -544,9 +545,11 @@ public static class CategoryEndpoints
                 if (lineCounter == 0)
                 {
                     headerCheck(line, errorCounts, ref hasErrors);
+                    if (hasErrors) break; // Breaking this so that header errors are corrected first
                 }
                 else
                 {
+                    hasCredentials = true;
                     bool rowResult = credentialCheck(line, errorCounts, allCredentialNames, ref newCredentialNames, ref hasErrors);
 
                     if (!rowResult)
@@ -561,6 +564,13 @@ public static class CategoryEndpoints
 
                 lineCounter += 1;
             }
+
+            if (!hasCredentials)
+            {
+                errorCounts["noCredentials"] += 1;
+                hasErrors = true;
+            }
+
 
             // Determine whether to add or not
             if (hasErrors)

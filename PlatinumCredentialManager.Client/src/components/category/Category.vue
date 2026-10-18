@@ -70,7 +70,6 @@ async function loaderHelper() {
       allCredentials.value = data.credentials;
       currentEntries.CategoryName = data.categoryName;
       isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";
-      useToast().success(`Credentials loaded for ${currentEntries.CategoryName}!`);
     } else {
       errorMessage.value=`${data.title}\n${data.detail}`
       useToast().error(errorMessage.value);

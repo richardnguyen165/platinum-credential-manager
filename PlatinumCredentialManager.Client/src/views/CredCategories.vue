@@ -46,7 +46,6 @@ async function categoryLoaderHelper() {
     
     if (valid){
       allCategories.value = data.categories;
-      useToast().success("Categories loaded in!");
     } else {
       errorMessage.value = `${data.title}\n${data.detail}`
       useToast().error(errorMessage.value);

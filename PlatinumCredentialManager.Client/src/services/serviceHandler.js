@@ -3,6 +3,22 @@ import { deleteCategory, exportCategories, getCategory, importCategories, postCa
 import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "./credentialService";
 import { getUser, postNewUser } from "./userService";
 
+const ERROR_NAMES = [
+    "emptyFile",
+    "missingColumnError",
+    "tooManyColumnError",
+    "wrongColumnName",
+    "missingRowEntryError",
+    "tooManyRowEntriesError",
+    "noServiceName",
+    "duplicateServiceName",
+    "serviceNameTooLong",
+    "usernameTooLong",
+    "noPassword",
+    "passwordTooLong",
+    "noCategoryName",
+    "categoryNameTooLong"
+]
 
 export async function serviceHandler(action, payload = null) {
     let response;
@@ -56,19 +72,28 @@ export async function serviceHandler(action, payload = null) {
     }
 
     if (!response["valid"]){
+        console.log(response);
         if(response.data.status == 401){
             console.log("Authentication expired - logging out..")
             keycloak.logout();
         }
-        return {
+        const currentErrorObject = {
             "valid": false,
             "data": {
                 status: response.data.status,
                 title: response.data.title,
                 detail: response.data.detail,
-                extensions: response?.extensions
+                extensions: {}
             }
+        };
+
+        for (const name of ERROR_NAMES){
+            if (name in response.data) currentErrorObject["data"]["extensions"][name] = response.data[name];
         }
+
+        console.log(currentErrorObject);
+
+        return currentErrorObject;
     }
     else{
         return {

@@ -82,7 +82,6 @@ async function credentialLoaderHelper() {
       currentEntries.Password = data.password;
       currentEntries.DateCreated = data.dateCreated;
       currentEntries.DateLastUpdated = data.dateLastUpdated;
-      useToast().success("Credential loaded!");
     } else {
       errorMessage.value=`${data.title}: ${data.detail}`
       useToast().error(errorMessage.value);

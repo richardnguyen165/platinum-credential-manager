@@ -18,8 +18,8 @@
             <slot name="image"></slot>
           </div>
 
-          <ul class="modal-rules" v-for="rule in rules" :key="rule.key">
-            <li>{{ rule.text }}</li>
+          <ul class="modal-rules">
+            <li v-for="rule in rules" :key="rule.key">{{ rule.text }}</li>
           </ul>
           
           <!-- for inputs -->
@@ -45,11 +45,14 @@
               :required="input.required"
               @change="(e) => handleFileImport(e)"            
             />
-            <p v-if="inputs.length > 0 && inputs[0].type === 'file'">{{ fileMessage }}</p>
           </div>
 
-          <div class="modalError">
-            <slot name="modalErrorMessage"></slot>
+          <div class="modal-error">
+            <slot name="modal-error-message"></slot>
+          </div>
+
+          <div class="modal-csv-error-display">
+            <slot name="modal-csv-error-count"></slot>
           </div>
 
           <div class="modal-footer">
@@ -77,7 +80,6 @@ import { reactive, ref, watch } from "vue";
 
 let data = reactive({});
 let file = ref(null);
-let fileMessage = ref("");
 let errorMessage = ref("");
 let disableButton = ref(true);
 
@@ -123,7 +125,6 @@ watch(() => canClose, (newCanClose) => {
 // https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
 function handleFileImport(e){
   errorMessage.value = "";
-  console.log(e.target.files);
 
   const inputFile = e.target.files[0];
 
@@ -141,7 +142,6 @@ function handleFileImport(e){
 
   disableButton.value = false;
   file.value = inputFile;
-  fileMessage.value = `${inputFile.name.length > 10 ? inputFile.name.slice(0, 10) : inputFile.name}`
 }
 
 function collectData() {
@@ -152,7 +152,6 @@ function collectData() {
     if (categoryId != null && inputs[0].type !== 'select') data["categoryId"] = categoryId;
     return data;
   } else {
-    console.log(file.value);
     return file.value;
   }
 }
@@ -168,7 +167,6 @@ watch(() => show, (newShow) => {
   if (newShow){
     data = {}
     file.value = null;
-    fileMessage.value = "";
     errorMessage .value = "";
     disableButton.value = false;
 
@@ -176,7 +174,6 @@ watch(() => show, (newShow) => {
       for (const input of inputs){
         data[input.key] = input["value"];
       }
-      console.log(data);
       disableButton.value = inputs[0]['type'] === 'file'
     }
   }

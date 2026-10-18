@@ -2,6 +2,7 @@ import { reactive } from 'vue'
 
 import { keycloak } from '../config/keycloak.js'
 import { serviceHandler } from '@/services/serviceHandler.js';
+import { useToast } from 'vue-toastification';
 
 const authState = reactive({
   authenticated: keycloak.authenticated ?? false,
@@ -20,6 +21,7 @@ keycloak.onAuthSuccess = async () => {
             authState.userId = data.id;
         }
         else {
+            useToast().error("Error logging in: Logging out");
             console.log("Log in crash...")
             console.log(`Error Title: ${response["title"]}`);
             console.log(`Error Code: ${response["status"]}`);

@@ -24,8 +24,19 @@
         <img alt="CSV instructions" v-show="action === 'allCredentials'" src="/img/importCredentials.png" />
       </template>
 
-      <template #modalErrorMessage>
+      <template #modal-error-message>
         <p>{{ errorMessage }}</p>
+      </template>
+
+      <template #modal-csv-error-count v-if="(action === 'allCategories' || action === 'allCredentials') && JSON.stringify(allCSVRuleViolationInfo) !== JSON.stringify({})">
+        <p v-if="allCSVRuleViolationInfo['type'] === 'file'">Please fix the file errors before re-submitting!</p>
+        <p v-else-if="allCSVRuleViolationInfo['type'] === 'header'">Please correct the header errors (adding, removing, or spelling correctly) before re-submitting!</p>
+        <p v-else>Please make sure that each credential is inputted correctly!</p>
+        <ul>
+          <li v-for="error in allCSVRuleViolationInfo['errors']">
+            {{ error }}
+          </li>
+        </ul>
       </template>
     </Modal>
   </Teleport>
@@ -43,6 +54,7 @@ import { categoriesPath, categoryPath, credentialPath, searchUpPath } from "@/ut
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { useToast } from "vue-toastification";
+import { filterImportCSVResponse } from "@/services/filterImportCSVResponse.js";
 
 const { show, action, categoryId, credentialId, currentEntries, query } = defineProps({
   show: Boolean,
@@ -63,12 +75,14 @@ const allInputs = computed(() => inputHelper());
 const description = computed(() => descriptionHelper());
 const rules = computed(() => ruleHelper());
 
-const errorMessage = ref("");
+let errorMessage = ref("");
 let allCategories = ref([]);
 let canClose = ref(false);
+let allCSVRuleViolationInfo = ref({});
 
 watch(() => show, async () => {
   errorMessage.value = "";
+  allCSVRuleViolationInfo.value = {};
   if (action === 'edit-credential'){
     const { data } = await getCategories();
     allCategories.value = data;
@@ -260,7 +274,7 @@ function toastSuccessHelper(action) {
       toast.success("Category has been deleted.");
       break;
     case "delete-credential":
-      toast.success("Credenital has been deleted.");
+      toast.success("Credential has been deleted.");
       break;
     case "create-category":
       toast.success("Category has been created!");
@@ -284,6 +298,9 @@ async function emitHelper(payload = {}, id = null) {
         "data": payload
       }
       break;
+    case "allCategories":
+      reparsedPayload = payload;
+      break;
     case "delete-category":
     case "delete-credential":
       reparsedPayload = {
@@ -293,6 +310,8 @@ async function emitHelper(payload = {}, id = null) {
     default:
       reparsedPayload = {...payload};
   }
+
+  console.log(reparsedPayload);
 
   switch (action) {
     case "create-category":
@@ -313,9 +332,10 @@ async function emitHelper(payload = {}, id = null) {
       canClose.value = response.valid;
       if (!canClose.value) {
         useToast().error("Invalid CSV import!");
-        // TODO: Figure out something for the error list for invalid csvs
-        errorMessage.value=`Please read the following details below to determine fixes to your cSV`
-
+        errorMessage.value=`Please read the following details below to determine fixes to your CSV`;
+        const allErrorCounts = filterImportCSVResponse(action, response.data.extensions);
+        console.log(allErrorCounts);
+        allCSVRuleViolationInfo.value = allErrorCounts;
       } else {
         toastSuccessHelper(action);
       }
@@ -360,7 +380,7 @@ async function emitHelper(payload = {}, id = null) {
         useToast().error(errorMessage.value);
       } else {
         toastSuccessHelper(action);
-        if (query) {
+        if (JSON.stringify(query) !== JSON.stringify({})) {
           router.push({
             path: searchUpPath(route.params.user_id),
             query: parsePayload(query)
