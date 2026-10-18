@@ -7,6 +7,7 @@
 <script setup>
     import { watch } from 'vue'
     import { useRouter } from 'vue-router'
+    import { useToast } from 'vue-toastification';
     
     import useAuth from '@/composables/useAuth'
     import { homepagePath } from '@/utils/routes';

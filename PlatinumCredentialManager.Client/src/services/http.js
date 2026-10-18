@@ -2,9 +2,9 @@ import axios from 'axios';
 import { keycloak } from '@/config/keycloak';
 
 // Source: https://skycloak.io/blog/keycloak-vue-js-authentication-guide/
-
 const http = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5142',
+    withCredentials: true, // needed to send cookie
     headers: {
         'Content-Type': 'application/json'
     }

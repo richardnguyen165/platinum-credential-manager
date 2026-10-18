@@ -1,5 +1,6 @@
 // Install: dotnet add PlatinumCredentialManager.Api package DotNetEnv
 
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer; // For jwt token
 using Microsoft.IdentityModel.Tokens;
 using PlatinumCredentialManager.Api.Data; // For migrate db and add creds store db
@@ -19,8 +20,17 @@ builder.Services.AddCors(options =>
         // dotnet run url
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();            
     });
+});
+
+// https://okyrylchuk.dev/blog/minimal-apis-in-dotnet-8/
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.Name ="PCMAntiForgeryCookie";
+    options.FormFieldName = "AntiFogeryFiled";
+    options.HeaderName = "X-CSRF-TOKEN";
 });
 
 builder.AddCredsStoreDb();  // Register db context 
@@ -70,6 +80,18 @@ app.UseCors(corsPolicy);   // add this before app.MapGamesEndpoints()
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+// https://www.roundthecode.com/dotnet-tutorials/how-to-upload-files-asp-net-core-web-api
+app.UseAntiforgery();
+
+app.MapGet("antiforgery/token", (IAntiforgery forgeryService, HttpContext context) =>
+{
+    var tokens = forgeryService.GetAndStoreTokens(context);
+    context.Response.Cookies.Append("X-CSRF-TOKEN", tokens.RequestToken!,
+            new CookieOptions { HttpOnly = false });
+
+    return Results.Ok();
+}).RequireAuthorization();
 
 app.MapUserEndpoints();
 

@@ -6,7 +6,7 @@ public record class GetDetailedCredentialDto
 (
     [Required] int Id,
     [Required][StringLength(100)] string ServiceName,
-    [Required][StringLength(100)] string Username,
+    [StringLength(100)] string? Username,
     [Required][StringLength(100)] string Password,
     [Required] DateOnly DateCreated,
     [Required] DateOnly DateLastUpdated,

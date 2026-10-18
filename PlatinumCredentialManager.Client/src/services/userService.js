@@ -2,11 +2,34 @@ import http from "./http";
 
 export async function postNewUser(){
     // Logic of no try and catch block, let the calling parent throw it
-    const { data } = await http.post(`/user/me`);
-    return data;
+    try{
+        const response = await http.post(`/user/me`);
+        const { data } = response;  
+        return {
+            data,
+            valid: true,
+        };
+    } catch (err) {
+        return {
+            data: err.response?.data,
+            valid: false
+        }
+    }
+    
 }
 
 export async function getUser(){
-    const { data } = await http.get(`/user/me`);
-    return data; 
+    try{
+        const response = await http.get(`/user/me`);
+        const { data } = response;  
+        return {
+            data,
+            valid: true,
+        };
+    } catch (err) {
+        return {
+            data: err.response?.data,
+            valid: false
+        }
+    }
 }

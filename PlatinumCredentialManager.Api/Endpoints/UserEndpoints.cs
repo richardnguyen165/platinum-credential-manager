@@ -21,7 +21,10 @@ public static class UserEndpoints
         {
             var keycloakId = KeycloakId(principal);
 
-            if (keycloakId is null) return Results.Unauthorized();
+            if (keycloakId is null) return Results.Problem(
+                detail: "User authentication expired.",
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "401 Unauthorized");
 
             // Finds user based on keycloak id
             var dto = await dbContext.Users
@@ -49,7 +52,10 @@ public static class UserEndpoints
         {
             var keycloakId = KeycloakId(principal);
 
-            if (keycloakId is null) return Results.Unauthorized();
+            if (keycloakId is null) return Results.Problem(
+                detail: "User authentication expired.",
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "401 Unauthorized");
 
             // find user
 

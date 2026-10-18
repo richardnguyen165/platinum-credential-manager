@@ -1,6 +1,8 @@
-export function sortDecider(sortFilter, data, credentialMatch = null){
+export function sortDecider(sortFilter, withinCategorySortOption, data, credentialMatch = null){
     const copiedData = [...data];
-    if (sortFilter === "azAscendingService") sortServiceNameAscending(copiedData);
+    // This is for all options
+    if (sortFilter && withinCategorySortOption) sortAllCredentials(copiedData, sortFilter, withinCategorySortOption);
+    else if (sortFilter === "azAscendingService") sortServiceNameAscending(copiedData);
     else if (sortFilter === "azDescendingService") sortServiceNameDescending(copiedData);
     else if (sortFilter === "azAscendingCategory") sortCategoryNameAscending(copiedData);
     else if (sortFilter === "azDescendingCategory") sortCategoryNameDescending(copiedData);
@@ -59,5 +61,40 @@ function sortByMatchCredential(data, credentialMatch){
 
         // if they equal each other, 0 => evaluate right hand side
         return aRank - bRank || a.serviceName.toLowerCase().localeCompare(b.serviceName.toLowerCase());
+    });
+}
+
+function sortAllCredentials(data, sortOption, secondSortOption) {
+    data.sort((a, b) => {
+
+        let firstSortCheck;
+
+        let firstOption, secondOption;
+        if (sortOption.includes("Ascending")){
+            firstOption = a;
+            secondOption = b;
+        } else {
+            firstOption = b;
+            secondOption = a;
+        }
+        
+        firstSortCheck = firstOption.categoryName.toLowerCase().localeCompare(secondOption.categoryName.toLowerCase());
+    
+
+        if (firstSortCheck !== 0) return firstSortCheck; // meaning they different category
+
+        // else, they are the same category => tiebreak using the date
+
+        if (secondSortOption.includes("Ascending")){
+            firstOption = a;
+            secondOption = b;
+        } else {
+            firstOption = b;
+            secondOption = a;
+        }
+
+        if (secondSortOption.includes("Service")) return firstOption.serviceName.toLowerCase().localeCompare(secondOption.serviceName.toLowerCase());
+        else if (secondSortOption.includes("dateCreated")) return (new Date(firstOption.dateCreated) -  new Date(secondOption.dateCreated));
+        else return (new Date(firstOption.dateLastUpdated) -  new Date(secondOption.dateLastUpdated));
     });
 }
