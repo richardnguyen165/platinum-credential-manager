@@ -4,7 +4,8 @@
 > item describes the symptom, the concept, and how to reproduce it, not where it is or how to fix
 > it.
 
-Suggested order: 1 (quickest, most serious), then 3, 2, 4, and 5 whenever it's convenient.
+Suggested order: 1 (quickest, most serious), then 6a and 6b (the API already redirects to HTTPS), then
+3, 2, 4, and 5 whenever it's convenient.
 
 ## 1. Passwords printed to the browser console
 
@@ -113,3 +114,56 @@ handler never runs.
   HTML attribute.
 - [ ] Found the input
 - [ ] Fixed
+
+## 6. The frontend still talks to the API over HTTP
+
+The API now listens on HTTPS and redirects plain HTTP requests, but the frontend still calls the
+HTTP address. Every request, including the bearer token and every decrypted password, still goes
+over plain HTTP before it is redirected. CORS preflight requests can't follow redirects, so calls
+may also fail with a CORS error that doesn't mention HTTPS.
+
+- **Why it matters:** On localhost the traffic stays on your machine, but as soon as the app runs
+  over a real network, anyone on the path can read and change it.
+- **Reproduce:** Open the Network tab, use the app, and look at the port and status code of each API
+  request.
+
+### 6a. Point the frontend at the HTTPS API
+
+- **What to check:** Find where the client gets its API address (search for the port and for
+  `VITE_`). No env file exists yet, so the fallback in code is the one in use. Decide whether to
+  change the fallback or add a Vite env file, and which env files git should ignore.
+- **Remember:** Vite reads env files only when it starts. Restart it after changing them.
+- [x] Every API request in the Network tab goes to the HTTPS port
+- [x] No request gets a redirect status from the HTTP port
+
+### 6b. Test every feature, not just login
+
+Some things can break quietly when the page and the API use different schemes.
+
+- **Concept:** Mixed content. Look up which direction browsers block: an HTTPS page calling HTTP, or
+  an HTTP page calling HTTPS.
+- **Concept:** "Schemeful same-site" and the Secure cookie flag. The CSV import relies on an
+  antiforgery cookie set by the API. Do browsers treat the HTTP frontend and the HTTPS API as the
+  same site? Can an HTTP page read a cookie marked Secure?
+- **Reproduce:** With the console open, try login, the credential list, view, create, edit, delete,
+  search, import, and all four exports.
+- [ ] Every feature works over HTTPS
+- [ ] Import still passes the antiforgery check
+
+### 6c. Optional: serve the frontend over HTTPS too
+
+Do this if the import breaks because of the cookie questions in 6b, or if you want development to
+match a real deployment. Three other things depend on the frontend's address:
+
+- **Concept:** How Vite serves HTTPS in development (a certificate, or a plugin that creates one).
+- **CORS:** The scheme is part of the origin, so the API's allowed origin must change too.
+- **Keycloak:** The client's Valid redirect URIs and Web origins list the frontend address. They must
+  be updated even though Keycloak itself still runs on HTTP, or login fails with a redirect URI
+  error.
+- **Tip:** Change one piece at a time and test login after each change.
+- [ ] Frontend served over HTTPS
+- [ ] CORS origin updated
+- [ ] Keycloak client redirect URIs and web origins updated
+- [ ] Login works end to end
+
+**Not yet:** Leave the frontend's Keycloak address alone. It changes when Keycloak itself gets TLS.

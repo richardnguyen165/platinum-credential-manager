@@ -72,7 +72,6 @@ export async function serviceHandler(action, payload = null) {
     }
 
     if (!response["valid"]){
-        console.log(response);
         if(response.data.status == 401){
             console.log("Authentication expired - logging out..")
             keycloak.logout();
@@ -90,9 +89,7 @@ export async function serviceHandler(action, payload = null) {
         for (const name of ERROR_NAMES){
             if (name in response.data) currentErrorObject["data"]["extensions"][name] = response.data[name];
         }
-
-        console.log(currentErrorObject);
-
+        
         return currentErrorObject;
     }
     else{

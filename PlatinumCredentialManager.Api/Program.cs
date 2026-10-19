@@ -64,15 +64,23 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build(); // Move this to after the cors and loading dot env
 
+app.MigrateDb();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
 // Swagger UI syntax
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.MapOpenApi();   // serves /openapi/v1.json
     app.UseSwaggerUI(options =>
-        options.SwaggerEndpoint("/openapi/v1.json", "Platinum Credential Manager"));
+        options.SwaggerEndpoint("./v1/swagger.json", "Platinum Credential Manager"));
 }
-
-app.MigrateDb();
 
 // CORS policy
 app.UseCors(corsPolicy);   // add this before app.MapGamesEndpoints()
@@ -81,9 +89,9 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-// https://www.roundthecode.com/dotnet-tutorials/how-to-upload-files-asp-net-core-web-api
 app.UseAntiforgery();
 
+// // https://www.roundthecode.com/dotnet-tutorials/how-to-upload-files-asp-net-core-web-api
 app.MapGet("antiforgery/token", (IAntiforgery forgeryService, HttpContext context) =>
 {
     var tokens = forgeryService.GetAndStoreTokens(context);

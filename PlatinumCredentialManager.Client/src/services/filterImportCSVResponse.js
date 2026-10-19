@@ -71,7 +71,6 @@ function headerErrorHelper(headerError, response) {
 }
 
 export function filterImportCSVResponse(action, response){
-    console.log(response);
     // Step 1: Check for an empty file
     if (response["emptyFile"] !== 0){
         return {

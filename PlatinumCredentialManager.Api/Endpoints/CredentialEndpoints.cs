@@ -25,7 +25,7 @@ public static class CredentialEndpoints
 
         if (header.Length > 3)
         {
-            errorCounts["tooManyColumnError"] = header.Length - 3;    
+            errorCounts["tooManyColumnError"] = header.Length - 3;
             hasErrors = true;
             return;
         }
@@ -46,7 +46,7 @@ public static class CredentialEndpoints
 
             if (!headerEquivalentResult)
             {
-                errorCounts["wrongColumnName"] += 1;
+                errorCounts["wrongColumnName"]++;
                 hasErrors = true;
             }
         }
@@ -71,14 +71,14 @@ public static class CredentialEndpoints
             // Username can be nulled
             if (credential.Length <= 2)
             {
-                errorCounts["missingRowEntryError"] += 1;   
+                errorCounts["missingRowEntryError"]++;   
                 hasErrors = true;
                 rowError = true;
                 return rowError;
             }
             if (credential.Length > 3)
             {
-                errorCounts["tooManyRowEntriesError"] += 1;
+                errorCounts["tooManyRowEntriesError"]++;
                 hasErrors = true;
                 rowError = true;
                 return rowError;
@@ -87,7 +87,7 @@ public static class CredentialEndpoints
             // Service Name
             if (allCredentialNames.Contains(credential[0].Trim()) || newCredentialNames.Contains(credential[0].Trim()))
             {
-                errorCounts["duplicateServiceName"] += 1;
+                errorCounts["duplicateServiceName"]++;
                 hasErrors = true;
                 rowError = true;
             }
@@ -98,13 +98,13 @@ public static class CredentialEndpoints
 
             if (credential[0].Trim().Length == 0)
             {
-                errorCounts["noServiceName"] += 1;
+                errorCounts["noServiceName"]++;
                 hasErrors = true;
                 rowError = true;
             }
             if (credential[0].Trim().Length > 100)
             {
-                errorCounts["serviceNameTooLong"] += 1;
+                errorCounts["serviceNameTooLong"]++;
                 hasErrors = true;
                 rowError = true;
             }
@@ -112,7 +112,7 @@ public static class CredentialEndpoints
             // Username
             if (credential[1].Trim().Length > 100)
             {
-                errorCounts["usernameTooLong"] += 1;
+                errorCounts["usernameTooLong"]++;
                 hasErrors = true;
                 rowError = true;
             }
@@ -120,13 +120,13 @@ public static class CredentialEndpoints
             // Password
             if (credential[2].Trim().Length == 0)
             {
-                errorCounts["noPassword"] += 1;
+                errorCounts["noPassword"]++;
                 hasErrors = true;
                 rowError = true;
             }
             if (credential[2].Trim().Length > 100)
             {
-                errorCounts["passwordTooLong"] += 1;
+                errorCounts["passwordTooLong"]++;
                 hasErrors = true;
                 rowError = true;
             }
@@ -466,212 +466,231 @@ public static class CredentialEndpoints
             return Results.NoContent();
         });
 
-        credentialURLGroup.MapGet("/search", async ([AsParameters] SearchCredentialDto searchCredential, CredsStoreContext dbContext, ClaimsPrincipal principal) => {
-            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        credentialURLGroup.MapGet("/search",
+            async ([AsParameters] SearchCredentialDto searchCredential, CredsStoreContext dbContext,
+                ClaimsPrincipal principal) =>
+            {
+                var keycloakId = principal.FindFirst("sub")?.Value ??
+                                 principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
-            
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+                if (keycloakId is null)
+                    return Results.Problem(
+                        detail: "User authentication expired.",
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "401 Unauthorized");
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user, searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate, searchCredential.EndDate);
+                if (user is null)
+                    return Results.Problem(
+                        detail: "User authentication expired.",
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "401 Unauthorized");
 
-            return Results.Ok(await dateLINQ
-            .Where(credential => searchCredential.CategoryName == null || credential.Category.CategoryName == searchCredential.CategoryName ||credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) || credential.Category.CategoryName.Contains(searchCredential.CategoryName))
-            .Where(credential => searchCredential.ServiceName == null || credential.ServiceName == searchCredential.ServiceName ||credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
-            credential.ServiceName.Contains(searchCredential.ServiceName))
-            .Select(credential => new SearchCredentialResultsDto(
-                credential.Id,
-                credential.Category.Id,
-                credential.Category.CategoryName,
-                credential.ServiceName,
-                credential.DateCreated,
-                credential.DateLastUpdated
-            ))
-            .AsNoTracking()
-            .ToListAsync());
-        });
+                IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user,
+                    searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate,
+                    searchCredential.EndDate);
+
+                return Results.Ok(await dateLINQ
+                    .Where(credential => searchCredential.CategoryName == null ||
+                                         credential.Category.CategoryName == searchCredential.CategoryName ||
+                                         credential.Category.CategoryName.StartsWith(searchCredential.CategoryName) ||
+                                         credential.Category.CategoryName.Contains(searchCredential.CategoryName))
+                    .Where(credential => searchCredential.ServiceName == null ||
+                                         credential.ServiceName == searchCredential.ServiceName ||
+                                         credential.ServiceName.StartsWith(searchCredential.ServiceName) ||
+                                         credential.ServiceName.Contains(searchCredential.ServiceName))
+                    .Select(credential => new SearchCredentialResultsDto(
+                        credential.Id,
+                        credential.Category.Id,
+                        credential.Category.CategoryName,
+                        credential.ServiceName,
+                        credential.DateCreated,
+                        credential.DateLastUpdated
+                    ))
+                    .AsNoTracking()
+                    .ToListAsync());
+            });
 
         // Mass uploading credentials
         // https://www.thatsoftwaredude.com/codebytes/14090/how-to-parse-csv-files-in-c-a-quick-guide
         // https://andrewlock.net/reading-json-and-binary-data-from-multipart-form-data-sections-in-aspnetcore/
-        credentialURLGroup.MapPost("/import/{categoryId}", async (int categoryId, [FromForm] ImportCredentialsDto importedCredentials, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
-        {
-            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
-
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
-
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
-
-            Dictionary<string, int> errorCounts = new Dictionary<string, int>();
-            IFormFile file = importedCredentials.File;
-
-            errorCounts.Add("emptyFile", 0);
-            errorCounts.Add("noCredentials", 0);
-
-            // Check the header
-            errorCounts.Add("missingColumnError", 0);
-            errorCounts.Add("tooManyColumnError", 0);
-
-            errorCounts.Add("wrongColumnName", 0);
-
-            // Check the rows
-            errorCounts.Add("missingRowEntryError", 0);
-            errorCounts.Add("tooManyRowEntriesError", 0);
-
-            errorCounts.Add("noServiceName", 0);
-            errorCounts.Add("duplicateServiceName", 0);
-            errorCounts.Add("serviceNameTooLong", 0);
-
-            errorCounts.Add("usernameTooLong", 0);
-
-            errorCounts.Add("noPassword", 0);
-            errorCounts.Add("passwordTooLong", 0);
-
-            List<string[]> allLines = new List<string[]>();
-
-            using var reader = new StreamReader(file.OpenReadStream());
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+        credentialURLGroup.MapPost("/import/{categoryId}",
+            async (int categoryId, [FromForm] ImportCredentialsDto importedCredentials, CredsStoreContext dbContext,
+                ClaimsPrincipal principal) =>
             {
-                while (csv.Read())
+                var keycloakId = principal.FindFirst("sub")?.Value ??
+                                 principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (keycloakId is null)
+                    return Results.Problem(
+                        detail: "User authentication expired.",
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "401 Unauthorized"
+                    );
+
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+                if (user is null)
+                    return Results.Problem(
+                        detail: "User authentication expired.",
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "401 Unauthorized"
+                    );
+
+                Dictionary<string, int> errorCounts = new Dictionary<string, int>();
+                IFormFile file = importedCredentials.File;
+
+                errorCounts.Add("emptyFile", 0);
+                errorCounts.Add("noCredentials", 0);
+
+                // Check the header
+                errorCounts.Add("missingColumnError", 0);
+                errorCounts.Add("tooManyColumnError", 0);
+
+                errorCounts.Add("wrongColumnName", 0);
+
+                // Check the rows
+                errorCounts.Add("missingRowEntryError", 0);
+                errorCounts.Add("tooManyRowEntriesError", 0);
+
+                errorCounts.Add("noServiceName", 0);
+                errorCounts.Add("duplicateServiceName", 0);
+                errorCounts.Add("serviceNameTooLong", 0);
+
+                errorCounts.Add("usernameTooLong", 0);
+
+                errorCounts.Add("noPassword", 0);
+                errorCounts.Add("passwordTooLong", 0);
+
+                List<string[]> allLines = new List<string[]>();
+
+                using var reader = new StreamReader(file.OpenReadStream());
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                 {
-                    allLines.Add(csv.Context.Reader.Parser.Record);
-                }
-            }
-
-            if (allLines.Count == 0)
-            {
-                errorCounts["emptyFile"] += 1;
-                return Results.Problem(
-                    detail: "Empty file. Please fill out the file.",
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: "400 Bad Request",
-                    extensions: errorCounts.ToDictionary(kv => kv.Key, kv => (object?)kv.Value)
-                );
-            }
-
-            HashSet<string> allCredentialNames = await dbContext.Credentials
-            .Where(cr => cr.Category.UserId == user.Id && cr.Category.Id == categoryId)
-            .Select(cr => cr.ServiceName)
-            .ToHashSetAsync();
-
-            HashSet<string> newCredentialNames = new HashSet<string>();
-
-            bool hasErrors = false;
-            bool hasCredentials = false;
-
-            // Validate each line
-            int lineCounter = 0;
-            foreach (var line in allLines)
-            {
-                if (lineCounter == 0)
-                {
-                    headerCheck(line, errorCounts, ref hasErrors);
-                    if (hasErrors) break; // Breaking this so that header errors are corrected first
-                }
-                else
-                {
-                    hasCredentials = true;
-                    bool rowResult = credentialCheck(line, errorCounts, allCredentialNames, ref newCredentialNames, ref hasErrors);
-
-                    if (!rowResult)
+                    while (csv.Read())
                     {
-                        string serviceName = line[0].Trim();
-                        // If new category in both in the csv and the existing ones
-                        if (!allCredentialNames.Contains(serviceName) && !newCredentialNames.Contains(serviceName))
-                        {
-                            newCredentialNames.Add(serviceName);
-                        }
+                        allLines.Add(csv.Context.Reader.Parser.Record);
                     }
                 }
 
-                lineCounter += 1;
-            }
+                if (allLines.Count == 0)
+                {
+                    errorCounts["emptyFile"] += 1;
+                    return Results.Problem(
+                        detail: "Empty file. Please fill out the file.",
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "400 Bad Request",
+                        extensions: errorCounts.ToDictionary(kv => kv.Key, kv => (object?)kv.Value)
+                    );
+                }
 
-            if (!hasCredentials)
-            {
-                errorCounts["noCredentials"] += 1;
-                hasErrors = true;
-            }
+                HashSet<string> allCredentialNames = await dbContext.Credentials
+                    .Where(cr => cr.Category.UserId == user.Id && cr.Category.Id == categoryId)
+                    .Select(cr => cr.ServiceName)
+                    .ToHashSetAsync();
 
-            if (hasErrors)
-            {
-                return Results.Problem(
-                    detail: "Errors found in imported CSV.",
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: "400 Bad Request",
-                    extensions: errorCounts.ToDictionary(kv => kv.Key, kv => (object?)kv.Value)
-                );
-            }
-            else
-            {
-                // One: Create new credentials, row by row
+                HashSet<string> newCredentialNames = new HashSet<string>();
 
-                lineCounter = 0;
+                bool hasErrors = false;
+                bool hasCredentials = false;
+
+                // Validate each line
+                int lineCounter = 0;
                 foreach (var line in allLines)
                 {
                     if (lineCounter == 0)
-                    { 
-                        lineCounter += 1;
-                        continue;   
-                    }
-
-                    string serviceName = line[0].Trim();
-                    string username = line[1].Trim();
-                    string password = line[2].Trim();
-
-                    Category correlatedCategory = await dbContext.Categories
-                    .FirstOrDefaultAsync(cr => cr.Id == categoryId && cr.UserId == user.Id);
-
-                    Credential credential;
-
-                    if (username != "")
                     {
-                        credential = new()
-                        {
-                            ServiceName = serviceName,
-                            Username = username,
-                            Password = password,
-                            CategoryId = categoryId,
-                            Category = correlatedCategory
-                        };   
+                        headerCheck(line, errorCounts, ref hasErrors);
+                        if (hasErrors) break; // Breaking this so that header errors are corrected first
                     }
                     else
                     {
-                        credential = new()
+                        hasCredentials = true;
+                        bool rowResult = credentialCheck(line, errorCounts, allCredentialNames, ref newCredentialNames,
+                            ref hasErrors);
+
+                        if (!rowResult)
                         {
-                            ServiceName = serviceName,
-                            Password = password,
-                            CategoryId = categoryId,
-                            Category = correlatedCategory
-                        };   
+                            string serviceName = line[0].Trim();
+                            // If new category in both in the csv and the existing ones
+                            if (!allCredentialNames.Contains(serviceName) && !newCredentialNames.Contains(serviceName))
+                            {
+                                newCredentialNames.Add(serviceName);
+                            }
+                        }
                     }
 
-                    dbContext.Credentials.Add(credential);
+                    lineCounter += 1;
                 }
 
-                await dbContext.SaveChangesAsync();
+                if (!hasCredentials)
+                {
+                    errorCounts["noCredentials"] += 1;
+                    hasErrors = true;
+                }
 
-                return Results.Ok("CSV successfully imported!");
-            }
-        });
+                if (hasErrors)
+                {
+                    return Results.Problem(
+                        detail: "Errors found in imported CSV.",
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "400 Bad Request",
+                        extensions: errorCounts.ToDictionary(kv => kv.Key, kv => (object?)kv.Value)
+                    );
+                }
+                else
+                {
+                    // One: Create new credentials, row by row
+
+                    lineCounter = 0;
+                    foreach (var line in allLines)
+                    {
+                        if (lineCounter == 0)
+                        {
+                            lineCounter += 1;
+                            continue;
+                        }
+
+                        string serviceName = line[0].Trim();
+                        string username = line[1].Trim();
+                        string password = line[2].Trim();
+
+                        Category correlatedCategory = await dbContext.Categories
+                            .FirstOrDefaultAsync(cr => cr.Id == categoryId && cr.UserId == user.Id);
+
+                        Credential credential;
+
+                        if (username != "")
+                        {
+                            credential = new()
+                            {
+                                ServiceName = serviceName,
+                                Username = username,
+                                Password = password,
+                                CategoryId = categoryId,
+                                Category = correlatedCategory
+                            };
+                        }
+                        else
+                        {
+                            credential = new()
+                            {
+                                ServiceName = serviceName,
+                                Password = password,
+                                CategoryId = categoryId,
+                                Category = correlatedCategory
+                            };
+                        }
+
+                        dbContext.Credentials.Add(credential);
+                    }
+
+                    await dbContext.SaveChangesAsync();
+
+                    return Results.Ok("CSV successfully imported!");
+                }
+            });
 
     }
 }

@@ -19,7 +19,7 @@ export async function antiForgeryCookie(){
 
 // For sending a form
 const sendingForm = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5142',
+    baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7032',
     // https://stackoverflow.com/questions/43002444/make-axios-send-cookies-in-its-requests-automatically
     withCredentials: true,
     headers: {

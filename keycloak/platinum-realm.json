@@ -707,10 +707,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:5173/*"
+        "https://localhost:7032/*"
       ],
       "webOrigins": [
-        "http://localhost:5173"
+        "https://localhost:7032"
       ],
       "notBefore": 0,
       "bearerOnly": false,

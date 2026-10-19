@@ -65,7 +65,6 @@ async function loaderHelper() {
     }
 
     const { valid, data } = await serviceHandler('get-category', payload);
-    console.log(data);
     if (valid) {
       allCredentials.value = data.credentials;
       currentEntries.CategoryName = data.categoryName;
