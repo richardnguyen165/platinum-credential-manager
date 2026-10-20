@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
     {
         // null forgiving -> ! ->  just in case
         // dotnet run url
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("https://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();            
@@ -40,7 +40,7 @@ builder.Services.AddValidation(); // Allows for annotations to work
 // For token services
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
-    options.Authority = "http://localhost:8080/realms/platinum";
+    options.Authority = "https://localhost:8443/realms/platinum";
     options.Audience = "platinum-api";
     options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
