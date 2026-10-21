@@ -50,11 +50,11 @@ import Modal from "./Modal.vue";
 import {
   getCategories
 } from "@/services/categoryService.js";
-import { categoriesPath, categoryPath, credentialPath, searchUpPath } from "@/utils/routes.js";
+import { categoriesPath, categoryPath, credentialPath, searchUpPath } from "@/router/routes.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { useToast } from "vue-toastification";
-import { filterImportCSVResponse } from "@/services/filterImportCSVResponse.js";
+import { filterImportCSVResponse } from "@/csv/filterImportCSVResponse.js";
 
 const { show, action, categoryId, credentialId, currentEntries, query } = defineProps({
   show: Boolean,

@@ -37,7 +37,7 @@ import PaginationGrid from "../ui/PaginationGrid.vue";
 
 import { useToast } from 'vue-toastification'
 
-import { categoryPath, searchUpPath } from "@/utils/routes.js";
+import { categoryPath, searchUpPath } from "@/router/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 

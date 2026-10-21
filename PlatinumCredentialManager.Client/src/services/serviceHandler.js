@@ -1,4 +1,3 @@
-import { keycloak } from "@/config/keycloak";
 import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "./categoryService";
 import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "./credentialService";
 import { getUser, postNewUser } from "./userService";
@@ -72,10 +71,6 @@ export async function serviceHandler(action, payload = null) {
     }
 
     if (!response["valid"]){
-        if(response.data.status == 401){
-            console.log("Authentication expired - logging out..")
-            keycloak.logout();
-        }
         const currentErrorObject = {
             "valid": false,
             "data": {

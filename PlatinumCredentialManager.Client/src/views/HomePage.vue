@@ -10,7 +10,7 @@
     import { useToast } from 'vue-toastification';
     
     import useAuth from '@/composables/useAuth'
-    import { homepagePath } from '@/utils/routes';
+    import { homepagePath } from '@/router/routes';
 
     const { authState, login, signup } = useAuth();
 

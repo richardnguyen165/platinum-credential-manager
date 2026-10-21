@@ -183,10 +183,10 @@ import { ref, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import { paginateData } from "@/utils/pagination";
-import { categoryPath, credentialPath } from "@/utils/routes.js";
+import { categoryPath, credentialPath } from "@/router/routes.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { sortDecider } from "@/utils/sort";
-import { exportCSVDecider } from "@/utils/exportCSV";
+import { exportCSVDecider } from "@/csv/exportCSV.js";
 import { useModal } from "@/composables/useModal.js";
 import Form from "./Form.vue";
 

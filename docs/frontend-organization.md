@@ -18,10 +18,10 @@ errors, and the router and the auth composable have their own login and logout c
   CSRF handling)? Which single place should own the decision "this session is over, log out"?
 - **What to check:** Search for every logout call and ask whether each one should be there. Does a
   401 always mean the session is over, or can it mean "not allowed"?
-- [ ] Listed every place that logs out or refreshes a token
-- [ ] Decided what is shared and what differs
-- [ ] Decided who owns logout
-- [ ] Fixed
+- [x] Listed every place that logs out or refreshes a token
+- [x] Decided what is shared and what differs
+- [x] Decided who owns logout
+- [x] Fixed
 
 ## 2. What the store should own
 

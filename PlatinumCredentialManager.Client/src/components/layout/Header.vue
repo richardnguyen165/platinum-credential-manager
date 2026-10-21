@@ -15,7 +15,7 @@
 <script setup>
 import useAuth from "@/composables/useAuth";
 
-import { homePath, categoriesPath, searchUpPath } from "@/utils/routes";
+import { homePath, categoriesPath, searchUpPath } from "@/router/routes";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 

@@ -1,5 +1,5 @@
 import { exportCategories } from "@/services/categoryService";
-import { sortDecider } from "./sort";
+import { sortDecider } from "../utils/sort";
 import { serviceHandler } from "@/services/serviceHandler";
 import { ExportError } from "./ExportError";
 import { useToast } from 'vue-toastification'
