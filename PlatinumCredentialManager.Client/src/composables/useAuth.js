@@ -23,9 +23,9 @@ keycloak.onAuthSuccess = async () => {
         else {
             useToast().error("Error logging in: Logging out");
             console.log("Log in crash...")
-            console.log(`Error Title: ${response["title"]}`);
-            console.log(`Error Code: ${response["status"]}`);
-            console.log(`Error Details: ${response["detail"]}`)
+            console.log(`Error Title: ${response?.title ?? "Error"}`);
+            console.log(`Error Code: ${response?.status ?? "Status Unknown"}`);
+            console.log(`Error Details: ${response?.detail ?? "Details Unknown"}`)
             keycloak.logout();
         }
     } catch (error) {
