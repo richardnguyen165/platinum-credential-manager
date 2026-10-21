@@ -74,7 +74,7 @@ async function credentialLoaderHelper() {
     }
 
     const { valid, data } = await serviceHandler('get-credential', payload);
-    console.log(data);
+    
     if (valid){
       currentEntries.CategoryName = data.categoryName;
       currentEntries.ServiceName = data.serviceName;

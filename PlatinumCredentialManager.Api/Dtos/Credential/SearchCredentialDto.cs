@@ -6,8 +6,8 @@ public record class SearchCredentialDto
 (
     string? CategoryName,
     string? ServiceName,
-    [Required] string CreateUpdateChoice,
-    [Required] string UserDateChoice,
+    [property: Required] string CreateUpdateChoice,
+    [property: Required] string UserDateChoice,
     string? StartDate,
     string? EndDate
 );

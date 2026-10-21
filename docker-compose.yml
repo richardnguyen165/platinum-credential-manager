@@ -1,15 +1,29 @@
-services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.7
-    command: start-dev --import-realm
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-    ports:
-      - "8080:8080"
-    volumes:
-      - keycloak_data:/opt/keycloak/data
-      - ./keycloak/platinum-realm.json:/opt/keycloak/data/import/platinum-realm.json
+# Container: An isolated process, or small group processes that has its own filesystem, netowkr and enviroment
 
-volumes:
-  keycloak_data:
+# Started from an image, a read-only package that holds the program (this image) and everything it needs to run
+
+# A VM includes a whole OS, a container shares the user's kernel so it starts in second and uses its own memeory
+
+
+
+services: # list of containers thus file defines
+  keycloak: # name of auth service
+    image: quay.io/keycloak/keycloak:26.7 # image to download and run
+    command: start-dev --import-realm # what to run when the container starts
+    # start-dev is keycloak dev mode, and --import-realm tells it to load realm files from its import folder at startup
+
+    environment: # variables set inside container
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin # for admin console
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTPS_CERTIFICATE_FILE:  /opt/keycloak/certs/cert.pem # container path to certificate 
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/dev.pem # container path to private key
+    ports:
+      - "8443:8443" # https port
+    volumes: # what container can see outside itself
+      - keycloak_data:/opt/keycloak/data # name volume keycloak manages
+      - ./keycloak/platinum-realm.json:/opt/keycloak/data/import/platinum-realm.json # a bind mount of the platinum-realm.json
+      - ${CERT_PATH}:/opt/keycloak/certs/cert.pem:ro # gets file path of cert from .env file
+      - ${DEV_PATH}:/opt/keycloak/certs/dev.pem:ro # gets file path of private key from .env file
+
+volumes: 
+  keycloak_data: # declaration that named volume exists

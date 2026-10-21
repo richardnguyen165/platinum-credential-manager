@@ -25,8 +25,7 @@ const router = createRouter({
 // router guard
 router.beforeEach((to) => {
   if (to.meta.requiresAuth && !keycloak.authenticated) {
-      keycloak.login({ redirectUri: window.location.origin + to.fullPath })
-      return false
+      keycloak.login()
   }
 });
 

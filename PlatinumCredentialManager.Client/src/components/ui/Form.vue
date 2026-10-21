@@ -311,8 +311,6 @@ async function emitHelper(payload = {}, id = null) {
       reparsedPayload = {...payload};
   }
 
-  console.log(reparsedPayload);
-
   switch (action) {
     case "create-category":
     case "create-credential":
@@ -334,7 +332,6 @@ async function emitHelper(payload = {}, id = null) {
         useToast().error("Invalid CSV import!");
         errorMessage.value=`Please read the following details below to determine fixes to your CSV`;
         const allErrorCounts = filterImportCSVResponse(action, response.data.extensions);
-        console.log(allErrorCounts);
         allCSVRuleViolationInfo.value = allErrorCounts;
       } else {
         toastSuccessHelper(action);
