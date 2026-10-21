@@ -1,0 +1,31 @@
+Router (route params → props)
+│
+├── Category            props: categoryId            (from :category_id)
+├── Credential          props: credId, categoryId, query   (from :cred_id, :category_id, ?query)
+│
+│   (CredHomepage, CredCategories, CredSearchup, HomePage, NotFound take no props;
+│    they read route params themselves where needed)
+│
+▼ Page → PaginationGrid
+   PaginationGrid  accepts: categoryId, rows, location, params, credentialMatch
+                   emits:   rerun   (also declares close)
+
+   CredCategories ─► :rows  :location="allCategories"                     ◄─ @rerun
+   Category       ─► :rows  :location="allCredentials"  :categoryId       ◄─ @rerun
+   Credential     ─► :rows  :location="credential"      :categoryId       ◄─ @rerun
+   CredSearchup   ─► :rows  :location="searchup"  :params  :credentialMatch   (no listener)
+
+▼ Page / PaginationGrid → Form
+   Form            accepts: show, action, categoryId, credentialId, currentEntries, query
+                   emits:   close, rerun
+
+   CredCategories ─► :show :action                                                  ◄─ @close @rerun
+   Category       ─► :show :action :categoryId :currentEntries                      ◄─ @close @rerun
+   Credential     ─► :show :action :categoryId :credentialId :currentEntries :query ◄─ @close @rerun
+   PaginationGrid ─► :show :action :categoryId :currentEntries                      ◄─ @close @rerun
+                     (only rendered when location is allCategories / allCredentials)
+
+▼ Form → Modal
+   Modal           accepts: show, inputs, rules, categoryId, credentialId, canClose
+                   emits:   ok, close
+   Form ─► :show :inputs :rules :categoryId :credentialId :canClose        ◄─ @ok @close

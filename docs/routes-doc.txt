@@ -1,0 +1,25 @@
+App
+└── <router-view>
+    ├── /                                         HomePage
+    ├── /cred-homepage/:user_id                   CredHomepage
+    │   └── Header
+    ├── /cred-categories/:user_id                 CredCategories
+    │   ├── Header
+    │   ├── PaginationGrid
+    │   │   └── Form ── (Teleport → body) ── Modal
+    │   └── Form ── (Teleport → body) ── Modal
+    ├── /cred-categories/:category_id/:user_id    Category
+    │   ├── Header
+    │   ├── PaginationGrid
+    │   │   └── Form ── Modal
+    │   └── Form ── Modal
+    ├── /cred-categories/:cred_id/:category_id/:user_id   Credential
+    │   ├── Header
+    │   ├── PaginationGrid
+    │   │   └── Form ── Modal
+    │   └── Form ── Modal
+    ├── /cred-searchup/:user_id                   CredSearchup
+    │   ├── Header
+    │   └── PaginationGrid
+    │       └── Form ── Modal
+    └── /:pathMatch(.*)*                          NotFound

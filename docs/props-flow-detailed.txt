@@ -1,0 +1,216 @@
+══════════════════════════════════════════════════════════════════════════════
+ 0. ROUTER → PAGE   (route params converted to props via the route's props fn)
+══════════════════════════════════════════════════════════════════════════════
+
+ URL                                                   Component        Props received
+ ────────────────────────────────────────────────────  ───────────────  ─────────────────────────────
+ /                                                     HomePage         —
+ /cred-homepage/:user_id                               CredHomepage     —
+ /cred-categories/:user_id                             CredCategories   —
+ /cred-categories/:category_id/:user_id                Category         categoryId: Number(:category_id)
+ /cred-categories/:cred_id/:category_id/:user_id       Credential       credId:     Number(:cred_id)
+                                                                        categoryId: Number(:category_id)
+                                                                        query:      route.query (Object)
+ /cred-searchup/:user_id                               CredSearchup     —
+ /:pathMatch(.*)*                                      NotFound         —
+
+ Note: :user_id is never turned into a prop. Every component that needs it
+       (pages, PaginationGrid, Form, Header) reads route.params.user_id directly.
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 1. SHARED MODAL STATE  (useModal composable, a fresh instance per caller)
+══════════════════════════════════════════════════════════════════════════════
+
+   showModal : ref(Boolean)   ← is the modal open?
+   action    : ref(String)    ← which form to show
+   createModal(a) → action = a, showModal = true
+   closeModal()   → showModal = false
+
+   Used by:  CredCategories, Category, Credential, PaginationGrid
+   (each one owns its OWN showModal/action; they are not shared between them)
+
+   Who opens which action:
+   ┌────────────────┬──────────────────────────────┬─────────────────────────┐
+   │ Owner          │ Button                       │ action value            │
+   ├────────────────┼──────────────────────────────┼─────────────────────────┤
+   │ CredCategories │ Create Category              │ "create-category"       │
+   │ Category       │ Edit Category  (not Misc.)   │ "edit-category"         │
+   │ Category       │ Delete Category (not Misc.)  │ "delete-category"       │
+   │ Category       │ Create Credential            │ "create-credential"     │
+   │ Credential     │ Edit Credential              │ "edit-credential"       │
+   │ Credential     │ Delete Credential            │ "delete-credential"     │
+   │ PaginationGrid │ Import CSV (allCategories /  │ = location              │
+   │                │             allCredentials)  │ "allCategories" /       │
+   │                │                              │ "allCredentials"        │
+   └────────────────┴──────────────────────────────┴─────────────────────────┘
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 2. PaginationGrid — CONTRACT
+══════════════════════════════════════════════════════════════════════════════
+
+ PROPS
+ ┌─────────────────┬────────┬───────────────────────────────────────────────────┐
+ │ prop            │ type   │ used for                                          │
+ ├─────────────────┼────────┼───────────────────────────────────────────────────┤
+ │ rows            │ Array  │ raw data → sorted → paginated (watched; re-pages  │
+ │                 │        │ when the parent replaces it)                      │
+ │ location        │ String │ MODE SWITCH: which sort options, which list       │
+ │                 │        │ layout, which click-redirect, whether Import CSV  │
+ │                 │        │ + inner Form exist, whether pagination shows      │
+ │ categoryId      │ Number │ building credential URLs; forwarded to inner Form │
+ │ params          │ Object │ search filters → URL query on redirect + export   │
+ │ credentialMatch │ String │ "best match" sort target (search page)            │
+ └─────────────────┴────────┴───────────────────────────────────────────────────┘
+
+ location values:
+   "allCategories"  → category list, sort, import/export, inner Form, paging
+   "allCredentials" → credential list, sort, import/export, inner Form, paging
+   "searchup"       → result list, sort (+ match sort), export, paging
+   "credential"     → single credential detail view, show/hide password, no paging
+
+ EMITS
+   rerun  ← re-emitted when its inner Form emits rerun (after CSV import)
+   close  ← declared, never emitted
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 3. PAGE → PaginationGrid  (bindings + value sources)
+══════════════════════════════════════════════════════════════════════════════
+
+ CredCategories
+   :rows      = allCategories      (from 'get-user' → data.categories)
+   :location  = "allCategories"
+   @rerun     → categoryLoaderHelper   (re-fetch 'get-user')
+
+ Category
+   :rows       = allCredentials    (from 'get-category' → data.credentials)
+   :location   = "allCredentials"
+   :categoryId = categoryId        (route prop)
+   @rerun      → loaderHelper           (re-fetch 'get-category')
+
+ Credential
+   :rows       = currentEntries    (reactive OBJECT from 'get-credential',
+                                    passed into an Array-typed prop)
+   :location   = "credential"
+   :categoryId = categoryId        (route prop)
+   @rerun      → credentialLoaderHelper
+
+ CredSearchup
+   :rows            = credentials      (from 'search-credential')
+   :location        = "searchup"
+   :params          = data             (reactive search-form state)
+   :credential-match= data.ServiceName (live form field)
+   (no @rerun listener)
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 4. Form — CONTRACT
+══════════════════════════════════════════════════════════════════════════════
+
+ PROPS
+ ┌────────────────┬─────────┬──────────────────────────────────────────────────┐
+ │ prop           │ type    │ used for                                         │
+ ├────────────────┼─────────┼──────────────────────────────────────────────────┤
+ │ show           │ Boolean │ forwarded to Modal; watched → reset errors, and  │
+ │                │         │ fetch category list when action=edit-credential  │
+ │ action         │ String  │ picks title, description, inputs, rules, image   │
+ │                │         │ slot, and which API call runs on OK              │
+ │ categoryId     │ Number  │ forwarded to Modal; API payloads; redirects;     │
+ │                │         │ "did the credential change category?" check      │
+ │ credentialId   │ Number  │ forwarded to Modal; API payloads                 │
+ │ currentEntries │ Object  │ pre-fills inputs for edit actions                │
+ │ query          │ Object  │ after delete-credential: go back to search with  │
+ │                │         │ this query, or to the category if empty          │
+ └────────────────┴─────────┴──────────────────────────────────────────────────┘
+
+ Computed from action → sent to Modal:  title, description, allInputs, rules
+ Internal state → sent to Modal:        canClose, errorMessage, CSV error info
+
+ EMITS
+   close  ← re-emitted when Modal emits close
+   rerun  ← after a successful OK (canClose true); for edit-credential only if
+            the category didn't change; actions that navigate away return early
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 5. PARENT → Form  (bindings + value sources)
+══════════════════════════════════════════════════════════════════════════════
+
+ CredCategories   :show=showModal  :action=action
+                  @close→closeModal  @rerun→categoryLoaderHelper
+
+ Category         :show=showModal  :action=action  :categoryId=categoryId
+                  :currentEntries=currentEntries   ({ CategoryName })
+                  @close→closeModal  @rerun→loaderHelper
+
+ Credential       :show=showModal  :action=action  :categoryId=categoryId
+                  :credentialId=credId  :query=query
+                  :currentEntries=currentEntries   ({ CategoryName, ServiceName,
+                                                     Username, Password,
+                                                     DateCreated, DateLastUpdated })
+                  @close→closeModal  @rerun→credentialLoaderHelper
+
+ PaginationGrid   :show=showModal  :action=action  :categoryId=categoryId
+   (only when     :currentEntries=currentEntries   (⚠ not defined in its own setup)
+   allCategories/ @close→closeModal  @rerun→loaderHelper (→ emit rerun upward)
+   allCredentials)
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 6. Form → Modal   (Teleported to <body>)
+══════════════════════════════════════════════════════════════════════════════
+
+ PROPS
+ ┌──────────────┬─────────┬────────────────────────────┬────────────────────────────┐
+ │ prop         │ type    │ value from Form            │ Modal uses it for          │
+ ├──────────────┼─────────┼────────────────────────────┼────────────────────────────┤
+ │ show         │ Boolean │ show (pass-through)        │ v-if + Transition; watched │
+ │              │         │                            │ → reset form data on open  │
+ │ inputs       │ Object* │ allInputs (computed)       │ renders text/select/file   │
+ │              │         │                            │ inputs (*actually an Array)│
+ │ rules        │ Object* │ rules (computed)           │ renders the rules list     │
+ │ categoryId   │ Number  │ categoryId (pass-through)  │ added to payload; chooseId │
+ │ credentialId │ Number  │ credentialId (pass-through)│ chooseId                   │
+ │ canClose     │ Boolean │ canClose (Form's ref)      │ watched → when true, emits │
+ │              │         │                            │ close (auto-close on       │
+ │              │         │                            │ success)                   │
+ └──────────────┴─────────┴────────────────────────────┴────────────────────────────┘
+
+ SLOTS (content Form puts inside Modal)
+   #header               → title
+   #description          → description
+   #image                → CSV format image (import actions only)
+   #modal-error-message  → errorMessage
+   #modal-csv-error-count→ CSV validation errors (import actions only)
+
+ EMITS
+   ok(payload, id) ← OK button: payload = collectData() (form object or File)
+                                id      = chooseId()    (credentialId || categoryId)
+                     → Form.emitHelper(payload, id)
+   close           ← Cancel button, OR canClose became true
+                     → Form re-emits close
+
+
+══════════════════════════════════════════════════════════════════════════════
+ 7. END-TO-END FLOW  (e.g. "Create Credential" on a Category page)
+══════════════════════════════════════════════════════════════════════════════
+
+  [Category] click → createModal("create-credential")
+        │  showModal=true, action="create-credential"
+        ▼  props: show, action, categoryId, currentEntries
+  [Form]  computes title/inputs/rules from action
+        ▼  props: show, inputs, rules, categoryId, credentialId, canClose
+  [Modal] opens, resets data, user fills inputs, clicks OK
+        │  emit ok(payload + categoryId, id)
+        ▲
+  [Form]  emitHelper → API call → success → canClose = true
+        │                                   └─► [Modal] watch(canClose) → emit close
+        │  emit rerun                                   ▲
+        ▲                                     [Form] emit close
+  [Category] @rerun → loaderHelper()          [Category] @close → closeModal()
+             re-fetches → allCredentials       showModal=false
+        │
+        ▼  :rows changes
+  [PaginationGrid] watch(rows) → re-sort + re-paginate → page 1
