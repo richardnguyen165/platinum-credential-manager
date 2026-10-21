@@ -23,6 +23,23 @@ errors, and the router and the auth composable have their own login and logout c
 - [x] Decided who owns logout
 - [x] Fixed
 
+**Outcome (2026-10-21):** Both clients now share one set of request/response helpers, and only the
+clients' 401 handling logs out (the extra check in the service layer is gone).
+
+- **Lessons from the refactor:**
+  - An interceptor needs a *function* Axios can call later, once per request. Parentheses or
+    `await` hand over the *result* of calling it once at load time. That silently registered nothing,
+    so requests went out without a token, got a 401 and logged the user out mid-login.
+  - Creating a client needs the options *object* straight away. An `async` function returns a
+    promise instead, so the client had no base URL and requests went to the dev server (404).
+  - A logout fired while the login callback is still in the URL gets rejected by Keycloak (400),
+    because the default post-logout redirect is the current URL, which still contains the login code.
+- **Still open:**
+  - When the token refresh fails, the request still goes out without a token. What does Axios do if
+    a request interceptor throws or rejects instead of returning the config? Which behavior do you want?
+  - The error-copying loop uses `in` on the response data. Is it safe when there is no response at
+    all (API down, request cancelled)?
+
 ## 2. What the store should own
 
 A store exists but holds only three ids (user, category, credential), with a setter for each. It is
@@ -40,6 +57,36 @@ named after the user while also holding category and credential ids.
   - Stores should be cleared on logout so another user in the same tab can't see old data.
   - Reactivity is lost if state is destructured directly out of a store. Look up the helper for it.
   - Check the naming convention in the Pinia docs for store functions.
+- **Findings (2026-10-21):**
+  - **The store isn't used anywhere.** Nothing imports it, so none of its ids are ever set or read.
+    You're designing from scratch. If the app works without it, which of those values does it
+    actually need, and where does it get them now?
+  - **There's already a hand-made store.** The auth composable keeps reactive state at module level
+    (including the user id) that's shared by everything using it. So the real choice is: Pinia store,
+    or module-level reactive state in a composable? Look up what Pinia adds (devtools, structure,
+    resetting, testing).
+  - **The URL already carries most ids.** Category and credential ids are route params passed to
+    components as props, and every authenticated route also carries the user id.
+    - Does the frontend use the user id from the URL for anything, given the API reads the user
+      from the token?
+    - What happens if you change the user id in the URL to another number? What *should* happen?
+    - What would storing ids the URL already provides (and keeps after a refresh) gain you?
+  - **The service facade's future depends on this section.** Once store actions exist, they may
+    absorb it, use it, or shrink it to an error-shaping helper. Decide after the stores exist.
+- **Next step: fill in this table**, adding real data (category list, current credential, user
+  profile) as well as ids:
+
+  | State | Where it comes from | Who needs it | Must survive a refresh? | So it belongs in |
+  |---|---|---|---|---|
+  | User id | | | | |
+  | Category id | | | | |
+  | Credential id | | | | |
+  | Category list | | | | |
+  | Current credential | | | | |
+  | User profile | | | | |
+
+- [ ] Filled in the state table
+- [ ] Decided between a Pinia store and composable state
 - [ ] Decided what belongs in the URL, a store, provide/inject, or props
 - [ ] Decided what data (not just ids) a store should own
 - [ ] Decided when stores reset
@@ -53,8 +100,35 @@ config file, a composable, the router and the HTTP clients.
 - **Question:** In this app, what is a service, a utility, a composable, a component and a view?
   Which files don't fit their folder?
 - **What to check:** Pick one feature (CSV import and export) and list every file it touches.
-- [ ] Wrote down what each folder is for
-- [ ] Moved files that don't fit
+- **What each folder is for (2026-10-21):**
+  - **Services:** one function per API operation on one resource, i.e. data access (like
+    repositories or gateways). They fetch and send data, they don't decide things.
+  - **Utilities:** pure helpers. Data in, data out, no app state, no HTTP, no side effects.
+  - **Composables:** reusable Vue logic that uses reactivity or lifecycle.
+  - **Config:** sets up an external library once.
+  - **Interceptors:** the configured HTTP clients plus their shared request/response helpers
+    (base URL, token, CSRF, 401 handling).
+  - **Feature folders (CSV):** everything for one feature in one place.
+- **Layers, top to bottom:** components → service facade → services → HTTP clients. Each layer talks
+  only to the one below it.
+  - The facade is a *facade* by role (one simple entry point), a *dispatcher* by mechanism (picks a
+    service by action name), and an *adapter* in its error shaping (one consistent error format).
+  - Patterns describe code, they aren't rules. One small file doing all three is fine. Split only
+    when changing one job forces you to touch another, the action list gets hard to scan, or you
+    can't test the error shaping on its own.
+  - Decision: keep the facade in services for now, as the one exception there. Revisit after
+    section 2.
+  - Most *use-case* logic (the order of steps for "import a CSV" or "save a form") currently lives
+    in the components. See section 6.
+- **Still open:**
+  - The folders now mix two styles: by type (services, utils, ...) and by feature (CSV). Write down
+    the rule for when something gets a feature folder. Would auth (config, composable, router,
+    interceptors) qualify?
+  - Does the name "interceptors" describe a folder that holds the client instances themselves?
+- [x] Wrote down what each folder is for
+- [x] Moved files that don't fit (build passes; check login, a normal request and a form submission,
+      and CSV import and export by hand)
+- [ ] Decided the feature-folder rule
 
 ## 4. Where data is fetched
 
@@ -63,8 +137,13 @@ Some components may call the API directly and others go through the service laye
 - **Question:** What should the rule be? "Components never call the HTTP client directly" makes
   store work and testing much simpler.
 - **What to check:** Search the components for direct imports of the HTTP clients.
-- [ ] Decided on the rule
-- [ ] Checked every component against it
+- **Rule:** Components only call the service facade. Only services touch the HTTP clients.
+- **Checked (2026-10-21):** No component or view imports an HTTP client, axios or a service directly.
+  - One exception outside the components: the CSV export module uses the facade for one call but a
+    service directly for another, so that call skips the facade's error shaping. Is that on purpose
+    (does it need the raw response)? Does its error look like the others?
+- [x] Decided on the rule
+- [x] Checked every component against it
 
 ## 5. Naming consistency
 
