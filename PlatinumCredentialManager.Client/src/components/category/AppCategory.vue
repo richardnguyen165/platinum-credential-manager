@@ -1,5 +1,5 @@
 <template>
-  <Header></Header>
+  <AppHeader></AppHeader>
   <div v-if="isLoading">Loading Credentials...</div>
   <div v-else-if="!isLoading && !successfullyLoaded">
     {{ errorMessage }}
@@ -16,7 +16,7 @@
       :location="'allCredentials'"
       @rerun="loaderHelper"
     />
-    <Form
+    <ActionFormModal
       :show="showModal"
       :categoryId="categoryId"
       :action="action"
@@ -28,40 +28,42 @@
 </template>
 
 <script setup>
-import Header from "../layout/Header.vue";
-import Form from "../ui/Form.vue";
-import PaginationGrid from "../ui/PaginationGrid.vue";
-
-import { onMounted, ref, reactive } from "vue";
+import { onMounted, ref, reactive, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useToast } from "vue-toastification";
+
+import AppHeader from "@/components/layout/AppHeader.vue";
+import ActionFormModal from "@/components/ui/ActionFormModal.vue";
+import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 import { categoriesPath } from "@/router/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
-import { useToast } from "vue-toastification";
 
 const { showModal, action, createModal, closeModal } = useModal();
+
+const router = useRouter();
+const route = useRoute();
 
 const isMiscallaneous = ref(null);
 const allCredentials = ref(null);
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const errorMessage = ref("");
-const router = useRouter();
-const route = useRoute();
+const categoryId = ref(Number(route.params.category_id));
+const userId = ref(Number(route.params.user_id));
 const currentEntries = reactive({});
 
-function redirectBackToAllCategories() {
-  router.push(categoriesPath(route.params.user_id));
-}
+provide('categoryId', Number(route.params.category_id));
+provide('credentialId', null);
 
-const { categoryId } = defineProps({
-  categoryId: Number,
-});
+function redirectBackToAllCategories() {
+  router.push(categoriesPath(userId.value));
+}
 
 async function loaderHelper() {
   try {
     const payload = {
-      "id": categoryId
+      "id": categoryId.value
     }
 
     const { valid, data } = await serviceHandler('get-category', payload);

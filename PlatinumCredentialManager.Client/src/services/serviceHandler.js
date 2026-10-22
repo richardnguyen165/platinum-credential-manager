@@ -1,6 +1,6 @@
-import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "./categoryService";
-import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "./credentialService";
-import { getUser, postNewUser } from "./userService";
+import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "@/services/categoryService";
+import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "@/services/credentialService";
+import { getUser, postNewUser } from "@/services/userService";
 
 const ERROR_NAMES = [
     "emptyFile",

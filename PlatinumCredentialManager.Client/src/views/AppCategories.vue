@@ -1,5 +1,5 @@
 <template>
-  <Header></Header>
+  <AppHeader></AppHeader>
   <div>Credential Categories</div>
   <div v-if="isLoading">Loading Credential Categories...</div>
   <div v-else-if="!isLoading && !successfullyLoaded">
@@ -13,7 +13,7 @@
       :location="'allCategories'" 
       @rerun="categoryLoaderHelper"
     />
-    <Form
+    <ActionFormModal
       :show="showModal"
       :action="action"
       @close="closeModal"
@@ -23,10 +23,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, provide } from "vue";
 
-import Form from "@/components/ui/Form.vue";
-import Header from "@/components/layout/Header.vue";
+import ActionFormModal from "@/components/ui/ActionFormModal.vue";
+import AppHeader from "@/components/layout/AppHeader.vue";
 import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 
 import { useModal } from "@/composables/useModal";
@@ -39,6 +39,9 @@ const allCategories = ref(null);
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const errorMessage = ref("");
+
+provide('categoryId', null);
+provide('credentialId', null);
 
 async function categoryLoaderHelper() {
   try {

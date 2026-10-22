@@ -1,5 +1,5 @@
 <template>
-  <Header></Header>
+  <AppHeader></AppHeader>
   <div v-if="isLoading">Loading Credential...</div>
   <div v-else-if="!isLoading && !successfullyLoaded">
     {{ errorMessage }}
@@ -11,13 +11,10 @@
     <PaginationGrid
       :rows="currentEntries"
       :location="'credential'"
-      :categoryId="categoryId"
       @rerun="credentialLoaderHelper"
     />
-    <Form
+    <ActionFormModal
       :show="showModal"
-      :categoryId="categoryId"
-      :credentialId="credId"
       :action="action"
       :currentEntries="currentEntries"
       :query="query"
@@ -28,12 +25,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from "vue";
+import { ref, onMounted, reactive, watch, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
-import Form from "../ui/Form.vue";
-import Header from "../layout/Header.vue";
-import PaginationGrid from "../ui/PaginationGrid.vue";
+import ActionFormModal from "@/components/ui/ActionFormModal.vue";
+import AppHeader from "@/components/layout/AppHeader.vue"
+import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 
 import { useToast } from 'vue-toastification'
 
@@ -43,9 +40,7 @@ import { serviceHandler } from "@/services/serviceHandler.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
-const { categoryId, credId, query } = defineProps({
-  categoryId: Number,
-  credId: Number,
+const {  query } = defineProps({
   query: Object,
 });
 
@@ -55,22 +50,28 @@ const route = useRoute();
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const errorMessage = ref("");
+const userId = ref(Number(route.params.user_id));
+const categoryId = ref(Number(route.params.category_id));
+const credentialId = ref(Number(route.params.cred_id));
 const currentEntries = reactive({});
 
-watch(() => categoryId, credentialLoaderHelper);
+provide("categoryId", categoryId.value);
+provide("credentialId", credentialId.value);
+
+watch(() => categoryId.value, credentialLoaderHelper);
 
 function goBackPrevious() {
   if (Object.keys(query).length > 0) {
-    router.push({ path: searchUpPath(route.params.user_id), query });
+    router.push({ path: searchUpPath(userId.value), query });
   } else {
-    router.push(categoryPath(categoryId, route.params.user_id));
+    router.push(categoryPath(categoryId.value, userId.value));
   }
 }
 
 async function credentialLoaderHelper() {
   try {
     const payload = {
-      "id": credId
+      "id": credentialId.value
     }
 
     const { valid, data } = await serviceHandler('get-credential', payload);

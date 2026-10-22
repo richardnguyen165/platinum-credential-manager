@@ -76,12 +76,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from "vue";
+import { reactive, ref, watch, inject } from "vue";
 
 let data = reactive({});
 let file = ref(null);
 let errorMessage = ref("");
 let disableButton = ref(true);
+let categoryId = ref(inject('categoryId'));
+let credentialId = ref(inject('credentialId'))
 
 // Use reactive to store all of the input keys, and their input values
 
@@ -99,12 +101,10 @@ let disableButton = ref(true);
 // https://vuejs.org/examples/#modal
 // https://vuejs.org/guide/built-ins/transition.html
 
-const { show, inputs, rules, categoryId, credentialId, canClose } = defineProps({
+const { show, inputs, rules, canClose } = defineProps({
   show: Boolean,
   inputs: Object,
   rules: Object,
-  categoryId: Number,
-  credentialId: Number,
   canClose: Boolean
 });
 
@@ -149,7 +149,7 @@ function collectData() {
     return data;
   } else if (inputs.length > 0 && inputs[0].type !== 'file'){
     // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
-    if (categoryId != null && inputs[0].type !== 'select') data["categoryId"] = categoryId;
+    if (categoryId.value != null && inputs[0].type !== 'select') data["categoryId"] = categoryId.value;
     return data;
   } else {
     return file.value;
@@ -157,8 +157,8 @@ function collectData() {
 }
 
 function chooseId() {
-  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId || null;
-  return credentialId || categoryId;
+  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId.value || null;
+  return credentialId.value || categoryId.value;
 }
 
 

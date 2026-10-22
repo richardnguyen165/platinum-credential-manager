@@ -1,4 +1,4 @@
-# Frontend organization: things to tidy before adding Pinia stores
+# Frontend organization: things to tidy before reworking shared state
 
 > Notes from a review of the Vue frontend's structure (2026-10-21). Written as hints: each item
 > describes the symptom, the concept, and what to check, not where it is or how to fix it.
@@ -73,23 +73,44 @@ named after the user while also holding category and credential ids.
     - What would storing ids the URL already provides (and keeps after a refresh) gain you?
   - **The service facade's future depends on this section.** Once store actions exist, they may
     absorb it, use it, or shrink it to an error-shaping helper. Decide after the stores exist.
+- **Direction (2026-10-21): provide/inject over a Pinia store.** After mapping the component tree
+  and the props flow (see the props-flow notes in this folder), there is very little truly global
+  state. Auth already has its own composable and search state lives in the URL. A store looks like
+  overkill for now.
+  - **Not a store doesn't automatically mean inject.** Props, or having a component read the value
+    itself, are still valid. Inject only pays off when all three hold:
+    - **One clear owner:** a single ancestor owns the value.
+    - **Real depth:** several layers in between only pass it along without using it.
+    - **Shared, not separate:** every descendant that injects it should see the *same* instance.
+  - Run each value that's passed through more than one level against those three. Values that come
+    from the URL fail the first test, since the router already owns them.
+  - **Watch out for:**
+    - Modal open/close state: is there a page where two separate forms live under one owner? What
+      happens if they both inject the same state?
+    - Provided data lives only as long as its provider. It is gone when the route changes. If some
+      data turns out to be needed across routes, that is where a store would earn its place again.
+    - Injected dependencies don't show in templates, so the flow is harder to trace than with props.
+    - Typing: look up how injected values get a type and what the type is when nothing provides it.
+  - The branch name still says Pinia. Keep it or rename it, but this note is the record of why the
+    direction changed.
 - **Next step: fill in this table**, adding real data (category list, current credential, user
   profile) as well as ids:
 
   | State | Where it comes from | Who needs it | Must survive a refresh? | So it belongs in |
   |---|---|---|---|---|
-  | User id | | | | |
-  | Category id | | | | |
-  | Credential id | | | | |
-  | Category list | | | | |
-  | Current credential | | | | |
-  | User profile | | | | |
+  | User id | Comes from url | All the components | | |
+  | Category id | When clicking on a category | | | |
+  | Credential id | When clicking on a credential | | | |
+  | Category list | When clicking on creds homepage | | | |
+  | Current credential | When clicking on a credential from home page | | | |
+  | User profile | When user logs in | No component | | |
 
 - [ ] Filled in the state table
-- [ ] Decided between a Pinia store and composable state
-- [ ] Decided what belongs in the URL, a store, provide/inject, or props
-- [ ] Decided what data (not just ids) a store should own
-- [ ] Decided when stores reset
+- [x] Decided between a Pinia store and composable state (leaning provide/inject, see Direction)
+- [ ] Ran each drilled value through the three inject tests
+- [ ] Decided what belongs in the URL, provide/inject, or props
+- [ ] Checked whether any data is needed across routes (the case that would bring a store back)
+- [ ] Decided what happens to provided or composable state on logout
 
 ## 3. Folders blur their responsibilities
 
@@ -152,7 +173,38 @@ that looks accidental. A few utility files are tiny.
 
 - **Question:** Do file names, component names and route names tell the same story? Could a new
   reader guess what a file does from its name?
-- [ ] Listed names that are unclear or inconsistent
+- **Concept:** Vue's style guide rule "Multi-word component names" (Essential). Single-word names
+  can clash with HTML elements: a capitalized tag is looked up as a component, a lowercase one is
+  a native element. A modal had a capitalized form tag that resolved to no component.
+- **Done so far (2026-10-22):** the form became ActionFormModal, the modal became BaseModal, the
+  views got a "Credentials" prefix, and the single-category page got a clearer name.
+- **First:** the router still imported two files by their old names after a rename. After every
+  batch, reload each route (also by pasting the URL) to catch broken imports.
+- **Still to rename:**
+  - **Header:** single word. The convention for single-instance components is a "The" or "App"
+    prefix.
+  - **The single-credential page:** give it the same pattern as the single-category page. Both
+    are routed pages, so they belong in views, not components.
+  - **The pagination grid:** it also sorts, imports and exports CSV, navigates and shows a single
+    credential. Rename it to match, or wait for the split in section 6.
+  - **"Searchup":** in the view, the route and the location values. Not a standard word.
+  - **The two HTTP clients in the interceptors folder:** they are clients, not just interceptors,
+    and one reads like a verb phrase.
+  - **The service facade:** "handler" is vague; the name should say it is the one entry point
+    components call.
+  - **The request/response helpers and the payload parser:** vague. Which request? Which payload?
+  - **The loading functions:** several "...LoaderHelper" variants. Name them after what they load,
+    with one pattern everywhere.
+  - **The grid's location prop:** it is a mode switch, and its values mix styles.
+  - **Router imports:** one view is imported under a different name than its file.
+  - **Routes:** paths use a "cred-" prefix while files say "Credentials", and params are
+    snake_case while the JavaScript is camelCase. Consider route names instead of built strings.
+  - **The misspelled "miscellaneous" category:** it is a data value, not just a name. Check where
+    it comes from (backend, database, seed data) and change both sides together.
+  - **Typos in comments and messages** ("retrieve", "animates").
+- **Imports:** normalize to the `@` alias. Decide whether same-folder `./` imports stay, write the
+  rule here, and apply it everywhere. Run a build afterwards.
+- [x] Listed names that are unclear or inconsistent
 - [ ] Renamed (and updated imports and routes)
 
 ## 6. Large components do several jobs

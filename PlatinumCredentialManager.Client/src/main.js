@@ -1,10 +1,11 @@
 import { createApp } from 'vue'
-import { keycloak } from './config/keycloak.js'
 import { createPinia } from 'pinia'
 import Toast from 'vue-toastification'
 
-import App from './App.vue'
-import router from './router/index.js'
+import { keycloak } from '@/config/keycloak.js'
+import App from '@/App.vue'
+import router from '@/router/index'
+
 import 'vue-toastification/dist/index.css'
 
 const app = createApp(App);

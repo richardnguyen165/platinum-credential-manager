@@ -30,11 +30,10 @@ const currentTab = computed(() => {
   return "";
 });
 
-const { logout, authState } = useAuth();
+const { logout } = useAuth();
 
 function executeRedirect(redirectParam) {
   let newRoute = null;
-  currentTab.value = redirectParam !== "logout" ? redirectParam : "";
 
   switch (redirectParam) {
     case "categories":

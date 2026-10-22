@@ -1,7 +1,7 @@
 <template>
   <div v-if="location !== 'credential'">
     <label for="sortFilter">Sort Options:</label>
-    <select name="sortFilter" v-model="sortOption" :id="sortFilter">
+    <select name="sortFilter" v-model="sortOption" :id="'sortFilter'">
       <option
         v-if="location === 'allCredentials' || location === 'searchup'"
         value="azAscendingService"
@@ -57,7 +57,7 @@
 
     <div v-if="location === 'allCategories'">
       <label for="withinCategorySortOption">Sorting Within Category: </label>
-      <select name="withinCategorySortOption" :id="withinCategorySort" v-model="withinCategorySortOption">
+      <select name="withinCategorySortOption" :id="'withinCategorySort'" v-model="withinCategorySortOption">
         <option
           value="azAscendingService"
         >
@@ -167,19 +167,17 @@
     </button>
   </div>
 
-  <Form
+  <ActionFormModal
     v-if="location === 'allCategories' || location === 'allCredentials'"
     :show="showModal"
-    :categoryId="categoryId"
     :action="action"
-    :currentEntries="currentEntries"
     @close="closeModal"
     @rerun="loaderHelper"
   />
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import { paginateData } from "@/utils/pagination";
@@ -188,27 +186,28 @@ import { parsePayload } from "@/utils/parsePayload.js";
 import { sortDecider } from "@/utils/sort";
 import { exportCSVDecider } from "@/csv/exportCSV.js";
 import { useModal } from "@/composables/useModal.js";
-import Form from "./Form.vue";
+import ActionFormModal from "@/components/ui/ActionFormModal.vue";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
-const { categoryId, rows, location, params, credentialMatch } = defineProps({
-  categoryId: Number,
+const { rows, location, params, credentialMatch } = defineProps({
   rows: Array,
   location: String,
   params: Object,
   credentialMatch: String,
 });
 
+const router = useRouter();
+const route = useRoute();
+
 const allData = ref([]);
 const currentData = ref([]);
+const userId = ref(Number(route.params.user_id));
+const categoryId = ref(null);
 const pageNumber = ref(1);
 const inputPageNumber = ref(pageNumber.value);
 const sortOption = ref("");
 const withinCategorySortOption = ref("");
-
-const router = useRouter();
-const route = useRoute();
 
 const emit = defineEmits(["close", "rerun"]);
 
@@ -267,7 +266,7 @@ function checkDecrement() {
 
 // When in category
 function redirectCredential(credentialId) {
-  router.push(credentialPath(credentialId, categoryId, route.params.user_id));
+  router.push(credentialPath(credentialId, categoryId.value, userId.value));
 }
 
 // When in searchup of categories
@@ -276,7 +275,7 @@ function redirectCredentialQuery(credential) {
     path: credentialPath(
       credential.credentialId,
       credential.categoryId,
-      route.params.user_id,
+      userId.value,
     ),
     query: parsePayload(params),
   });
@@ -288,12 +287,13 @@ function loaderHelper(){
 }
 
 // When in credentials of a category
-function redirectToCredentialsOfCategory(categoryId) {
-  router.push(categoryPath(categoryId, route.params.user_id));
+function redirectToCredentialsOfCategory(categoryIdSpecific) {
+  router.push(categoryPath(categoryIdSpecific, userId.value));
 }
 
 // First, when we reach onMounted => we have the data => we need to first paginate it
 onMounted(() => {
+  categoryId.value = inject("categoryId");
   sortOption.value =
     location === "allCategories" ? "azAscendingCategory" : (location !== 'credential' ? "azAscendingService" : null);
   withinCategorySortOption.value = location === "allCategories" ? "azAscendingService" : "";

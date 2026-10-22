@@ -1,11 +1,9 @@
 <template>
   <Teleport to="body">
     <!-- emitHelper should not have brackets so that it does not call any code -->
-    <Modal
+    <BaseModal
       :show="show"
       :inputs="allInputs"
-      :categoryId="categoryId"
-      :credentialId="credentialId"
       :rules="rules"
       :canClose = "canClose"
       @close="emit('close')"
@@ -38,14 +36,14 @@
           </li>
         </ul>
       </template>
-    </Modal>
+    </BaseModal>
   </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import Modal from "./Modal.vue";
+import BaseModal from "@/components/ui/BaseModal.vue";
 
 import {
   getCategories
@@ -56,11 +54,9 @@ import { parsePayload } from "@/utils/parsePayload.js";
 import { useToast } from "vue-toastification";
 import { filterImportCSVResponse } from "@/csv/filterImportCSVResponse.js";
 
-const { show, action, categoryId, credentialId, currentEntries, query } = defineProps({
+const { show, action, currentEntries, query } = defineProps({
   show: Boolean,
   action: String,
-  categoryId: Number,
-  credentialId: Number,
   currentEntries: Object,
   query: Object
 });
@@ -77,6 +73,7 @@ const rules = computed(() => ruleHelper());
 
 let errorMessage = ref("");
 let allCategories = ref([]);
+let categoryId = ref(inject("categoryId"));
 let canClose = ref(false);
 let allCSVRuleViolationInfo = ref({});
 
@@ -164,7 +161,7 @@ function inputHelper() {
       key: "categoryId",
       label: "Category",
       type: "select",
-      value: categoryId
+      value: categoryId.value
   };
 
   if (action === "edit-credential"){
@@ -174,7 +171,7 @@ function inputHelper() {
       allOptions.push({
         label: categorySet["categoryName"],
         id: categorySet["id"],
-        selected: categoryId === categorySet["id"]
+        selected: categoryId.value === categorySet["id"]
       })
     }
 
@@ -354,7 +351,7 @@ async function emitHelper(payload = {}, id = null) {
         errorMessage.value=`${response.data.title}: ${response.data.detail}`
         useToast().error(errorMessage.value);
       }
-      if (canClose.value && reparsedPayload.data.categoryId !== categoryId){
+      if (canClose.value && reparsedPayload.data.categoryId !== categoryId.value){
         toastSuccessHelper(action);
         if (query){
           router.push({
@@ -383,7 +380,7 @@ async function emitHelper(payload = {}, id = null) {
             query: parsePayload(query)
           });
         } else {
-          router.push(categoryPath(categoryId, route.params.user_id));
+          router.push(categoryPath(categoryId.value, route.params.user_id));
         }
       }
       return;
@@ -395,6 +392,6 @@ async function emitHelper(payload = {}, id = null) {
 
   // All the other cases do not return, so they run emit regardless
   // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-  if ((action !== "edit-credential" && canClose.value) || (action === "edit-credential" && reparsedPayload.data.categoryId === categoryId && canClose.value)) emit("rerun");
+  if ((action !== "edit-credential" && canClose.value) || (action === "edit-credential" && reparsedPayload.data.categoryId === categoryId.value && canClose.value)) emit("rerun");
 }
 </script>

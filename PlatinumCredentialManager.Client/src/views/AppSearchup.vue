@@ -1,5 +1,5 @@
 <template>
-  <Header></Header>
+  <AppHeader></AppHeader>
   <form @submit.prevent="searchForCredentials">
     <p>Search Area</p>
     <div>
@@ -73,10 +73,10 @@
 </template>
 
 <script setup>
-import Header from "@/components/layout/Header.vue";
+import AppHeader from "@/components/layout/AppHeader.vue";
 import PaginationGrid from "@/components/ui/PaginationGrid.vue";
 
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { parsePayload } from "@/utils/parsePayload";
 import { serviceHandler } from "@/services/serviceHandler";
@@ -96,6 +96,9 @@ const formErrorMessage = ref("");
 const credentials = ref([]);
 const submittedServiceName = ref("");
 const errorMessage = ref("");
+
+provide('categoryId', null);
+provide('credentialId', null);
 
 // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
 function todaysDate() {

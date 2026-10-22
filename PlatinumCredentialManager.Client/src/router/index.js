@@ -1,23 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { keycloak } from '@/config/keycloak.js'
 
-import HomePage from '@/views/HomePage.vue';
-import CredHomepage from '@/views/CredHomepage.vue';
-import CredCategories from '@/views/CredCategories.vue';
-import Category from '@/components/category/Category.vue';
-import CredSearchup from '@/views/CredSearchup.vue';
+import WelcomePage from '@/views/WelcomePage.vue';
+import AppHomepage from '@/views/AppHomepage.vue';
+import AppCategories from '@/views/AppCategories.vue';
+import AppCategory from '@/components/category/AppCategory.vue';
+import AppSearchup from '@/views/AppSearchup.vue';
+import AppCredential from '@/components/credential/AppCredential.vue';
 import NotFound from '@/views/NotFound.vue';
-import Credential from '@/components/credential/Credential.vue';
 
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: '/', component: HomePage},
-        { path: '/cred-homepage/:user_id', component: CredHomepage, meta: { requiresAuth: true }},
-        { path: '/cred-categories/:user_id',  component: CredCategories, meta: { requiresAuth: true }},
-        { path: '/cred-categories/:category_id/:user_id',  component: Category, meta: { requiresAuth: true }, props: route => ({ categoryId: Number(route.params.category_id)})},
-        { path: '/cred-categories/:cred_id/:category_id/:user_id',  component: Credential, meta: { requiresAuth: true }, props: route => ({ credId: Number(route.params.cred_id), categoryId: Number(route.params.category_id), query: route.query })},
-        { path: '/cred-searchup/:user_id', component: CredSearchup, meta: { requiresAuth: true }},
+        { path: '/', component: WelcomePage},
+        { path: '/cred-homepage/:user_id', component: AppHomepage, meta: { requiresAuth: true }},
+        { path: '/cred-categories/:user_id',  component: AppCategories, meta: { requiresAuth: true }},
+        { path: '/cred-categories/:category_id/:user_id',  component: AppCategory, meta: { requiresAuth: true }},
+        { path: '/cred-categories/:cred_id/:category_id/:user_id',  component: AppCredential, meta: { requiresAuth: true }, props: route => ({ query: route.query })},
+        { path: '/cred-searchup/:user_id', component: AppSearchup, meta: { requiresAuth: true }},
         { path: '/:pathMatch(.*)*', component: NotFound }
     ]
 });

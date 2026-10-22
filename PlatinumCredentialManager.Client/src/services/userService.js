@@ -1,4 +1,4 @@
-import http from "../interceptors/http";
+import http from "@/interceptors/http"
 
 export async function postNewUser(){
     // Logic of no try and catch block, let the calling parent throw it

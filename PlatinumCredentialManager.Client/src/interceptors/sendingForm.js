@@ -1,6 +1,6 @@
 import axios from 'axios';
-import http from "./http";
-import { createAxios, createConfig, errorResponse } from './requestResponse';
+import http from "@/interceptors/http"
+import { createAxios, createConfig, errorResponse } from '@/interceptors/requestResponse';
 
 export async function antiForgeryCookie(){
     try{

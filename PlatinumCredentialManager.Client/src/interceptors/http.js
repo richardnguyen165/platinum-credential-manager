@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createAxios, createConfig, errorResponse } from './requestResponse';
+import { createAxios, createConfig, errorResponse } from '@/interceptors/requestResponse';
 
 // Source: https://skycloak.io/blog/keycloak-vue-js-authentication-guide/
 const http = axios.create(createAxios('http'));

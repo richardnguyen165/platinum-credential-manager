@@ -1,5 +1,5 @@
-import http from "../interceptors/http";
-import sendingForm from "../interceptors/sendingForm";
+import http from "@/interceptors/http"
+import sendingForm from "@/interceptors/sendingForm"
 
 export async function getAllCredentials() {
     try{
