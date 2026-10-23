@@ -1,9 +1,9 @@
+<!-- https://mokkapps.de/blog/simpler-two-way-binding-in-vue-with-define-model -->
 <template>
   <button :disabled="pageNumber === 1" @click="checkDecrement">«</button>
   <input
     :id="'inputPageNumber'"
-    :value="inputPageNumber"
-    @input="emit('update:inputPageNumber', $event.target.value)"
+    v-model="inputPageNumber"
     type="number"
     min="1"
     :max="allData.length"
@@ -18,52 +18,51 @@
 </template>
 
 <script setup>
-const { pageNumber, inputPageNumber, currentData, allData } = defineProps({
-  pageNumber: Number,
-  inputPageNumber: Number,
-  currentData: Array,
+const { allData } = defineProps({
   allData: Array,
 });
 
-const emit = defineEmits(["update:pageNumber", "update:inputPageNumber", "update:currentData"])
+const pageNumber = defineModel('pageNumber');
+const inputPageNumber = defineModel('inputPageNumber');
+const currentData = defineModel('currentData');
 
 function checkIncrement() {
-  if (pageNumber !== allData.length) {
-    const incrementedPage = pageNumber + 1;
-    emit("update:pageNumber", incrementedPage);
-    emit("update:inputPageNumber", incrementedPage);
-    emit("update:currentData", allData[incrementedPage - 1]);
+  if (pageNumber.value !== allData.length) {
+    const incrementedPage = pageNumber.value + 1;
+    pageNumber.value = incrementedPage;
+    inputPageNumber.value = incrementedPage;
+    currentData.value = allData[incrementedPage - 1];
   }
 }
 
 function checkDecrement() {
-  if (pageNumber !== 1) {
-    const decrementedPage = pageNumber - 1;
-    emit("update:pageNumber", decrementedPage);
-    emit("update:inputPageNumber", decrementedPage);
-    emit("update:currentData", allData[decrementedPage - 1]);
+  if (pageNumber.value !== 1) {
+    const decrementedPage = pageNumber.value - 1;
+    pageNumber.value = decrementedPage;
+    inputPageNumber.value = decrementedPage;
+    currentData.value = allData[decrementedPage - 1];
   }
 }
 
 function goToPage() {
-  let currentInputPageNumber = inputPageNumber;
+  let currentInputPageNumber = inputPageNumber.value;
 
-  if (!Number.isInteger(inputPageNumber)) {
-    currentInputPageNumber = Math.round(inputPageNumber);
+  if (!Number.isInteger(inputPageNumber.value)) {
+    currentInputPageNumber = Math.round(inputPageNumber.value);
   }
 
   if (currentInputPageNumber > allData.length) {
-    emit("update:inputPageNumber", allData.length);
-    emit("update:pageNumber", allData.length);
-    emit("update:currentData", allData[allData.length - 1]);
+    inputPageNumber.value = allData.length;
+    pageNumber.value = allData.length;
+    currentData.value = allData[allData.length - 1];
     return;
   } else if (currentInputPageNumber < 1) {
-    emit("update:inputPageNumber", 1);
-    emit("update:pageNumber", 1);
-    emit("update:currentData", allData[0]);
+    inputPageNumber.value = 1;
+    pageNumber.value = 1;
+    currentData.value = allData[0];
     return;
   }
-  emit("update:currentData", allData[currentInputPageNumber]);
-  emit("update:pageNumber", currentInputPageNumber);
+  currentData.value = allData[currentInputPageNumber - 1];
+  pageNumber.value = currentInputPageNumber;
 }
 </script>
