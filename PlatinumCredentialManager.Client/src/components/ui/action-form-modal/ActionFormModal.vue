@@ -18,8 +18,8 @@
       </template>
 
       <template #image v-if="action === 'allCategories' || action === 'allCredentials'">
-        <img alt="CSV instructions" v-show="action === 'allCategories'" src="/img/importCategory.png" />
-        <img alt="CSV instructions" v-show="action === 'allCredentials'" src="/img/importCredentials.png" />
+        <img alt="CSV instructions" v-if="action === 'allCategories'" src="/img/importCategory.png" />
+        <img alt="CSV instructions" v-if="action === 'allCredentials'" src="/img/importCredentials.png" />
       </template>
 
       <template #modal-error-message>

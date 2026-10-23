@@ -4,71 +4,21 @@
     <div v-if="show" class="modal-background">
       <Form @submit.prevent="collectData">
         <div class="modal-container">
-          <!-- for title-->
-          <div class="modal-header">
-            <slot name="header"></slot>
-          </div>
+          <BaseModalReadArea :rules="rules">
+            <template #header>
+              <slot name="header"></slot>
+            </template>
+            <template #description>
+              <slot name="description"></slot>
+            </template>
+            <template #image> 
+              <slot name="image"></slot>
+            </template>
+          </BaseModalReadArea>
 
-          <!--description-->
-          <div class="modal-description">
-            <slot name="description"></slot>
-          </div>
-
-          <div class="modal-image">
-            <slot name="image"></slot>
-          </div>
-
-          <ul class="modal-rules">
-            <li v-for="rule in rules" :key="rule.key">{{ rule.text }}</li>
-          </ul>
+          <BaseModalActionArea :inputs="inputs">
           
-          <!-- for inputs -->
-          <div class="modal-body" v-for="input in inputs" :key="input.key">
-            <label :for="input.key">{{ input.label }}</label>
-            <input
-              v-if="inputs.length > 0 && inputs[0].type !== 'file' && input.type !== 'select'"
-              :type="input.type"
-              :id="input.key"
-              :required="input.required"
-              v-model.trim="data[input.key]"
-            />
-            <select v-else-if="input.type === 'select'" :id="input.key" name="input.key" @change="selectedCategory"> 
-              <option :value="option.id" v-for="option in input.options" :key="option.id" :selected="option.selected">
-                {{ option.label }}
-              </option>
-            </select>
-            <input
-              v-else
-              :type="input.type"
-              :id="input.key"
-              accept=".csv"
-              :required="input.required"
-              @change="(e) => handleFileImport(e)"            
-            />
-          </div>
-
-          <div class="modal-error">
-            <slot name="modal-error-message"></slot>
-          </div>
-
-          <div class="modal-csv-error-display">
-            <slot name="modal-csv-error-count"></slot>
-          </div>
-
-          <div class="modal-footer">
-            <button
-              type="submit"
-              @click="
-                () => {
-                  emit('ok', collectData(), chooseId());
-                }
-              "
-              :disabled="disableButton"
-            >
-              OK
-            </button>
-            <button @click="emit('close')">Cancel</button>
-          </div>
+          </BaseModalActionArea>
         </div>
       </Form>
     </div>
@@ -77,13 +27,14 @@
 
 <script setup>
 import { reactive, ref, watch, inject } from "vue";
+import BaseModalReadArea from "./BaseModalReadArea.vue";
+import BaseModalActionArea from "./BaseModalActionArea.vue";
 
 let data = reactive({});
 let file = ref(null);
 let errorMessage = ref("");
 let disableButton = ref(true);
 let categoryId = ref(inject('categoryId'));
-let credentialId = ref(inject('credentialId'))
 
 // Use reactive to store all of the input keys, and their input values
 
@@ -111,38 +62,12 @@ const { show, inputs, rules, canClose } = defineProps({
 // Passes up ok and close event
 const emit = defineEmits(["ok", "close"]);
 
-function selectedCategory(e){
-  data["categoryId"] = Number(e.target.value);
-}
-
 // when submitting a form
 watch(() => canClose, (newCanClose) => {
   if (newCanClose) {
     emit('close');
   }
 })
-
-// https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
-function handleFileImport(e){
-  errorMessage.value = "";
-
-  const inputFile = e.target.files[0];
-
-  if (inputFile == undefined){
-    return;
-  }
-
-  const sizeInMB = inputFile.size / (1024 * 1024);
-  if (sizeInMB > 5){
-    errorMessage.value = `Attepmpted file upload: "${inputFile.name}" exceeds the 5MB limit. Please shorten your file.`
-    disableButton.value = true;
-    file.value = null;
-    return;
-  }
-
-  disableButton.value = false;
-  file.value = inputFile;
-}
 
 function collectData() {
   if (inputs.length > 0 && inputs[0].type === 'select'){
@@ -155,12 +80,6 @@ function collectData() {
     return file.value;
   }
 }
-
-function chooseId() {
-  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId.value || null;
-  return credentialId.value || categoryId.value;
-}
-
 
 // You nee.d to reset defaults once show appears
 watch(() => show, (newShow) => {
