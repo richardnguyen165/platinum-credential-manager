@@ -4,7 +4,9 @@
     <div v-if="show" class="modal-background">
       <Form @submit.prevent="collectData">
         <div class="modal-container">
-          <BaseModalReadArea :rules="rules">
+          <BaseModalReadArea 
+            :rules="rules"
+          >
             <template #header>
               <slot name="header"></slot>
             </template>
@@ -16,8 +18,21 @@
             </template>
           </BaseModalReadArea>
 
-          <BaseModalActionArea :inputs="inputs">
-          
+          <BaseModalActionArea 
+            :inputs="inputs" 
+            v-model:disableButton="disableButton"
+            v-model:data="data"
+            v-model:errorMessage="errorMessage"
+            v-model:file="file"
+            @ok="emit('ok')"
+            @close="emit('close')"
+          >
+            <template #modal-error-message>
+              <slot name="modal-error-message"></slot>
+            </template>
+            <template #modal-csv-error-count>
+              <slot name="modal-csv-error-count"></slot>
+            </template>
           </BaseModalActionArea>
         </div>
       </Form>
@@ -26,7 +41,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, inject } from "vue";
+import { reactive, ref, watch } from "vue";
 import BaseModalReadArea from "./BaseModalReadArea.vue";
 import BaseModalActionArea from "./BaseModalActionArea.vue";
 
@@ -34,23 +49,6 @@ let data = reactive({});
 let file = ref(null);
 let errorMessage = ref("");
 let disableButton = ref(true);
-let categoryId = ref(inject('categoryId'));
-
-// Use reactive to store all of the input keys, and their input values
-
-// Notes for self:
-/* 
-    v-model:trim is shorthand for
-
-    <input
-        :value="data[input.key]"
-        @input-"data[input.key] = $event.target.value.trim()"
-    />
-    */
-
-// Sources
-// https://vuejs.org/examples/#modal
-// https://vuejs.org/guide/built-ins/transition.html
 
 const { show, inputs, rules, canClose } = defineProps({
   show: Boolean,
@@ -68,18 +66,6 @@ watch(() => canClose, (newCanClose) => {
     emit('close');
   }
 })
-
-function collectData() {
-  if (inputs.length > 0 && inputs[0].type === 'select'){
-    return data;
-  } else if (inputs.length > 0 && inputs[0].type !== 'file'){
-    // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
-    if (categoryId.value != null && inputs[0].type !== 'select') data["categoryId"] = categoryId.value;
-    return data;
-  } else {
-    return file.value;
-  }
-}
 
 // You nee.d to reset defaults once show appears
 watch(() => show, (newShow) => {

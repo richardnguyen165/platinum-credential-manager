@@ -7,7 +7,7 @@
         :type="input.type"
         :id="input.key"
         :required="input.required"
-        v-model.trim="data[input.key]"
+        v-model.trim="data.value[input.key]"
     />
     <select v-else-if="input.type === 'select'" :id="input.key" name="input.key" @change="selectedCategory"> 
         <option :value="option.id" v-for="option in input.options" :key="option.id" :selected="option.selected">
@@ -25,11 +25,11 @@
     </div>
 
     <div class="modal-error">
-    <slot name="modal-error-message"></slot>
+        <slot name="modal-error-message"></slot>
     </div>
 
     <div class="modal-csv-error-display">
-    <slot name="modal-csv-error-count"></slot>
+        <slot name="modal-csv-error-count"></slot>
     </div>
 
     <div class="modal-footer">
@@ -49,14 +49,22 @@
 </template>
 
 <script setup>
+const emit = defineEmits(["ok", "close"]);
+
 const { inputs } = defineProps({
     inputs: Array
 })
 
+let categoryId = ref(inject('categoryId'));
 let credentialId = ref(inject('credentialId'));
 
+const errorMessage = defineModel('errorMessage');
+const disableButton = defineModel('disableButton');
+const file = defineModel('file');
+const data = defineModel('data');
+
 function selectedCategory(e){
-  data["categoryId"] = Number(e.target.value);
+  data.value["categoryId"] = Number(e.target.value);
 }
 
 function chooseId() {
@@ -85,4 +93,17 @@ function handleFileImport(e){
   disableButton.value = false;
   file.value = inputFile;
 }
+
+function collectData() {
+  if (inputs.length > 0 && inputs[0].type === 'select'){
+    return data.value;
+  } else if (inputs.length > 0 && inputs[0].type !== 'file'){
+    // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
+    if (categoryId.value != null && inputs[0].type !== 'select') data.value["categoryId"] = categoryId.value;
+    return data.value;
+  } else {
+    return file.value;
+  }
+}
+
 </script>
