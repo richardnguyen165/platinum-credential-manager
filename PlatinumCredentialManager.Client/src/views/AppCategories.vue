@@ -25,9 +25,9 @@
 <script setup>
 import { onMounted, ref, provide } from "vue";
 
-import ActionFormModal from "@/components/ui/ActionFormModal.vue";
+import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
 import AppHeader from "@/components/layout/AppHeader.vue";
-import PaginationGrid from "@/components/ui/PaginationGrid.vue";
+import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
 import { useModal } from "@/composables/useModal";
 import { serviceHandler } from "@/services/serviceHandler";

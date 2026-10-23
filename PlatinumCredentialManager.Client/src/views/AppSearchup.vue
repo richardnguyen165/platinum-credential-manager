@@ -74,7 +74,7 @@
 
 <script setup>
 import AppHeader from "@/components/layout/AppHeader.vue";
-import PaginationGrid from "@/components/ui/PaginationGrid.vue";
+import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
 import { ref, reactive, onMounted, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";

@@ -28,9 +28,9 @@
 import { ref, onMounted, reactive, watch, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
-import ActionFormModal from "@/components/ui/ActionFormModal.vue";
+import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
 import AppHeader from "@/components/layout/AppHeader.vue"
-import PaginationGrid from "@/components/ui/PaginationGrid.vue";
+import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
 import { useToast } from 'vue-toastification'
 

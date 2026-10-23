@@ -152,20 +152,13 @@
     <p>Date Last Updated: {{ rows.DateLastUpdated }}</p>
   </div>
 
-  <div v-if="location !== 'credential'">
-    <button :disabled="pageNumber === 1" @click="checkDecrement">«</button>
-    <input
-      :id="'inputPageNumber'"
-      v-model="inputPageNumber"
-      type="number"
-      min="1"
-      :max="allData.length"
-      @keyup.enter="goToPage"
-    />
-    <button :disabled="allData.length === 0 || pageNumber === allData.length" @click="checkIncrement">
-      »
-    </button>
-  </div>
+  <PaginationGridPageTracker 
+    v-if="location !== 'credential'"
+    v-model:pageNumber="pageNumber"
+    v-model:inputPageNumber="inputPageNumber"
+    v-model:currentData="currentData"
+    :allData="allData"
+  />
 
   <ActionFormModal
     v-if="location === 'allCategories' || location === 'allCredentials'"
@@ -186,7 +179,8 @@ import { parsePayload } from "@/utils/parsePayload.js";
 import { sortDecider } from "@/utils/sort";
 import { exportCSVDecider } from "@/csv/exportCSV.js";
 import { useModal } from "@/composables/useModal.js";
-import ActionFormModal from "@/components/ui/ActionFormModal.vue";
+import ActionFormModal from "@/components/ui/action-form-modal/ActionFormModal.vue";
+import PaginationGridPageTracker from "./PaginationGridPageTracker.vue";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -225,42 +219,6 @@ function changeData(){
     pageNumber.value = 1;
     currentData.value = allData.value[pageNumber.value - 1];
     inputPageNumber.value = pageNumber.value;
-  }
-}
-
-function goToPage() {
-  if (!Number.isInteger(inputPageNumber.value)) {
-    inputPageNumber.value = Math.round(inputPageNumber.value);
-  }
-
-  if (inputPageNumber.value > allData.value.length) {
-    inputPageNumber.value = allData.value.length;
-    pageNumber.value = inputPageNumber.value;
-    currentData.value = allData.value[pageNumber.value - 1];
-    return;
-  } else if (inputPageNumber.value < 1) {
-    inputPageNumber.value = 1;
-    pageNumber.value = inputPageNumber.value;
-    currentData.value = allData.value[pageNumber.value - 1];
-    return;
-  }
-  currentData.value = allData.value[inputPageNumber.value];
-  pageNumber.value = inputPageNumber.value;
-}
-
-function checkIncrement() {
-  if (pageNumber.value !== allData.value.length) {
-    pageNumber.value += 1;
-    inputPageNumber.value = pageNumber.value;
-    currentData.value = allData.value[pageNumber.value - 1];
-  }
-}
-
-function checkDecrement() {
-  if (pageNumber.value !== 1) {
-    pageNumber.value -= 1;
-    inputPageNumber.value = pageNumber.value;
-    currentData.value = allData.value[pageNumber.value - 1];
   }
 }
 

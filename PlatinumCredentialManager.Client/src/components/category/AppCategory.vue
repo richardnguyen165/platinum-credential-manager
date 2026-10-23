@@ -33,8 +33,8 @@ import { useRouter, useRoute } from "vue-router";
 import { useToast } from "vue-toastification";
 
 import AppHeader from "@/components/layout/AppHeader.vue";
-import ActionFormModal from "@/components/ui/ActionFormModal.vue";
-import PaginationGrid from "@/components/ui/PaginationGrid.vue";
+import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
+import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 import { categoriesPath } from "@/router/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";

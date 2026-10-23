@@ -43,7 +43,7 @@
 <script setup>
 import { ref, computed, watch, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import BaseModal from "@/components/ui/BaseModal.vue";
+import BaseModal from "@/components/ui/base-modal/BaseModal.vue";
 
 import {
   getCategories
