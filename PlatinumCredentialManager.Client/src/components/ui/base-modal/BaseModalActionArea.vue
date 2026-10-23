@@ -7,7 +7,7 @@
         :type="input.type"
         :id="input.key"
         :required="input.required"
-        v-model.trim="data.value[input.key]"
+        v-model.trim="data[input.key]"
     />
     <select v-else-if="input.type === 'select'" :id="input.key" name="input.key" @change="selectedCategory"> 
         <option :value="option.id" v-for="option in input.options" :key="option.id" :selected="option.selected">
@@ -49,6 +49,8 @@
 </template>
 
 <script setup>
+import { ref, inject } from 'vue';
+
 const emit = defineEmits(["ok", "close"]);
 
 const { inputs } = defineProps({

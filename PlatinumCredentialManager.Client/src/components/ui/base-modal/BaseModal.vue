@@ -45,7 +45,7 @@ import { reactive, ref, watch } from "vue";
 import BaseModalReadArea from "./BaseModalReadArea.vue";
 import BaseModalActionArea from "./BaseModalActionArea.vue";
 
-let data = reactive({});
+let data = ref({});
 let file = ref(null);
 let errorMessage = ref("");
 let disableButton = ref(true);
