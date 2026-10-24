@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { keycloak } from '@/config/keycloak'
+import { createRouter, createWebHistory, type RouteLocationNormalizedGeneric, type Router } from 'vue-router'
+import { keycloak } from '@/config/keycloak.js'
 
 import WelcomePage from '@/views/WelcomePage.vue';
 import AppHomepage from '@/views/AppHomepage.vue';
@@ -9,7 +9,7 @@ import AppSearchup from '@/views/AppSearchup.vue';
 import AppCredential from '@/components/credential/AppCredential.vue';
 import NotFound from '@/views/NotFound.vue';
 
-const router = createRouter({
+const router: Router = createRouter({
     history: createWebHistory(),
     routes: [
         { path: '/', component: WelcomePage},
@@ -23,7 +23,7 @@ const router = createRouter({
 });
 
 // router guard
-router.beforeEach((to) => {
+router.beforeEach((to: RouteLocationNormalizedGeneric) => {
   if (to.meta.requiresAuth && !keycloak.authenticated) {
       keycloak.login()
   }

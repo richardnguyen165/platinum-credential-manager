@@ -27,9 +27,9 @@
     // Style Options
     // "noImplicitReturns": true,
     // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
     // "noPropertyAccessFromIndexSignature": true,
 
     // Recommended Options
@@ -41,5 +41,14 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     "allowJs": true,
-  }
+    "outDir": "./ts-dist",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": [
+    "./archive/*",
+    "./node_modules/*",
+    "./.vscode/*"
+  ]
 }
