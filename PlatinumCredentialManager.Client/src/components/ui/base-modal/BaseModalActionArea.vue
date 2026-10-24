@@ -35,11 +35,10 @@
     <div class="modal-footer">
     <button
         type="submit"
-        @click="
-        () => {
-            emit('ok', collectData(), chooseId());
-        }
-        "
+        @click="(e) => {
+          e.preventDefault();
+          emit('ok')
+        }"
         :disabled="disableButton"
     >
         OK
@@ -49,16 +48,11 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue';
-
 const emit = defineEmits(["ok", "close"]);
 
 const { inputs } = defineProps({
     inputs: Array
-})
-
-let categoryId = ref(inject('categoryId'));
-let credentialId = ref(inject('credentialId'));
+});
 
 const errorMessage = defineModel('errorMessage');
 const disableButton = defineModel('disableButton');
@@ -67,11 +61,6 @@ const data = defineModel('data');
 
 function selectedCategory(e){
   data.value["categoryId"] = Number(e.target.value);
-}
-
-function chooseId() {
-  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId.value || null;
-  return credentialId.value || categoryId.value;
 }
 
 // https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
@@ -94,18 +83,6 @@ function handleFileImport(e){
 
   disableButton.value = false;
   file.value = inputFile;
-}
-
-function collectData() {
-  if (inputs.length > 0 && inputs[0].type === 'select'){
-    return data.value;
-  } else if (inputs.length > 0 && inputs[0].type !== 'file'){
-    // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
-    if (categoryId.value != null && inputs[0].type !== 'select') data.value["categoryId"] = categoryId.value;
-    return data.value;
-  } else {
-    return file.value;
-  }
 }
 
 </script>

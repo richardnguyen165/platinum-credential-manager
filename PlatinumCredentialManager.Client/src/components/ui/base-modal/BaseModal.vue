@@ -2,7 +2,7 @@
   <!-- helps annimates element appearing and disappearing-->
   <Transition name="modal">
     <div v-if="show" class="modal-background">
-      <Form @submit.prevent="collectData">
+      <Form @submit.prevent="okPasser">
         <div class="modal-container">
           <BaseModalReadArea 
             :rules="rules"
@@ -24,7 +24,7 @@
             v-model:data="data"
             v-model:errorMessage="errorMessage"
             v-model:file="file"
-            @ok="emit('ok')"
+            @ok="okPasser"
             @close="emit('close')"
           >
             <template #modal-error-message>
@@ -41,10 +41,12 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from "vue";
+import { inject, ref, watch } from "vue";
 import BaseModalReadArea from "./BaseModalReadArea.vue";
 import BaseModalActionArea from "./BaseModalActionArea.vue";
 
+let categoryId = ref(inject('categoryId'));
+let credentialId = ref(inject('credentialId'));
 let data = ref({});
 let file = ref(null);
 let errorMessage = ref("");
@@ -60,6 +62,10 @@ const { show, inputs, rules, canClose } = defineProps({
 // Passes up ok and close event
 const emit = defineEmits(["ok", "close"]);
 
+function okPasser(){
+  emit('ok', collectData(), chooseId());
+}
+
 // when submitting a form
 watch(() => canClose, (newCanClose) => {
   if (newCanClose) {
@@ -67,10 +73,10 @@ watch(() => canClose, (newCanClose) => {
   }
 })
 
-// You nee.d to reset defaults once show appears
+// You need to reset defaults once show appears
 watch(() => show, (newShow) => {
   if (newShow){
-    data = {}
+    data.value = {}
     file.value = null;
     errorMessage .value = "";
     disableButton.value = false;
@@ -83,6 +89,24 @@ watch(() => show, (newShow) => {
     }
   }
 })
+
+function collectData() {
+  if (inputs.length > 0 && inputs[0].type === 'select'){
+    return data.value;
+  } else if (inputs.length > 0 && inputs[0].type !== 'file'){
+    // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
+    if (categoryId.value != null && inputs[0].type !== 'select') data.value["categoryId"] = categoryId.value;
+    return data.value;
+  } else {
+    return file.value;
+  }
+}
+
+function chooseId() {
+  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId.value || null;
+  return credentialId.value || categoryId.value;
+}
+
 
 </script>
 
