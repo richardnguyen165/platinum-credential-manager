@@ -43,7 +43,10 @@
     >
         OK
     </button>
-    <button @click="emit('close')">Cancel</button>
+    <button @click="(e) => {
+        e.preventDefault();
+        emit('close')
+    }">Cancel</button>
     </div>
 </template>
 
