@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { keycloak } from '@/config/keycloak.js'
+import { keycloak } from '@/config/keycloak'
 import axios from 'axios';
 
 const authState = reactive({

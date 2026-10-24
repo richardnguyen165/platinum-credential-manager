@@ -1,0 +1,17 @@
+// https://vite.dev/guide/env-and-mode
+
+interface ViteTypeOptions {
+  // By adding this line, you can make the type of ImportMetaEnv strict
+  // to disallow unknown keys.
+  strictImportMetaEnv: unknown
+}
+
+interface ImportMetaEnv {
+  readonly VITE_KEYCLOAK_URL: undefined | string
+  readonly VITE_KEYCLOAK_REALM: undefined | string
+  readonly VITE_KEYCLOAK_CLIENT_ID: undefined | string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}

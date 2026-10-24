@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import Toast from 'vue-toastification'
 
-import { keycloak } from '@/config/keycloak.js'
+import { keycloak } from '@/config/keycloak'
 import App from '@/App.vue'
 import router from '@/router/index'
 

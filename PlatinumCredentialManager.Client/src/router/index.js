@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { keycloak } from '@/config/keycloak.js'
+import { keycloak } from '@/config/keycloak'
 
 import WelcomePage from '@/views/WelcomePage.vue';
 import AppHomepage from '@/views/AppHomepage.vue';
