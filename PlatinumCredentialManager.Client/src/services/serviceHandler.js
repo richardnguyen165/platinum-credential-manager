@@ -1,6 +1,7 @@
 import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "@/services/categoryService";
 import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "@/services/credentialService";
 import { getUser, postNewUser } from "@/services/userService";
+import { useToast } from "vue-toastification";
 
 const ERROR_NAMES = [
     "emptyFile",
@@ -22,52 +23,60 @@ const ERROR_NAMES = [
 export async function serviceHandler(action, payload = null) {
     let response;
 
-    switch(action){
-        case "get-user":
-            response = await getUser();
-            break;
-        case "post-new-user":
-            response = await postNewUser();
-            break;
-        case "allCategories":
-            response = await importCategories(payload);
-            break;
-        case "create-category":
-            response = await postCategory(payload);
-            break;
-        case "get-category":
-            response = await getCategory(payload["id"]);
-            break;
-        case "edit-category":
-            response = await putCategory(payload["id"], payload["data"]);
-            break;
-        case "delete-category":
-            response = await deleteCategory(payload["id"]);
-            break;
-        case "export-categories":
-            response = await exportCategories();
-            break;
-        case "getAllCredentials":
-            response = await getAllCredentials();
-            break;
-        case "search-credential":
-            response = await searchCredential(payload);
-            break;
-        case "get-credential":
-            response = await getCredential(payload["id"]);
-            break;
-        case "edit-credential":
-            response = await putCredential(payload["id"], payload["data"]);
-            break;
-        case "delete-credential":
-            response = await deleteCredential(payload["id"]);
-            break;
-        case "allCredentials":
-            response = await importCredentials(payload["data"], payload["id"]);
-            break;
-        case "create-credential":
-            response = await postCredential(payload);
-            break;
+    try{
+        switch(action){
+            case "get-user":
+                response = await getUser();
+                break;
+            case "post-new-user":
+                response = await postNewUser();
+                break;
+            case "allCategories":
+                response = await importCategories(payload);
+                break;
+            case "create-category":
+                response = await postCategory(payload);
+                break;
+            case "get-category":
+                response = await getCategory(payload["id"]);
+                break;
+            case "edit-category":
+                response = await putCategory(payload["id"], payload["data"]);
+                break;
+            case "delete-category":
+                response = await deleteCategory(payload["id"]);
+                break;
+            case "export-categories":
+                response = await exportCategories();
+                break;
+            case "getAllCredentials":
+                response = await getAllCredentials();
+                break;
+            case "search-credential":
+                response = await searchCredential(payload);
+                break;
+            case "get-credential":
+                response = await getCredential(payload["id"]);
+                break;
+            case "edit-credential":
+                response = await putCredential(payload["id"], payload["data"]);
+                break;
+            case "delete-credential":
+                response = await deleteCredential(payload["id"]);
+                break;
+            case "allCredentials":
+                response = await importCredentials(payload["data"], payload["id"]);
+                break;
+            case "create-credential":
+                response = await postCredential(payload);
+                break;
+        }
+    } catch (err) {
+        console.log(err);
+        return {
+            "valid": false,
+            "data": null
+        }
     }
 
     if (!response["valid"]){
