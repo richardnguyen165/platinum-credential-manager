@@ -3,6 +3,7 @@ import sendingForm from "@/interceptors/sendingForm.js"
 import { type backendResponse } from "./serviceType.js";
 import axios, { type AxiosResponse } from 'axios';
 import type { CategoryDetail, CategoryListItem, ProblemDetails, ValidationProblemDetails } from "./responseType.js";
+import type { CategoryForm } from "./requestType.js";
 
 export async function getCategories(): Promise<backendResponse | undefined> {
     try{
@@ -48,7 +49,7 @@ export async function getCategory(categoryId: string | number): Promise<backendR
     }
 }
 
-export async function postCategory(newData: object): Promise<backendResponse | undefined> {
+export async function postCategory(newData: CategoryForm): Promise<backendResponse | undefined> {
     try {
         const response: AxiosResponse<any, any, {}> = await http.post(`/category`, newData);
         const { data } = response;
@@ -70,7 +71,7 @@ export async function postCategory(newData: object): Promise<backendResponse | u
     }
 }
 
-export async function putCategory(categoryId: string | number, changedData: object): Promise<backendResponse | undefined>{
+export async function putCategory(categoryId: string | number, changedData: CategoryForm): Promise<backendResponse | undefined>{
     try {
         const response: AxiosResponse<any, any, {}> = await http.put(`/category/${categoryId}`, changedData);
         const { data } = response;
