@@ -1,18 +1,19 @@
 import http from "@/interceptors/http.js"
 import sendingForm from "@/interceptors/sendingForm.js"
-import { type backendResponse } from "./serviceTypes.js";
+import { type backendResponse } from "./serviceType.js";
 import axios, { type AxiosResponse } from 'axios';
+import type { CategoryDetail, CategoryListItem, ProblemDetails, ValidationProblemDetails } from "./responseType.js";
 
 export async function getCategories(): Promise<backendResponse | undefined> {
     try{
-        const response: AxiosResponse<any, any, {}> = await http.get(`/category`);
+        const response: AxiosResponse<CategoryListItem[], any, {}> = await http.get(`/category`);
         const { data } = response;  
         return {
             data,
             valid: true,
         };
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {
@@ -27,14 +28,14 @@ export async function getCategories(): Promise<backendResponse | undefined> {
 
 export async function getCategory(categoryId: string | number): Promise<backendResponse | undefined>{
     try {
-        const response: any = await http.get(`/category/${categoryId}`);
+        const response: AxiosResponse<CategoryDetail, any, {}>  = await http.get(`/category/${categoryId}`);
         const { data } = response;
         return {
             data,
             valid: true,
         }
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {
@@ -49,14 +50,14 @@ export async function getCategory(categoryId: string | number): Promise<backendR
 
 export async function postCategory(newData: object): Promise<backendResponse | undefined> {
     try {
-        const response = await http.post(`/category`, newData);
+        const response: AxiosResponse<any, any, {}> = await http.post(`/category`, newData);
         const { data } = response;
         return {
             data,
             valid: true,
         } 
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {
@@ -78,14 +79,15 @@ export async function putCategory(categoryId: string | number, changedData: obje
             valid: true
         }
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {
                 data: err.response?.data,
                 valid: false
             }
-        } else{
+        }
+        else{
             throw(err);
         }
     }
@@ -100,7 +102,7 @@ export async function deleteCategory(categoryId: string | number): Promise<backe
             valid: true
         }
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {
@@ -122,7 +124,7 @@ export async function exportCategories(): Promise<backendResponse | undefined>{
             valid: true
         }
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {
@@ -149,7 +151,7 @@ export async function importCategories(file: File): Promise<backendResponse | un
             valid: true
         }
     } catch (err) {
-        if (axios.isAxiosError(err)){
+        if (axios.isAxiosError<ProblemDetails | ValidationProblemDetails>(err)){
             console.log(err.status)
             console.error(err.response);
             return {

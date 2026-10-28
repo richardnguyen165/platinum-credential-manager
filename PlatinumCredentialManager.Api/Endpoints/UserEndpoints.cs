@@ -44,7 +44,11 @@ public static class UserEndpoints
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-            return dto is null ? Results.NotFound() : Results.Ok(dto);
+            return dto is null ?
+                Results.Problem(detail: "User row not provisioned yet.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "404 Not Found") :
+                Results.Ok(dto);
         }).WithName(GetCurrentUserRoute);
 
         // 201 first time, 200 second time
@@ -52,10 +56,13 @@ public static class UserEndpoints
         {
             var keycloakId = KeycloakId(principal);
 
-            if (keycloakId is null) return Results.Problem(
+            if (keycloakId is null)
+            {
+                return Results.Problem(
                 detail: "User authentication expired.",
                 statusCode: StatusCodes.Status401Unauthorized,
                 title: "401 Unauthorized");
+            }
 
             // find user
 

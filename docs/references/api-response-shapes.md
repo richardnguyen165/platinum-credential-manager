@@ -23,7 +23,8 @@ The endpoints use three different error styles, so the frontend needs to handle 
 | --- | --- | --- | --- |
 | **ProblemDetails** | `Results.Problem(...)` | `application/problem+json` | `ProblemDetails` object (below) |
 | **Bare string** | `Results.BadRequest("...")` | `application/json` | a JSON string, e.g. `"Category cannot be blank!"` |
-| **Empty** | `Results.NotFound()`, JwtBearer 401 | none | no body |
+| **Empty** | `Results.NotFound()`, JwtBearer 401, antiforgery 400 (Production) | none | no body |
+| **Plain-text exception** | antiforgery 400 (Development only) | `text/plain` | exception message + stack trace (see below) |
 
 **ProblemDetails**, the output of `Results.Problem(...)`:
 
@@ -55,6 +56,31 @@ The endpoints use three different error styles, so the frontend needs to handle 
 ```
 
 If the JSON body is malformed or missing, the request also fails with a 400 before the handler runs.
+
+### Antiforgery failures (400)
+
+This applies to the two `[FromForm]` import endpoints. `app.UseAntiforgery()` checks the `PCMAntiForgeryCookie` cookie against the `X-CSRF-TOKEN` header and **records** the result. When the framework then binds the `[FromForm]` parameter, it sees the failed result and throws a `BadHttpRequestException`. The handler never runs, so none of the handler's own error formats apply. The body depends on the environment, because `RouteHandlerOptions.ThrowOnBadRequest` defaults to `true` only in Development:
+
+| Environment | Status | Content-Type | Body |
+| --- | --- | --- | --- |
+| **Development** | 400 | `text/plain; charset=utf-8` | exception text from `UseDeveloperExceptionPage` (below) |
+| **Production** | 400 | none | **empty** (`Content-Length: 0`) |
+
+The Development body is **not JSON**: the first two lines are the useful ones, followed by a stack trace.
+
+```
+Microsoft.AspNetCore.Http.BadHttpRequestException: Invalid anti-forgery token found when reading parameter "ImportCategoriesDto importedCredentials" from the request body as form.
+ ---> Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException: <reason>
+   at ... (stack trace)
+```
+
+`<reason>` depends on what went wrong. Two examples:
+- No cookie: `The required antiforgery cookie "PCMAntiForgeryCookie" is not present.`
+- Header value is garbage: `The antiforgery token could not be decrypted.`
+
+On the frontend, `err.response.data` will be a **string** in Development and `""` in Production. Neither has `title` or `detail`, so code that expects ProblemDetails will show `undefined`.
+
+*Verified against ASP.NET Core 10.0.13 with a minimal repro using the same antiforgery, validation, and developer-exception-page setup.*
 
 ---
 
@@ -188,7 +214,7 @@ Source: [Program.cs](../../PlatinumCredentialManager.Api/Program.cs)
 | 200 | **empty** |
 | 401 | empty (JwtBearer) |
 
-This endpoint has a side effect: it sets two cookies, the antiforgery cookie `PCMAntiForgeryCookie` (HttpOnly) and `X-CSRF-TOKEN`, which JavaScript can read. The frontend has to send the value of `X-CSRF-TOKEN` back in the `X-CSRF-TOKEN` header on the `[FromForm]` import endpoints. If it doesn't, those endpoints return **400** because antiforgery validation fails.
+This endpoint has a side effect: it sets two cookies, the antiforgery cookie `PCMAntiForgeryCookie` (HttpOnly) and `X-CSRF-TOKEN`, which JavaScript can read. The frontend has to send the value of `X-CSRF-TOKEN` back in the `X-CSRF-TOKEN` header on the `[FromForm]` import endpoints. If it doesn't, those endpoints return **400** because antiforgery validation fails (see [Antiforgery failures](#antiforgery-failures-400) for the body).
 
 ---
 
@@ -306,7 +332,7 @@ Request: `multipart/form-data` with a `file` field. The CSV header is `Category 
 | --- | --- |
 | 200 | **bare string**: `"CSV successfully imported!"` |
 | 400 | `ImportProblem`, detail `"Empty file. Please fill out the file."` or `"Errors found in imported CSV."` |
-| 400 | antiforgery failure (token missing or invalid) |
+| 400 | antiforgery failure (token missing or invalid): plain-text exception in Development, empty in Production. See [Antiforgery failures](#antiforgery-failures-400) |
 | 401 | `ProblemDetails` |
 
 The error counters are flattened onto the root of the problem object. Every key is always present, and each value is an integer (`0` = no error of that kind):
@@ -431,7 +457,7 @@ Request: `multipart/form-data` with a `file` field. The CSV header is `Service N
 | --- | --- |
 | 200 | **bare string**: `"CSV successfully imported!"` |
 | 400 | `ImportProblem`, detail `"Empty file. Please fill out the file."` or `"Errors found in imported CSV."` |
-| 400 | antiforgery failure |
+| 400 | antiforgery failure: same body as `/category/import`. See [Antiforgery failures](#antiforgery-failures-400) |
 | 401 | `ProblemDetails` |
 
 The error counter keys are the same as for `/category/import`, **without** `noCategoryName` and `categoryNameTooLong`:

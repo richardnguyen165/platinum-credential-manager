@@ -1,4 +1,4 @@
 export type backendResponse = {
     data: any,
-    valid: boolean
+    valid: true | false
 }

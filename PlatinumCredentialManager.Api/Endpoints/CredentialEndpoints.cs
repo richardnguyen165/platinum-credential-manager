@@ -13,12 +13,12 @@ public static class CredentialEndpoints
 {
     private const string GetCredEndpointName = "GetCred";
 
-      private static void headerCheck(string[] header, IDictionary<string, int> errorCounts, ref bool hasErrors)
+    private static void headerCheck(string[] header, IDictionary<string, int> errorCounts, ref bool hasErrors)
     {
         // Checking cannot proceed without correct number of entries
         if (header.Length < 3)
         {
-            errorCounts["missingColumnError"] = 3- header.Length;
+            errorCounts["missingColumnError"] = 3 - header.Length;
             hasErrors = true;
             return;
         }
@@ -35,14 +35,14 @@ public static class CredentialEndpoints
         for (int i = 0; i < 3; i++)
         {
             // expected csv headers
-            string lowerCaseTrimmedCSV = CSVHEADERS[i].Trim().ToLower();
-            string underscoreCSV = lowerCaseTrimmedCSV.Replace("_", " ");
-            string noSpaceCSV = lowerCaseTrimmedCSV.Replace(" ", "");
+            string lowerCaseTrimmedCsv = CSVHEADERS[i].Trim().ToLower();
+            string underscoreCSV = lowerCaseTrimmedCsv.Replace("_", " ");
+            string noSpaceCSV = lowerCaseTrimmedCsv.Replace(" ", "");
 
             // header from imported csv
             string lowerCaseTrimmedColumn = header[i].Trim().ToLower();
 
-            bool headerEquivalentResult = (lowerCaseTrimmedColumn == lowerCaseTrimmedCSV) || (lowerCaseTrimmedColumn == underscoreCSV) || (lowerCaseTrimmedColumn == noSpaceCSV);
+            bool headerEquivalentResult = (lowerCaseTrimmedColumn == lowerCaseTrimmedCsv) || (lowerCaseTrimmedColumn == underscoreCSV) || (lowerCaseTrimmedColumn == noSpaceCSV);
 
             if (!headerEquivalentResult)
             {
@@ -71,7 +71,7 @@ public static class CredentialEndpoints
             // Username can be nulled
             if (credential.Length <= 2)
             {
-                errorCounts["missingRowEntryError"]++;   
+                errorCounts["missingRowEntryError"]++;
                 hasErrors = true;
                 rowError = true;
                 return rowError;
@@ -134,12 +134,11 @@ public static class CredentialEndpoints
             return rowError;
         }
     private static IQueryable<Credential> credentialDateLINQFinder(CredsStoreContext dbContext, User user, string CreateUpdateChoice, string? UserDateChoice, string? StartDate, string? EndDate){
-        
         int decrementDateAmount = 0;
-        
+
         IQueryable<Credential> data = dbContext.Credentials.Where(credential => credential.Category.UserId == user.Id);
 
-        switch(UserDateChoice) 
+        switch(UserDateChoice)
         {
             case "lastSevenDays":
                 decrementDateAmount = -6; // -6 + today = 7 days back
@@ -166,7 +165,6 @@ public static class CredentialEndpoints
 
             default:
                 return data;
-            
         }
 
         var todaysDate = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -193,19 +191,25 @@ public static class CredentialEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             return Results.Ok(await dbContext.Credentials
             .Where(credential => credential.Category.UserId == user.Id)
@@ -230,19 +234,25 @@ public static class CredentialEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             // Find credential by id
             var credential = await dbContext.Credentials.FirstOrDefaultAsync(c => c.Id == id && c.Category.UserId == user.Id);
@@ -287,17 +297,23 @@ public static class CredentialEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized");
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized");
+            }
 
             // Check if the category exists
             var categoryCheck = await dbContext.Categories.FirstOrDefaultAsync(category => category.Id == newCredential.CategoryId && category.UserId == user.Id);
@@ -363,17 +379,23 @@ public static class CredentialEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized");
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized");
+            }
 
             var findCredential = await dbContext.Credentials.FirstOrDefaultAsync(credential => credential.Id == id && credential.Category.UserId == user.Id);
 
@@ -447,17 +469,23 @@ public static class CredentialEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized");
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized");
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized");
+            }
 
             await dbContext.Credentials
             .Where(credential => credential.Id == id && credential.Category.UserId == user.Id)
@@ -474,18 +502,24 @@ public static class CredentialEndpoints
                                  principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (keycloakId is null)
+                {
                     return Results.Problem(
                         detail: "User authentication expired.",
                         statusCode: StatusCodes.Status401Unauthorized,
-                        title: "401 Unauthorized");
+                        title: "401 Unauthorized"
+                    );
+                }
 
                 var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
                 if (user is null)
+                {
                     return Results.Problem(
                         detail: "User authentication expired.",
                         statusCode: StatusCodes.Status401Unauthorized,
-                        title: "401 Unauthorized");
+                        title: "401 Unauthorized"
+                    );
+                }
 
                 IQueryable<Credential> dateLINQ = credentialDateLINQFinder(dbContext, user,
                     searchCredential.CreateUpdateChoice, searchCredential.UserDateChoice, searchCredential.StartDate,
@@ -523,20 +557,24 @@ public static class CredentialEndpoints
                                  principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (keycloakId is null)
+                {
                     return Results.Problem(
                         detail: "User authentication expired.",
                         statusCode: StatusCodes.Status401Unauthorized,
                         title: "401 Unauthorized"
                     );
+                }
 
                 var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
                 if (user is null)
+                {
                     return Results.Problem(
                         detail: "User authentication expired.",
                         statusCode: StatusCodes.Status401Unauthorized,
                         title: "401 Unauthorized"
                     );
+                }
 
                 Dictionary<string, int> errorCounts = new Dictionary<string, int>();
                 IFormFile file = importedCredentials.File;
@@ -576,7 +614,7 @@ public static class CredentialEndpoints
 
                 if (allLines.Count == 0)
                 {
-                    errorCounts["emptyFile"] += 1;
+                    errorCounts["emptyFile"]++;
                     return Results.Problem(
                         detail: "Empty file. Please fill out the file.",
                         statusCode: StatusCodes.Status400BadRequest,
@@ -621,12 +659,12 @@ public static class CredentialEndpoints
                         }
                     }
 
-                    lineCounter += 1;
+                    lineCounter++;
                 }
 
                 if (!hasCredentials)
                 {
-                    errorCounts["noCredentials"] += 1;
+                    errorCounts["noCredentials"]++;
                     hasErrors = true;
                 }
 

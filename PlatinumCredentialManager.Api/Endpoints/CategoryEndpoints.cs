@@ -74,14 +74,14 @@ public static class CategoryEndpoints
         // Checking cannot proceed without correct number of entries
         if (credential.Length <= 2)
         {
-            errorCounts["missingRowEntryError"] += 1;   
+            errorCounts["missingRowEntryError"]++;
             hasErrors = true;
             rowError = true;
             return rowError;
         }
         if (credential.Length > 4)
         {
-            errorCounts["tooManyRowEntriesError"] += 1;
+            errorCounts["tooManyRowEntriesError"]++;
             hasErrors = true;
             rowError = true;
             return rowError;
@@ -90,13 +90,13 @@ public static class CategoryEndpoints
         // Category
         if (credential[0].Trim().Length == 0)
         {
-            errorCounts["noCategoryName"] += 1;
+            errorCounts["noCategoryName"]++;
             hasErrors = true;
             rowError = true;
         }
         if (credential[0].Trim().Length > 100)
         {
-            errorCounts["categoryNameTooLong"] += 1;
+            errorCounts["categoryNameTooLong"]++;
             hasErrors = true;
             rowError = true;
         }
@@ -104,7 +104,7 @@ public static class CategoryEndpoints
         // Service Name
         if (allCredentialNames.Contains(ValueTuple.Create(credential[0].Trim(), credential[1].Trim())) || newCredentialNames.Contains(ValueTuple.Create(credential[0].Trim(), credential[1].Trim())))
         {
-            errorCounts["duplicateServiceName"] += 1;
+            errorCounts["duplicateServiceName"]++;
             hasErrors = true;
             rowError = true;
         }
@@ -116,37 +116,57 @@ public static class CategoryEndpoints
 
         if (credential[1].Trim().Length == 0)
         {
-            errorCounts["noServiceName"] += 1;
+            errorCounts["noServiceName"]++;
             hasErrors = true;
             rowError = true;
         }
         if (credential[1].Trim().Length > 100)
         {
-            errorCounts["serviceNameTooLong"] += 1;
+            errorCounts["serviceNameTooLong"]++;
             hasErrors = true;
             rowError = true;
         }
 
-        // Username
-        if (credential[2].Trim().Length > 100)
+        if (credential.Length == 4)
         {
-            errorCounts["usernameTooLong"] += 1;
-            hasErrors = true;
-            rowError = true;
-        }
+            // Username
+            if (credential[2].Trim().Length > 100)
+            {
+                errorCounts["usernameTooLong"] ++;
+                hasErrors = true;
+                rowError = true;
+            }
 
-        // Password
-        if (credential[3].Trim().Length == 0)
-        {
-            errorCounts["noPassword"] += 1;
-            hasErrors = true;
-            rowError = true;
+            // Password
+            if (credential[3].Trim().Length == 0)
+            {
+                errorCounts["noPassword"]++;
+                hasErrors = true;
+                rowError = true;
+            }
+            if (credential[3].Trim().Length > 100)
+            {
+                errorCounts["passwordTooLong"]++;
+                hasErrors = true;
+                rowError = true;
+            }
         }
-        if (credential[3].Trim().Length > 100)
+        // username omitted - length of 3
+        else
         {
-            errorCounts["passwordTooLong"] += 1;
-            hasErrors = true;
-            rowError = true;
+            // Password
+            if (credential[2].Trim().Length == 0)
+            {
+                errorCounts["noPassword"]++;
+                hasErrors = true;
+                rowError = true;
+            }
+            if (credential[2].Trim().Length > 100)
+            {
+                errorCounts["passwordTooLong"]++;
+                hasErrors = true;
+                rowError = true;
+            }
         }
 
         return rowError;
@@ -163,19 +183,25 @@ public static class CategoryEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             return Results.Ok(await dbContext.Categories
             .Where(category => category.UserId == user.Id)
@@ -188,19 +214,25 @@ public static class CategoryEndpoints
         categoryURLGroup.MapGet("/export", async (CredsStoreContext dbContext, ClaimsPrincipal principal) => {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var allCategoryInformation = await dbContext.Categories
             .Where(c => c.UserId == user.Id)
@@ -227,19 +259,25 @@ public static class CategoryEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             // This doesnot join with the Credentials table, so it returns an empty list
 
@@ -264,95 +302,109 @@ public static class CategoryEndpoints
         });
 
         // CREATE/POST a category (POST /category)
-        categoryURLGroup.MapPost("/", async (CreateCategoryDto newCategory, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
-        {
-            // Category.UserId is a required FK, so we need the caller's User row before saving
-            // The "sub" claim is Keycloak user id
-
-            var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
-
-            // Look up caller, creating the row on the first find
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
-
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
-
-            var categorySameName = await dbContext.Categories
-            .FirstOrDefaultAsync(
-                category => category.CategoryName == newCategory.CategoryName
-                && category.UserId == user.Id
-            );
-
-            if (categorySameName is not null)
+        categoryURLGroup.MapPost("/",
+            async (CreateCategoryDto newCategory, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
             {
-                return Results.Problem(
-                    detail: "There exists a category that has the same name!",
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: "400 Bad Request"
+                // Category.UserId is a required FK, so we need the caller's User row before saving
+                // The "sub" claim is Keycloak user id
+
+                var keycloakId = principal.FindFirst("sub")?.Value ??
+                                 principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (keycloakId is null)
+                {
+                    return Results.Problem(
+                        detail: "User authentication expired.",
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "401 Unauthorized"
+                    );
+                }
+
+                // Look up caller, creating the row on the first find
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
+
+                if (user is null)
+                {
+                    return Results.Problem(
+                        detail: "User authentication expired.",
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "401 Unauthorized"
+                    );
+                }
+
+                var categorySameName = await dbContext.Categories
+                    .FirstOrDefaultAsync(category => category.CategoryName == newCategory.CategoryName
+                                                     && category.UserId == user.Id
+                    );
+
+                if (categorySameName is not null)
+                {
+                    return Results.Problem(
+                        detail: "There exists a category that has the same name!",
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "400 Bad Request"
+                    );
+                }
+                else if (newCategory.CategoryName == MISC_CONSTANT)
+                {
+                    return Results.Problem(
+                        detail: "Category name cannot be named 'Miscallaneous'",
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "400 Bad Request"
+                    );
+                }
+
+                Category category = new()
+                {
+                    CategoryName = newCategory.CategoryName,
+                    User = user,
+                    UserId = user.Id
+                };
+
+                dbContext.Categories.Add(category);
+
+                await dbContext.SaveChangesAsync();
+
+                GetDetailedCategoryDto newCategoryDetails = new(
+                    category.Id,
+                    category.CategoryName,
+                    category.Credentials.Select(cr => new GetAllCredentialsDto(
+                        cr.Id,
+                        cr.ServiceName,
+                        cr.Username,
+                        cr.DateCreated,
+                        cr.DateLastUpdated
+                    )).ToList()
                 );
-            }
-            else if (newCategory.CategoryName == MISC_CONSTANT)
-            {
-                return Results.Problem(
-                    detail: "Category name cannot be named 'Miscallaneous'",
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: "400 Bad Request"
-                );
-            }
 
-            Category category = new()
-            {
-                CategoryName = newCategory.CategoryName,
-                User = user,
-                UserId = user.Id
-            };
-
-            dbContext.Categories.Add(category);
-
-            await dbContext.SaveChangesAsync();
-
-            GetDetailedCategoryDto newCategoryDetails = new (
-                category.Id,
-                category.CategoryName,
-                category.Credentials.Select(cr => new GetAllCredentialsDto(
-                    cr.Id,
-                    cr.ServiceName,
-                    cr.Username,
-                    cr.DateCreated,
-                    cr.DateLastUpdated
-                )).ToList()
-            );
-
-            return Results.CreatedAtRoute(GetCategoryEndpointName, new { id = newCategoryDetails.Id }, newCategoryDetails );
-        }).WithName(GetCategoryEndpointName);
+                return Results.CreatedAtRoute(GetCategoryEndpointName, new { id = newCategoryDetails.Id },
+                    newCategoryDetails);
+            });
 
         // UPDATE/PUT a Category (PUT /category/:id) 
         categoryURLGroup.MapPut("/{id}", async (int id, UpdateCategoryDto updatedCategory, CredsStoreContext dbContext, ClaimsPrincipal principal) =>
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             // Finds first matching category
             var findCategory = await dbContext.Categories
@@ -360,15 +412,48 @@ public static class CategoryEndpoints
             var name = updatedCategory.CategoryName;
 
             if (name.Length == 0)
-                return Results.BadRequest("Name cannot be zero legnth!");
+            {
+                return Results.Problem(
+                    detail: "Name cannot be zero length.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "400 Bad Request"
+                );
+            }
             if (findCategory is null)
-                return Results.NotFound();
+            {
+                return Results.Problem(
+                    detail: "Category not found.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "404 Not Found"
+                );
+            }
+
             if (string.IsNullOrWhiteSpace(updatedCategory.CategoryName))
-                return Results.BadRequest("Category cannot be blank!");
+            {
+                return Results.Problem(
+                    detail: "Category cannot be blank.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "400 Bad Request"
+                );
+            }
+
             if (updatedCategory.CategoryName == MISC_CONSTANT)
-                return Results.BadRequest("Category name cannot be named 'Miscallaneous'");
-            if (await dbContext.Categories.AnyAsync(c => c.UserId == user.Id && c.CategoryName == name))
-                return Results.BadRequest("There exists a category that has the same name!");
+            {
+                return Results.Problem(
+                    detail: "Category name cannot be named 'Miscallaneous'.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "400 Bad Request"
+                );
+            }
+
+            // User could be editing the credential, but not changing the category
+            if (findCategory.CategoryName != name && await dbContext.Categories.AnyAsync(c => c.UserId == user.Id && c.CategoryName == name)){
+                return Results.Problem(
+                    detail: "There exists a category that has the same name.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "400 Bad Request"
+                );
+            }
 
             findCategory.CategoryName = name;
 
@@ -385,29 +470,45 @@ public static class CategoryEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var category = await dbContext.Categories.FirstOrDefaultAsync(category => category.Id == id && category.UserId == user.Id);
 
-            if (category is null) return Results.Problem(
-                detail: "Category not found.",
-                statusCode: StatusCodes.Status404NotFound,
-                title: "404 Not Found"
-            );
+            if (category is null)
+            { 
+                return Results.Problem(
+                    detail: "Category not found.",
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "404 Not Found"
+                );
+            }
 
-            if (category.CategoryName == MISC_CONSTANT) return Results.BadRequest("Cannot delete default category 'Miscallaneous!");
+            if (category.CategoryName == MISC_CONSTANT)
+            {
+                return Results.Problem(
+                    detail: "Cannot delete default category 'Miscallaneous'.",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "400 Bad Request"
+                );
+            }
 
             // 1. Find the miscallenous category id (diff for each user)
             var miscId = await dbContext.Categories
@@ -440,7 +541,7 @@ public static class CategoryEndpoints
 
             dbContext.Categories.Remove(category);
             await dbContext.SaveChangesAsync();
-            return Results.NoContent(); 
+            return Results.NoContent();
         });
 
         // Mass uploading categories and credentials
@@ -448,19 +549,25 @@ public static class CategoryEndpoints
         {
             var keycloakId = principal.FindFirst("sub")?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (keycloakId is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (keycloakId is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             var user = await dbContext.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId);
 
-            if (user is null) return Results.Problem(
-                detail: "User authentication expired.",
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "401 Unauthorized"
-            );
+            if (user is null)
+            {
+                return Results.Problem(
+                    detail: "User authentication expired.",
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "401 Unauthorized"
+                );
+            }
 
             // storage of errors
             // https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.idictionary-2?view=net-10.0
@@ -509,7 +616,7 @@ public static class CategoryEndpoints
 
             if (allLines.Count == 0)
             {
-                errorCounts["emptyFile"] += 1;
+                errorCounts["emptyFile"]++;
                 return Results.Problem(
                     detail: "Empty file. Please fill out the file.",
                     statusCode: StatusCodes.Status400BadRequest,
@@ -562,12 +669,12 @@ public static class CategoryEndpoints
                     }
                 }
 
-                lineCounter += 1;
+                lineCounter++;
             }
 
             if (!hasCredentials)
             {
-                errorCounts["noCredentials"] += 1;
+                errorCounts["noCredentials"]++;
                 hasErrors = true;
             }
 
@@ -608,8 +715,8 @@ public static class CategoryEndpoints
                 {
                     if (lineCounter == 0)
                     { 
-                        lineCounter += 1;
-                        continue;   
+                        lineCounter++;
+                        continue;
                     }
 
                     string categoryName = line[0].Trim();
