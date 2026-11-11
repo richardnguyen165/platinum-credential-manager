@@ -115,11 +115,16 @@ async function emitHelper(payload = {}, id = null) {
       reparsedPayload = {...payload};
   }
 
+  const payload = {
+    action,
+    payload: reparsedPayload
+  }
+
   switch (action) {
     case "create-category":
     case "create-credential":
     case "edit-category":
-      response = await serviceHandler(action, reparsedPayload);
+      response = await serviceHandler(payload);
       canClose.value = response.valid;
       if (!canClose.value) {
         errorMessage.value=`${response.data.title}: ${response.data.detail}`
@@ -130,7 +135,7 @@ async function emitHelper(payload = {}, id = null) {
       break;
     case "allCategories":
     case "allCredentials":
-      response = await serviceHandler(action, reparsedPayload);
+      response = await serviceHandler(payload);
       canClose.value = response.valid;
       if (!canClose.value) {
         useToast().error("Invalid CSV import!");
@@ -142,7 +147,7 @@ async function emitHelper(payload = {}, id = null) {
       }
       break;
     case "delete-category":
-      response = await serviceHandler(action, reparsedPayload);
+      response = await serviceHandler(payload);
       if (!response.valid) {
         errorMessage.value=`${response.data.title}: ${response.data.detail}`
         useToast().error(errorMessage.value);
@@ -152,7 +157,7 @@ async function emitHelper(payload = {}, id = null) {
       }
       return
     case "edit-credential":
-      response = await serviceHandler(action, reparsedPayload);
+      response = await serviceHandler(payload);
       canClose.value = response.valid;
       if (!canClose.value) {
         errorMessage.value=`${response.data.title}: ${response.data.detail}`
@@ -175,7 +180,7 @@ async function emitHelper(payload = {}, id = null) {
       }
       break;
     case "delete-credential":
-      response = await serviceHandler(action, reparsedPayload);
+      response = await serviceHandler(payload);
       if (!response.valid) {
         errorMessage.value=`${response.data.title}: ${response.data.detail}`
         useToast().error(errorMessage.value);

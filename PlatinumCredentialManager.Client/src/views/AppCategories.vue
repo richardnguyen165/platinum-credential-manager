@@ -45,7 +45,10 @@ provide('credentialId', null);
 
 async function categoryLoaderHelper() {
   try {
-    const { valid, data } = await serviceHandler('get-user');
+    const payload = {
+      action: 'get-user'
+    }
+    const { valid, data } = await serviceHandler(payload);
     
     if (valid){
       allCategories.value = data.categories;

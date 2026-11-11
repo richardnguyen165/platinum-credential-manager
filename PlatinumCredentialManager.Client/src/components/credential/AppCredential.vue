@@ -71,10 +71,14 @@ function goBackPrevious() {
 async function credentialLoaderHelper() {
   try {
     const payload = {
-      "id": credentialId.value
+      action: 'get-credential',
+      payload: {
+        "id": credentialId.value
+      }
     }
+    
 
-    const { valid, data } = await serviceHandler('get-credential', payload);
+    const { valid, data } = await serviceHandler(payload);
     
     if (valid){
       currentEntries.CategoryName = data.categoryName;

@@ -135,9 +135,14 @@ async function searchForCredentials() {
     }
   }
 
-  const payload = parsePayload(data);
+  const searchPayload = parsePayload(data);
 
-  const { valid, data: extractedData } = await serviceHandler("search-credential", payload);
+  const payload = {
+    action: 'search-credential',
+    payload: searchPayload
+  }
+
+  const { valid, data: extractedData } = await serviceHandler(payload);
   if (valid) {
     credentials.value = extractedData;
   } else {
@@ -166,9 +171,14 @@ onMounted(async () => {
   data["StartDate"] = route.query.StartDate ?? "";
   data["EndDate"] = route.query.EndDate ?? "";
 
-  const payload = parsePayload(data);
+  const searchPayload = parsePayload(data);
 
-  const { valid, data: extractedData } = await serviceHandler("search-credential", payload);
+  const payload = {
+    action: 'search-credential',
+    payload: searchPayload
+  }
+
+  const { valid, data: extractedData } = await serviceHandler(payload);
   if (valid) {
     credentials.value = extractedData;
   } else {

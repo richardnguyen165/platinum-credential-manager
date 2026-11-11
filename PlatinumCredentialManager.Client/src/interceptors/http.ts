@@ -1,8 +1,8 @@
-import axios from 'axios';
-import { createAxios, createConfig, errorResponse } from '@/interceptors/requestResponse';
+import axios, { type AxiosInstance } from 'axios';
+import { createAxios, createConfig, errorResponse } from '@/interceptors/requestResponse.js';
 
 // Source: https://skycloak.io/blog/keycloak-vue-js-authentication-guide/
-const http = axios.create(createAxios('http'));
+const http: AxiosInstance = axios.create(createAxios('http'));
 
 http.interceptors.request.use(
     async (config) => await createConfig(config),

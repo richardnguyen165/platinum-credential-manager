@@ -141,7 +141,11 @@ async function exportCredentialsAsCSV(credentials) {
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
 
-    const response = await serviceHandler('getAllCredentials');
+    const payload = {
+        action: 'getAllCredentials'
+    }
+
+    const response = await serviceHandler(payload);
     if (!response.valid){
         alert(`${data.title}\n${data.detail}`);
         return;
@@ -233,8 +237,12 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     searchParams.push("\n");
     csvRows.push(searchParams.join(","));
 
+    const payload = {
+        action: 'getAllCredentials'
+    }
+
     // Tie passwords to credentials
-    const response = await serviceHandler('getAllCredentials');
+    const response = await serviceHandler(payload);
     if (!response.valid){
         alert(`${data.title}\n${data.detail}`);
         return;

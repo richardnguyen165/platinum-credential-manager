@@ -1,4 +1,4 @@
-import { keycloak } from '@/config/keycloak';
+import { keycloak } from '@/config/keycloak.js';
 
 export function createAxios(action){
     if (action === 'sendingForm'){

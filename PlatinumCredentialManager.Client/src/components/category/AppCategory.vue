@@ -63,10 +63,13 @@ function redirectBackToAllCategories() {
 async function loaderHelper() {
   try {
     const payload = {
+      action: 'get-category',
+      payload: {
       "id": categoryId.value
+      }
     }
 
-    const { valid, data } = await serviceHandler('get-category', payload);
+    const { valid, data } = await serviceHandler(payload);
     if (valid) {
       allCredentials.value = data.credentials;
       currentEntries.CategoryName = data.categoryName;

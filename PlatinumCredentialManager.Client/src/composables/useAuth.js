@@ -15,7 +15,11 @@ keycloak.onAuthSuccess = async () => {
     authState.username = keycloak.tokenParsed?.preferred_username ?? ''
 
     try {
-        const response = await serviceHandler('post-new-user');
+        const payload = {
+            action: 'post-new-user'
+        }
+
+        const response = await serviceHandler(payload);
         if (response["valid"]){
             const { data }= response;
             authState.userId = data.id;
