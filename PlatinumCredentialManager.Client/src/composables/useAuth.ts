@@ -1,13 +1,16 @@
 import { reactive } from 'vue'
 import { useToast } from 'vue-toastification';
 
-import { keycloak } from '@/config/keycloak'
+import { keycloak } from '@/config/keycloak.js'
 import { serviceHandler } from '@/services/serviceHandler.js';
+import type { HandlerResult } from '@/services/serviceType.js';
+import type { ServiceCall } from  "@/services/requestType.js";
+import type { UserProfile } from '@/services/responseType.js';
 
 const authState = reactive({
   authenticated: keycloak.authenticated ?? false,
   username: keycloak.tokenParsed?.preferred_username ?? '',
-  userId: null
+  userId: null as number | null // Can become number later on
 });
 
 keycloak.onAuthSuccess = async () => {
@@ -15,21 +18,21 @@ keycloak.onAuthSuccess = async () => {
     authState.username = keycloak.tokenParsed?.preferred_username ?? ''
 
     try {
-        const payload = {
+        const payload: ServiceCall = {
             action: 'post-new-user'
         }
 
-        const response = await serviceHandler(payload);
+        const response: HandlerResult<UserProfile> = await serviceHandler(payload) as HandlerResult<UserProfile>;
         if (response["valid"]){
-            const { data }= response;
-            authState.userId = data.id;
+            const { data } = response;
+            authState.userId = data?.id;
         }
         else {
             useToast().error("Error logging in: Logging out");
             console.log("Log in crash...")
-            console.log(`Error Title: ${response?.title ?? "Error"}`);
-            console.log(`Error Code: ${response?.status ?? "Status Unknown"}`);
-            console.log(`Error Details: ${response?.detail ?? "Details Unknown"}`)
+            console.log(`Error Title: ${response?.data?.title ?? "Error"}`);
+            console.log(`Error Code: ${response?.data?.status ?? "Status Unknown"}`);
+            console.log(`Error Details: ${response?.data?.detail ?? "Details Unknown"}`)
             keycloak.logout();
         }
     } catch (error) {

@@ -5,7 +5,7 @@ export const useModal = () => {
     const action = ref('');
     const showModal = ref(false);
 
-    function createModal(modalAction){
+    function createModal(modalAction: string){
         action.value = modalAction;
         showModal.value = true;
     }

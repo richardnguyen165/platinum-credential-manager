@@ -1,12 +1,29 @@
 import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "@/services/categoryService.js";
 import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "@/services/credentialService.js";
 import { getUser, postNewUser } from "@/services/userService.js";
-import type { backendResponse } from "./serviceType.js";
+import type { HandlerResult, ErrorData, ServiceResult } from "./serviceType.js";
 import type { ServiceCall } from  "./requestType.js";
+import type { CategoryDetail, CredentialDetail, CredentialSearchResult, ImportProblem, UserProfile } from "./responseType.js";
 
+type ResponseFor = {
+    "get-user": UserProfile,
+    "post-new-user": UserProfile,
+    "allCategories": string,
+    "create-category": CategoryDetail,
+    "get-category": CategoryDetail,
+    "edit-category": void,
+    "delete-category": void,
+    "export-categories": CategoryDetail,
+    "getAllCredentials": CredentialDetail[],
+    "search-credential": CredentialSearchResult[],
+    "get-credential": CredentialDetail,
+    "edit-credential": void,
+    "delete-credential": void,
+    "allCredentials": string,
+    "create-credential": CredentialDetail
+};
 
-
-const ERROR_NAMES: string[] = [
+const ERROR_NAMES = [
     "emptyFile",
     "missingColumnError",
     "tooManyColumnError",
@@ -21,10 +38,14 @@ const ERROR_NAMES: string[] = [
     "passwordTooLong",
     "noCategoryName",
     "categoryNameTooLong"
-]
+] as const satisfies readonly (keyof ImportProblem)[];
+// as const, keeps the exact names in the array's type
+// satsifies checks if every name is a real field of ImportProblem
 
-export async function serviceHandler(serviceCall: ServiceCall): (Promise<backendResponse>) {
-    let response: backendResponse | undefined;
+// Defines what HandlerResult returns specifically (overload signature, what the function looks from the outside)
+export function serviceHandler<C extends ServiceCall>(serviceCall: C): Promise<HandlerResult<ResponseFor[C["action"]]>>;
+export async function serviceHandler(serviceCall: ServiceCall): Promise<HandlerResult<unknown>>{
+    let response: ServiceResult<unknown> | undefined;
 
     try{
         switch(serviceCall.action){
@@ -82,22 +103,27 @@ export async function serviceHandler(serviceCall: ServiceCall): (Promise<backend
         }
     }
 
-    if (response?.valid == undefined){
-        const currentErrorObject: backendResponse = {
-            "valid": false,
-            "data": {
-                status: response?.data.status,
-                title: response?.data.title,
-                detail: response?.data.detail,
-                extensions: {}
-            }
+    if (!response) return { valid: false, data: null }
+
+    if (!response.valid){
+
+        const problem = response.data;
+        const currentErrorObject: ErrorData = {
+            status: problem?.status,
+            title: problem?.title,
+            detail: problem?.detail,
+            extensions: {}
         };
 
-        for (const name of ERROR_NAMES){
-            if (name in response?.data) currentErrorObject["data"]["extensions"][name] = response?.data[name];
+        if (problem){
+            const raw = problem as Partial<ImportProblem>; // Property in ImportProblem, property could become optional 
+            for (const name of ERROR_NAMES){
+                const count = raw[name];
+                if (count !== undefined) currentErrorObject.extensions[name] = count; // meaning that problem does not exist
+            }
         }
         
-        return currentErrorObject;
+        return { valid: false, data: currentErrorObject };
     }
     else{
         return {

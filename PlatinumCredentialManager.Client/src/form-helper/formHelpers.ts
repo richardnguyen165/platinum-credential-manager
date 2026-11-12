@@ -1,3 +1,5 @@
+import type { CategoryListItem } from "@/services/responseType.js";
+
 type FormAction =
   | "create-category" | "edit-category" | "delete-category"
   | "create-credential" | "edit-credential" | "delete-credential"
@@ -8,9 +10,27 @@ type Rule = {
   text: string
 }
 
-type Input = {
-  
+type SelectOption = {
+  label: string,
+  id: number,
+  selected: boolean
 }
+
+type Input = {
+  label?: string,
+  key?: string,
+  id?: string,
+  type?: "password" | "select" | "text",
+  required?: boolean,
+  value?: string | number,
+  selected?: string
+  options?: SelectOption[]
+}
+
+type CurrentEntries = Partial<{
+  CategoryName: string; ServiceName: string; Username: string;
+  Password: string; DateCreated: string; DateLastUpdated: string;
+}>;
 
 const TITLES: Record<FormAction, string> = {
   'create-category': 'Create A Category',
@@ -71,7 +91,7 @@ export function ruleHelper(action: FormAction): Rule[] {
   return RULES[action] ?? [];
 }
 
-export function inputHelper(action: FormAction, allCategories, currentEntries, categoryId) {
+export function inputHelper(action: FormAction, allCategories: CategoryListItem[], currentEntries: CurrentEntries, categoryId: number | string) {
   const credentialArray = [
         {
           key: "ServiceName",
@@ -96,7 +116,7 @@ export function inputHelper(action: FormAction, allCategories, currentEntries, c
         },
   ];
 
-  let categoryOptions = {
+  let categoryOptions: Input = {
       key: "categoryId",
       label: "Category",
       type: "select",
@@ -104,17 +124,11 @@ export function inputHelper(action: FormAction, allCategories, currentEntries, c
   };
 
   if (action === "edit-credential"){
-    const allOptions = [];
-
-    for (const categorySet of allCategories){
-      allOptions.push({
-        label: categorySet["categoryName"],
-        id: categorySet["id"],
-        selected: categoryId === categorySet["id"]
-      })
-    }
-
-    categoryOptions["options"] = allOptions;
+    categoryOptions.options = allCategories.map((category: CategoryListItem): SelectOption => ({
+      label: category.categoryName,
+      id: category.id,
+      selected: categoryId === category.id
+    }));
   }
     
   switch (action) {
