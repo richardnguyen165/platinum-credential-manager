@@ -1,6 +1,6 @@
-const SIZE = 10;
+const SIZE: number = 10;
 
-export function paginateData(data) {
+export function paginateData<T>(data: T[]): T[][] {
     let paginatedData = [];
 
     for (let i = 0; i < data.length; i += SIZE){

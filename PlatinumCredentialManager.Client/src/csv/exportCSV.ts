@@ -1,11 +1,11 @@
 import { useToast } from 'vue-toastification';
 
-import { exportCategories } from "@/services/categoryService";
-import { sortDecider } from "@/utils/sort";
-import { serviceHandler } from "@/services/serviceHandler";
-import { ExportError } from "@/csv/ExportError";
+import { exportCategories } from "@/services/categoryService.js";
+import { sortDecider } from "@/utils/sort.js";
+import { serviceHandler } from "@/services/serviceHandler.js";
+import { ExportError } from "@/csv/ExportError.js";
 
-export async function exportCSVDecider(action, data, sortOption, withinCategorySortOption, params){
+export async function exportCSVDecider(action: string, data, sortOption: string, withinCategorySortOption: string, params){
     try {
         if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
         else if (action === 'allCredentials') await exportCredentialsAsCSV(data);
@@ -21,7 +21,7 @@ export async function exportCSVDecider(action, data, sortOption, withinCategoryS
     }
 };
 
-function currentDateAndTime() {
+function currentDateAndTime(): string {
     let currentDate = new Date();
     let currentDateString = `${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}_${currentDate.getHours()}-${currentDate.getMinutes()}-${currentDate.getSeconds()}`
 
@@ -38,7 +38,7 @@ async function fileWriter(title, blob) {
             writable = await fileHandle.createWritable();
 
             await writable.write(blob);
-        } catch (error) {
+        } catch (error : ExportError) {
             if (error.name === 'AbortError'){
                 const toast = useToast();
                 toast.info("Cancelling export.")
@@ -75,7 +75,7 @@ async function fileWriter(title, blob) {
 }
 
 // https://stackoverflow.com/questions/69380775/choose-a-folder-where-the-file-will-be-downloadedreactjs
-async function getSaveFilePicker(fileName) {
+async function getSaveFilePicker(fileName: string) {
     const opts = {
         suggestedName: fileName,
         types: [

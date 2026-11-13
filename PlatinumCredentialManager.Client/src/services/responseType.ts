@@ -1,10 +1,5 @@
 // API RESPONSE VALUES - 200 VALUES
 
-export interface CategorySummary {
-    id: number,
-    categoryName: string
-}
-
 export interface CategoryListItem {
     id: number,
     categoryName: string

@@ -1,5 +1,5 @@
 export class ExportError extends Error {
-    constructor(message){
+    constructor(message: string){
         super(message);
         this.name = "ExportError";
     }
