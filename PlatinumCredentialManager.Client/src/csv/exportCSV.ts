@@ -4,8 +4,15 @@ import { exportCategories } from "@/services/categoryService.js";
 import { sortDecider } from "@/utils/sort.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { ExportError } from "@/csv/ExportError.js";
+import type { GridLocation, SearchParams } from '@/types/gridType.js';
+import type { sortAction } from '@/types/sortType.js';
+import type { ServiceCall } from '@/types/requestType.js';
+import type { HandlerResult } from '@/types/serviceType.js';
+import type { CredentialDetail } from '@/types/responseType.js';
 
-export async function exportCSVDecider(action: string, data, sortOption: string, withinCategorySortOption: string, params){
+const SEARCH_KEYS = ["CategoryName", "ServiceName", "UserDateChoice", "CreateUpdateChoice", "StartDate", "EndDate"] as const satisfies readonly (keyof SearchParams)[];
+
+export async function exportCSVDecider(action: GridLocation, data, sortOption: sortAction, withinCategorySortOption: string, params: SearchParams){
     try {
         if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
         else if (action === 'allCredentials') await exportCredentialsAsCSV(data);
@@ -15,20 +22,23 @@ export async function exportCSVDecider(action: string, data, sortOption: string,
         const toast = useToast();
         if (error instanceof ExportError){
             toast.error(error.message);
-        } else {
+        } else if (error instanceof Error) {
             toast.warning(error.message);
+        } else { // unexpected error
+            console.error('Unexpected export failure', error);
+            toast.warning("Export failed. Please try again.");
         }
     }
 };
 
 function currentDateAndTime(): string {
-    let currentDate = new Date();
-    let currentDateString = `${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}_${currentDate.getHours()}-${currentDate.getMinutes()}-${currentDate.getSeconds()}`
+    let currentDate: Date = new Date();
+    let currentDateString: string = `${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}_${currentDate.getHours()}-${currentDate.getMinutes()}-${currentDate.getSeconds()}`
 
     return currentDateString;
 }
 
-async function fileWriter(title, blob) {
+async function fileWriter(title: string, blob: Blob) {
     if (window.hasOwnProperty('showSaveFilePicker')){
         let writable;
         try{
@@ -88,12 +98,12 @@ async function getSaveFilePicker(fileName: string) {
 };
 
 // All credentials
-async function exportCategoriesAsCSV(sortOption, withinCategorySortOption){
+async function exportCategoriesAsCSV(sortOption: sortAction, withinCategorySortOption: string){
     const creationDateAndTime = currentDateAndTime();
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`, "All Credentials \n"];
 
-    const { data: allCategories } = await exportCategories();
+    const { data } = await exportCategories();
     const flattenedCredentials = []
 
     for (const category of allCategories){
@@ -221,7 +231,7 @@ async function exportCredentialAsCSV(credential)
     await fileWriter(title, blob);
 }
 
-async function exportSearchCredentialsAsCSV(credentials, params)
+async function exportSearchCredentialsAsCSV(credentials, params: SearchParams)
 {
     const creationDateAndTime = currentDateAndTime();
 
@@ -230,25 +240,26 @@ async function exportSearchCredentialsAsCSV(credentials, params)
     const searchHeaders = ["Category Name", "Service Name", "User Date Choice", "Create Update Choice", "Start Date", "End Date"]
     csvRows.push(searchHeaders.join(","));
     const searchParams = [];
-    for (let key in params)
+    for (const key of SEARCH_KEYS)
     {
-        searchParams.push(params[key]);
+        searchParams.push(params[key] ?? "");
     }
     searchParams.push("\n");
     csvRows.push(searchParams.join(","));
 
-    const payload = {
+    const payload: ServiceCall = {
         action: 'getAllCredentials'
     }
 
     // Tie passwords to credentials
-    const response = await serviceHandler(payload);
+    const response: HandlerResult<CredentialDetail[]> = await serviceHandler(payload);
+
     if (!response.valid){
-        alert(`${data.title}\n${data.detail}`);
+        alert(`${response.data?.title ?? "Error"}\n${response.data?.detail ?? ""}`);
         return;
     }
 
-    const allCredentials = response.data;
+    const allCredentials: CredentialDetail[] = response.data;
 
     const data = credentials.map(findUserAndPassword)
 
@@ -256,8 +267,8 @@ async function exportSearchCredentialsAsCSV(credentials, params)
         const firstElement = allCredentials.find(c => c.id === credential.credentialId);
         return {
             ...credential,
-            "username": firstElement.username,
-            "password": firstElement.password
+            "username": firstElement?.username,
+            "password": firstElement?.password
         }
     }
 
@@ -276,7 +287,7 @@ async function exportSearchCredentialsAsCSV(credentials, params)
 
     const csvString = csvRows.join('\n');
 
-    const blob = new Blob([csvString], { type: 'text/csv' });
+    const blob: Blob = new Blob([csvString], { type: 'text/csv' });
 
     const title = `all_credentials_found_in_search_${creationDateAndTime}.csv`
 
