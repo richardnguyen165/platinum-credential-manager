@@ -1,11 +1,4 @@
-export type sortAction = 'azAscendingService' | 'azDescendingService' | 'azAscendingCategory' | 'azDescendingCategory' | 'dateCreatedAscending' | 'dateCreatedDescending' | 'dateUpdatedAscending' | 'dateUpdatedDescending' | 'searchup'
-
-export interface DataRow {
-    serviceName?: string;
-    categoryName?: string;
-    dateCreated?: string;
-    dateLastUpdated?: string;
-}
+import type { DataRow, sortAction } from "@/types/sortType.js";
 
 export function sortDecider(sortFilter: sortAction, withinCategorySortOption: string | null, data: DataRow[], credentialMatch: string = ""){
     const copiedData: DataRow[] = [...data];

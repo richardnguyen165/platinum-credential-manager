@@ -1,9 +1,9 @@
 import http from "@/interceptors/http.js"
 import sendingForm from "@/interceptors/sendingForm.js"
-import { type ServiceResult } from "./serviceType.js";
+import { type ServiceResult } from "@/types/serviceType.js";
 import axios, { type AxiosResponse } from 'axios';
-import type { CategoryDetail, CategoryListItem, ProblemDetails, ValidationProblemDetails } from "./responseType.js";
-import type { CategoryForm } from "./requestType.js";
+import type { CategoryDetail, CategoryListItem, ProblemDetails, ValidationProblemDetails } from "@/types/responseType.js";
+import type { CategoryForm } from "@/types/requestType.js";
 
 export async function getCategories(): Promise<ServiceResult<CategoryListItem[]>  | undefined> {
     try{

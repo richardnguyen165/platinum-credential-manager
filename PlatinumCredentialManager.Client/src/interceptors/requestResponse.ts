@@ -1,6 +1,8 @@
 import { keycloak } from '@/config/keycloak.js';
+import type { InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
-export function createAxios(action){
+export function createAxios(action: string){
     if (action === 'sendingForm'){
         return {
             baseURL: import.meta.env.VITE_API_URL || 'https://localhost:7032',
@@ -21,7 +23,7 @@ export function createAxios(action){
     }
 }
 
-export async function createConfig(config){
+export async function createConfig(config: InternalAxiosRequestConfig){
     // If authenticated stated => logged in
     if (keycloak.authenticated) {
         try {
@@ -36,9 +38,11 @@ export async function createConfig(config){
     return config;
 }
 
-export async function errorResponse(error){
-    if (error.response?.status === 401) {
-        keycloak.logout();
+export async function errorResponse(error: unknown){
+    if (axios.isAxiosError(error)){
+        if (error.response?.status === 401) {
+            keycloak.logout();
+        }
     }
     return Promise.reject(error);
 }

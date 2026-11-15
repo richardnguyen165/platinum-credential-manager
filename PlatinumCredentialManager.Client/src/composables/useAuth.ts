@@ -3,9 +3,9 @@ import { useToast } from 'vue-toastification';
 
 import { keycloak } from '@/config/keycloak.js'
 import { serviceHandler } from '@/services/serviceHandler.js';
-import type { HandlerResult } from '@/services/serviceType.js';
-import type { ServiceCall } from  "@/services/requestType.js";
-import type { UserProfile } from '@/services/responseType.js';
+import type { HandlerResult } from '@/types/serviceType.js';
+import type { ServiceCall } from  "@/types/requestType.js";
+import type { UserProfile } from '@/types/responseType.js';
 
 const authState = reactive({
   authenticated: keycloak.authenticated ?? false,

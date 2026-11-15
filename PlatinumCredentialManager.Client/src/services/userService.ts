@@ -1,7 +1,7 @@
 import http from "@/interceptors/http.js"
 import axios, { type AxiosResponse } from "axios";
-import type { ProblemDetails, UserProfile, ValidationProblemDetails } from "./responseType.js";
-import type { ServiceResult } from "./serviceType.js";
+import type { ProblemDetails, UserProfile, ValidationProblemDetails } from "@/types/responseType.js";
+import type { ServiceResult } from "@/types/serviceType.js";
 
 export async function postNewUser(): Promise<ServiceResult<UserProfile> | undefined>{
     // Logic of no try and catch block, let the calling parent throw it

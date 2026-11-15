@@ -1,10 +1,10 @@
 import http from "@/interceptors/http.js"
 import sendingForm from "@/interceptors/sendingForm.js"
-import type { ServiceResult } from "./serviceType.js";
+import type { ServiceResult } from "@/types/serviceType.js";
 import type { AxiosResponse } from "axios";
-import type { CredentialDetail, CredentialSearchResult, ProblemDetails, ValidationProblemDetails } from "./responseType.js";
+import type { CredentialDetail, CredentialSearchResult, ProblemDetails, ValidationProblemDetails } from "@/types/responseType.js";
 import axios from "axios";
-import type { CredentialForm, SearchQuery } from "./requestType.js";
+import type { CredentialForm, SearchQuery } from "@/types/requestType.js";
 
 export async function getAllCredentials(): Promise<ServiceResult<CredentialDetail[]> | undefined> {
     try{

@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_KEYCLOAK_URL: undefined | string
   readonly VITE_KEYCLOAK_REALM: undefined | string
   readonly VITE_KEYCLOAK_CLIENT_ID: undefined | string
+  readonly VITE_API_URL: undefined | string
 }
 
 interface ImportMeta {

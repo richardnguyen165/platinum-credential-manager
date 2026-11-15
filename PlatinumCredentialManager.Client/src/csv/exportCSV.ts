@@ -38,7 +38,7 @@ async function fileWriter(title, blob) {
             writable = await fileHandle.createWritable();
 
             await writable.write(blob);
-        } catch (error : ExportError) {
+        } catch (error) {
             if (error.name === 'AbortError'){
                 const toast = useToast();
                 toast.info("Cancelling export.")

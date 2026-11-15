@@ -1,27 +1,9 @@
 import { deleteCategory, exportCategories, getCategory, importCategories, postCategory, putCategory } from "@/services/categoryService.js";
 import { deleteCredential, getAllCredentials, getCredential, importCredentials, postCredential, putCredential, searchCredential } from "@/services/credentialService.js";
 import { getUser, postNewUser } from "@/services/userService.js";
-import type { HandlerResult, ErrorData, ServiceResult } from "./serviceType.js";
-import type { ServiceCall } from  "./requestType.js";
-import type { CategoryDetail, CredentialDetail, CredentialSearchResult, ImportProblem, UserProfile } from "./responseType.js";
-
-type ResponseFor = {
-    "get-user": UserProfile,
-    "post-new-user": UserProfile,
-    "allCategories": string,
-    "create-category": CategoryDetail,
-    "get-category": CategoryDetail,
-    "edit-category": void,
-    "delete-category": void,
-    "export-categories": CategoryDetail,
-    "getAllCredentials": CredentialDetail[],
-    "search-credential": CredentialSearchResult[],
-    "get-credential": CredentialDetail,
-    "edit-credential": void,
-    "delete-credential": void,
-    "allCredentials": string,
-    "create-credential": CredentialDetail
-};
+import type { HandlerResult, ErrorData, ServiceResult, ResponseFor } from "@/types/serviceType.js";
+import type { ServiceCall } from  "@/types/requestType.js";
+import type { ImportProblem } from "@/types/responseType.js";
 
 const ERROR_NAMES = [
     "emptyFile",

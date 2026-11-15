@@ -1,36 +1,5 @@
-import type { CategoryListItem } from "@/services/responseType.js";
-
-type FormAction =
-  | "create-category" | "edit-category" | "delete-category"
-  | "create-credential" | "edit-credential" | "delete-credential"
-  | "allCategories" | "allCredentials";
-
-type Rule = {
-  id: number,
-  text: string
-}
-
-type SelectOption = {
-  label: string,
-  id: number,
-  selected: boolean
-}
-
-type Input = {
-  label?: string,
-  key?: string,
-  id?: string,
-  type?: "password" | "select" | "text",
-  required?: boolean,
-  value?: string | number,
-  selected?: string
-  options?: SelectOption[]
-}
-
-type CurrentEntries = Partial<{
-  CategoryName: string; ServiceName: string; Username: string;
-  Password: string; DateCreated: string; DateLastUpdated: string;
-}>;
+import type { CategoryListItem } from "@/types/responseType.js";
+import type { CurrentEntries, FormAction, Input, Rule, SelectOption } from "@/types/formType.js";
 
 const TITLES: Record<FormAction, string> = {
   'create-category': 'Create A Category',
