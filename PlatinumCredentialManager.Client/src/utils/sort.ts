@@ -32,6 +32,12 @@ const byText = (x = "", y = "") => x.toLowerCase().localeCompare(y.toLowerCase()
 const byDate = (x?: string, y?: string) =>
     (x ? new Date(x).getTime() : 0) - (y ? new Date(y).getTime() : 0);
 
+const byServiceName = (x = "", y = "") => {
+    if (x === y) return 0;
+    else if (x.startsWith(y)) return 1;
+    return 2;
+}
+
 function sortServiceNameAscending(data: DataRow[]){
     data.sort((a, b) => byText(a.serviceName, b.serviceName));
 }
@@ -67,14 +73,8 @@ function sortDateUpdatedDescending(data: DataRow[]){
 function sortByMatchCredential(data: DataRow[], credentialMatch: string){
     data.sort((a, b) => {
         // use ranking system => start at the assumption they at least contain the name
-        let aRank = 2, bRank = 2;
-
-        if (a.serviceName === credentialMatch) aRank = 0;
-        else if (a.serviceName.startsWith(credentialMatch)) aRank = 1;
-
-        if (b.serviceName === credentialMatch) bRank = 0;
-        else if (b.serviceName.startsWith(credentialMatch)) bRank = 1;
-
+        let aRank = byServiceName(a.serviceName, credentialMatch);
+        let bRank = byServiceName(b.serviceName, credentialMatch);
         // if they equal each other, 0 => evaluate right hand side
         return aRank - bRank || byText(a.serviceName, b.serviceName);
     });
