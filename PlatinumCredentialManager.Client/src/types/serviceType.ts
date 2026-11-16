@@ -1,9 +1,9 @@
-import type { CategoryDetail, CredentialDetail, CredentialSearchResult, ProblemDetails, UserProfile, ValidationProblemDetails } from "./responseType.js"
+import type { CategoryDetail, CredentialDetail, CredentialSearchResult, ExportCategory, ProblemDetails, UserProfile, ValidationProblemDetails } from "./responseType.js"
 
 export type ErrorData = {
-    status?: number | undefined,
-    title?: string | undefined,
-    detail?: string | null | undefined,
+    status: number | undefined,
+    title: string | undefined,
+    detail: string | null | undefined,
     extensions: Partial<Record<string, number>>
 }
 
@@ -23,7 +23,7 @@ export type ResponseFor = {
     "get-category": CategoryDetail,
     "edit-category": void,
     "delete-category": void,
-    "export-categories": CategoryDetail,
+    "export-categories": ExportCategory[],
     "getAllCredentials": CredentialDetail[],
     "search-credential": CredentialSearchResult[],
     "get-credential": CredentialDetail,

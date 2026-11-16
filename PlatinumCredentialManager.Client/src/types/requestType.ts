@@ -50,4 +50,4 @@ export type ServiceCall =
 
 export type ImportCategories = File;
 
-export type importCredentials = File;
+export type ImportCredentials = File;

@@ -1,23 +1,22 @@
 import { useToast } from 'vue-toastification';
 
-import { exportCategories } from "@/services/categoryService.js";
 import { sortDecider } from "@/utils/sort.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { ExportError } from "@/csv/ExportError.js";
-import type { GridLocation, SearchParams } from '@/types/gridType.js';
-import type { sortAction } from '@/types/sortType.js';
+import type { GridPayload, SearchParams } from '@/types/gridType.js';
+import type { DataRow, SortAction } from '@/types/sortType.js';
 import type { ServiceCall } from '@/types/requestType.js';
 import type { HandlerResult } from '@/types/serviceType.js';
-import type { CredentialDetail } from '@/types/responseType.js';
+import type { CredentialDetail, CredentialSearchResult } from '@/types/responseType.js';
 
 const SEARCH_KEYS = ["CategoryName", "ServiceName", "UserDateChoice", "CreateUpdateChoice", "StartDate", "EndDate"] as const satisfies readonly (keyof SearchParams)[];
 
-export async function exportCSVDecider(action: GridLocation, data, sortOption: sortAction, withinCategorySortOption: string, params: SearchParams){
+export async function exportCSVDecider(csvPayload: GridPayload){
     try {
-        if (action === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
-        else if (action === 'allCredentials') await exportCredentialsAsCSV(data);
-        else if (action === 'credential') await exportCredentialAsCSV(data);
-        else await exportSearchCredentialsAsCSV(data, params);
+        if (csvPayload.action === 'allCategories') await exportCategoriesAsCSV(csvPayload.sortOption, csvPayload.withinCategorySortOption);
+        else if (csvPayload.action === 'allCredentials') await exportCredentialsAsCSV(csvPayload.data);
+        else if (csvPayload.action === 'credential') await exportCredentialAsCSV(csvPayload.data);
+        else await exportSearchCredentialsAsCSV(csvPayload.data, csvPayload.params);
     } catch (error) {
         const toast = useToast();
         if (error instanceof ExportError){
@@ -40,7 +39,7 @@ function currentDateAndTime(): string {
 
 async function fileWriter(title: string, blob: Blob) {
     if (window.hasOwnProperty('showSaveFilePicker')){
-        let writable;
+        let writable: FileSystemWritableFileStream | undefined;
         try{
             const fileHandle = await getSaveFilePicker(title);
 
@@ -49,6 +48,8 @@ async function fileWriter(title: string, blob: Blob) {
 
             await writable.write(blob);
         } catch (error) {
+            if (!(error instanceof DOMException)) throw error;   // TypeError etc. pass straight through
+
             if (error.name === 'AbortError'){
                 const toast = useToast();
                 toast.info("Cancelling export.")
@@ -70,7 +71,7 @@ async function fileWriter(title: string, blob: Blob) {
                 throw error;
             }
         } finally {
-            await writable.close();
+            await writable?.close();
         }
     // firefox and safari don't open the window
     } else {
@@ -85,8 +86,8 @@ async function fileWriter(title: string, blob: Blob) {
 }
 
 // https://stackoverflow.com/questions/69380775/choose-a-folder-where-the-file-will-be-downloadedreactjs
-async function getSaveFilePicker(fileName: string) {
-    const opts = {
+async function getSaveFilePicker(fileName: string): Promise<FileSystemFileHandle> {
+    const opts: SaveFilePickerOptions  = {
         suggestedName: fileName,
         types: [
             {
@@ -98,15 +99,24 @@ async function getSaveFilePicker(fileName: string) {
 };
 
 // All credentials
-async function exportCategoriesAsCSV(sortOption: sortAction, withinCategorySortOption: string){
+async function exportCategoriesAsCSV(sortOption: SortAction, withinCategorySortOption: string | null){
     const creationDateAndTime = currentDateAndTime();
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`, "All Credentials \n"];
 
-    const { data } = await exportCategories();
+    const payload: ServiceCall = {
+        action: 'export-categories'
+    }
+
+    const { valid, data } = await serviceHandler(payload);
+
+    if (!valid || !data) {
+        throw new ExportError('Error exporting CSV');
+    }
+
     const flattenedCredentials = []
 
-    for (const category of allCategories){
+    for (const category of data){
         let categoryName = category.categoryName;
         for (const credential of category.credentials){
             flattenedCredentials.push({
@@ -116,14 +126,14 @@ async function exportCategoriesAsCSV(sortOption: sortAction, withinCategorySortO
         }
     }
     
-    const data = sortDecider(sortOption, withinCategorySortOption, flattenedCredentials);
+    const sortedCrdentials: DataRow[] = sortDecider(sortOption, withinCategorySortOption, flattenedCredentials);
 
     // https://www.geeksforgeeks.org/javascript/how-to-create-and-download-csv-file-in-javascript/
 
     const headers = ["Category Name", "Service Name", "User Name", "Password", "Date Created", "Date Last Updated"];
     csvRows.push(headers.join(","));
 
-    for (let credential of data){
+    for (let credential of sortedCrdentials){
         // the quotes inside backticks are needed if the fields themselves have a comma
         const row = [
             `"${credential.categoryName}"`,
@@ -146,26 +156,27 @@ async function exportCategoriesAsCSV(sortOption: sortAction, withinCategorySortO
 };
 
 // Per category
-async function exportCredentialsAsCSV(credentials) {
+async function exportCredentialsAsCSV(credentials: CredentialDetail[]) {
     const creationDateAndTime = currentDateAndTime();
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
 
-    const payload = {
+    const payload: ServiceCall = {
         action: 'getAllCredentials'
     }
 
-    const response = await serviceHandler(payload);
+    const response: HandlerResult<CredentialDetail[]> = await serviceHandler(payload);
+
     if (!response.valid){
-        alert(`${data.title}\n${data.detail}`);
-        return;
+        throw new ExportError(`${response.data?.title ?? "Error"}\n${response.data?.detail ?? ""}`);
     }
-    const allCredentials = response.data;
+    const allCredentials: CredentialDetail[] = response.data;
 
     const data = credentials.map(findPassword);
 
-    function findPassword(credential){
+    function findPassword(credential: CredentialDetail){
         const firstElement = allCredentials.find(c => c.id === credential.id);
+        if (!firstElement) throw new ExportError(`Credential ${credential.id} not found`);
         return {
             ...credential,
             "password": firstElement.password,
@@ -173,7 +184,12 @@ async function exportCredentialsAsCSV(credentials) {
         }
     }
 
-    let categoryName = data[0].categoryName;
+    if (data == null || data == undefined) throw new ExportError("Error in exporting credentials: one credential does not exist");
+
+    const first = data[0];
+    if (!first) throw new ExportError("No credentials to export in this category");
+
+    let categoryName = first.categoryName;
 
     csvRows.push(`All Credentials in ${categoryName} \n`);
 
@@ -203,7 +219,7 @@ async function exportCredentialsAsCSV(credentials) {
 }
 
 // One credential
-async function exportCredentialAsCSV(credential) 
+async function exportCredentialAsCSV(credential: CredentialDetail) 
 {
     const creationDateAndTime = currentDateAndTime();
 
@@ -213,12 +229,12 @@ async function exportCredentialAsCSV(credential)
     csvRows.push(headers.join(","));
 
     const credentialData = [
-        credential.CategoryName, 
-        credential.ServiceName, 
-        credential.Username, 
-        credential.Password, 
-        credential.DateCreated, 
-        credential.DateLastUpdated
+        credential.categoryName, 
+        credential.serviceName, 
+        credential.username, 
+        credential.password, 
+        credential.dateCreated, 
+        credential.dateLastUpdated
     ];
     csvRows.push(credentialData.join(","));
 
@@ -226,12 +242,12 @@ async function exportCredentialAsCSV(credential)
 
     const blob = new Blob([csvString], { type: 'text/csv' });
 
-    const title = `credential_${credential.ServiceName.toLowerCase()}_${creationDateAndTime}.csv`;
+    const title = `credential_${credential.serviceName.toLowerCase()}_${creationDateAndTime}.csv`;
 
     await fileWriter(title, blob);
 }
 
-async function exportSearchCredentialsAsCSV(credentials, params: SearchParams)
+async function exportSearchCredentialsAsCSV(credentials: CredentialSearchResult[], params: SearchParams)
 {
     const creationDateAndTime = currentDateAndTime();
 
@@ -255,15 +271,14 @@ async function exportSearchCredentialsAsCSV(credentials, params: SearchParams)
     const response: HandlerResult<CredentialDetail[]> = await serviceHandler(payload);
 
     if (!response.valid){
-        alert(`${response.data?.title ?? "Error"}\n${response.data?.detail ?? ""}`);
-        return;
+        throw new ExportError(`${response.data?.title ?? "Error"}\n${response.data?.detail ?? ""}`);
     }
 
     const allCredentials: CredentialDetail[] = response.data;
 
     const data = credentials.map(findUserAndPassword)
 
-    function findUserAndPassword(credential){
+    function findUserAndPassword(credential: CredentialSearchResult){
         const firstElement = allCredentials.find(c => c.id === credential.credentialId);
         return {
             ...credential,

@@ -2,7 +2,7 @@ import http from "@/interceptors/http.js"
 import sendingForm from "@/interceptors/sendingForm.js"
 import { type ServiceResult } from "@/types/serviceType.js";
 import axios, { type AxiosResponse } from 'axios';
-import type { CategoryDetail, CategoryListItem, ProblemDetails, ValidationProblemDetails } from "@/types/responseType.js";
+import type { CategoryDetail, CategoryListItem, ExportCategory, ProblemDetails, ValidationProblemDetails } from "@/types/responseType.js";
 import type { CategoryForm } from "@/types/requestType.js";
 
 export async function getCategories(): Promise<ServiceResult<CategoryListItem[]>  | undefined> {
@@ -116,7 +116,7 @@ export async function deleteCategory(categoryId: string | number): Promise<Servi
     }
 }
 
-export async function exportCategories(): Promise<ServiceResult<CategoryDetail> | undefined>{
+export async function exportCategories(): Promise<ServiceResult<ExportCategory[]> | undefined>{
     try {
         const response: AxiosResponse<any, any, {}> = await http.get('/category/export');
         const { data } = response;

@@ -1,6 +1,6 @@
-import type { DataRow, sortAction } from "@/types/sortType.js";
+import type { DataRow, SortAction } from "@/types/sortType.js";
 
-export function sortDecider(sortFilter: sortAction, withinCategorySortOption: string | null, data: DataRow[], credentialMatch: string = ""){
+export function sortDecider(sortFilter: SortAction, withinCategorySortOption: string | null, data: DataRow[], credentialMatch: string = ""): DataRow[]{
     const copiedData: DataRow[] = [...data];
     // This is for all options
     if (sortFilter && withinCategorySortOption) sortAllCredentials(copiedData, sortFilter, withinCategorySortOption);

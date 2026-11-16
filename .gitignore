@@ -10,3 +10,6 @@
 # .NET build output (regenerated on every build)
 [Bb]in/
 [Oo]bj/
+
+# Node dependencies
+node_modules/
