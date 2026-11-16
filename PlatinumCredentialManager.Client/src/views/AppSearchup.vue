@@ -72,14 +72,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import AppHeader from "@/components/layout/AppHeader.vue";
 import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
 import { ref, reactive, onMounted, provide } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { parsePayload } from "@/utils/parsePayload";
-import { serviceHandler } from "@/services/serviceHandler";
+import { useRouter, useRoute, type Router, type RouteLocationNormalizedLoadedGeneric } from "vue-router";
+import { parsePayload } from "@/utils/parsePayload.js";
+import { serviceHandler } from "@/services/serviceHandler.js";
 import { useToast } from 'vue-toastification'
 
 const router = useRouter();
@@ -101,7 +101,7 @@ provide('categoryId', null);
 provide('credentialId', null);
 
 // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
-function todaysDate() {
+function todaysDate(): String {
   let today = new Date();
 
   let day = String(today.getDate()).padStart(2, "0");

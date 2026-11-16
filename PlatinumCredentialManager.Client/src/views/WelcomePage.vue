@@ -4,19 +4,19 @@
   <button @click="goToLogIn">Log In</button>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { watch } from 'vue'
-    import { useRouter } from 'vue-router'
+    import { useRouter, type Router } from 'vue-router'
     
-    import useAuth from '@/composables/useAuth'
-    import { homepagePath } from '@/router/routes';
+    import useAuth from '@/composables/useAuth.js'
+    import { homepagePath } from '@/router/routes.js';
 
     const { authState, login, signup } = useAuth();
 
-    const router = useRouter();
+    const router: Router = useRouter();
 
     // If userId in authState is defined (meaning successful request), redirect to user's homepage
-    watch(() => authState.userId, (userId) => {
+    watch(() => authState.userId, (userId: number | null) => {
         if (userId) router.push(homepagePath(userId))
     }, { immediate: true })
 
