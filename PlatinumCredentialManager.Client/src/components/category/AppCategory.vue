@@ -11,9 +11,10 @@
     <button v-if="!isMiscallaneous" @click="createModal('delete-category')"> Delete Category </button>
     <button @click="createModal('create-credential')">Create Credential</button>
     <PaginationGrid
-      :categoryId="categoryId"
-      :rows="allCredentials"
-      :location="'allCredentials'"
+      :grid = "{
+        rows: allCredentials,
+        location: 'allCredentials'
+      }"
       @rerun="loaderHelper"
     />
     <ActionFormModal
@@ -55,11 +56,11 @@ const categoryId = ref(Number(route.params.category_id));
 const userId = ref(Number(route.params.user_id));
 const currentEntries = reactive<CategoryForm>({ CategoryName: "" });
 
-provide('categoryId', Number(route.params.category_id));
-provide('credentialId', null);
+provide(categoryIdKey, Number(route.params.category_id));
+provide(credentialIdKey, null);
 
-function redirectBackToAllCategories() {
-  router.push(categoriesPath(userId.value));
+async function redirectBackToAllCategories() {
+  await router.push(categoriesPath(userId.value));
 }
 
 async function loaderHelper() {

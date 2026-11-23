@@ -9,8 +9,10 @@
     <button @click="createModal('delete-credential')">Delete Credential</button>
     <button @click="createModal('edit-credential')">Edit Credential</button>
     <PaginationGrid
-      :rows="currentEntries"
-      :location="'credential'"
+      :grid = "{
+        rows: currentEntries,
+        location: 'credential'
+      }"
       @rerun="credentialLoaderHelper"
     />
     <ActionFormModal
@@ -26,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, watch, provide, type Reactive } from "vue";
+import { categoryIdKey, credentialIdKey } from "@/types/injectionKeys.js";
 import { useRouter, useRoute } from "vue-router";
 
 import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
@@ -57,8 +60,8 @@ const categoryId = ref(Number(route.params.category_id));
 const credentialId = ref(Number(route.params.cred_id));
 const currentEntries: Reactive<CurrentEntries> = reactive({});
 
-provide("categoryId", categoryId.value);
-provide("credentialId", credentialId.value);
+provide(categoryIdKey, categoryId.value);
+provide(credentialIdKey, credentialId.value);
 
 watch(() => categoryId.value, credentialLoaderHelper);
 

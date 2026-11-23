@@ -18,13 +18,15 @@
 </template>
 
 <script setup lang="ts">
-const { allData } = defineProps({
-  allData: Array,
-});
+import type { DataRow } from '@/types/sortType.js';
 
-const pageNumber = defineModel('pageNumber');
-const inputPageNumber = defineModel('inputPageNumber');
-const currentData = defineModel('currentData');
+const { allData } = defineProps<{
+  allData: DataRow[][],
+}>();
+
+const pageNumber = defineModel<number>('pageNumber', { required: true });
+const inputPageNumber = defineModel<number>('inputPageNumber', { required: true });
+const currentData = defineModel<DataRow[]>('currentData', { required: true });
 
 function checkIncrement() {
   if (pageNumber.value !== allData.length) {

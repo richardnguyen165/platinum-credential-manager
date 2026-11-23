@@ -9,8 +9,10 @@
     <button @click="createModal('create-category')">Create Category</button>
     <!-- Only shows category name -->
     <PaginationGrid 
-      :rows="allCategories" 
-      :location="'allCategories'" 
+      :grid="{
+        rows: allCategories,
+        location: 'allCategories'
+      }"
       @rerun="categoryLoaderHelper"
     />
     <ActionFormModal
@@ -24,6 +26,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, provide, type Ref } from "vue";
+import { categoryIdKey, credentialIdKey } from "@/types/injectionKeys.js";
 
 import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
 import AppHeader from "@/components/layout/AppHeader.vue";
@@ -42,8 +45,8 @@ const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const errorMessage = ref("");
 
-provide('categoryId', null);
-provide('credentialId', null);
+provide(categoryIdKey, null);
+provide(credentialIdKey, null);
 
 async function categoryLoaderHelper() {
   try {

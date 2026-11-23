@@ -1,7 +1,7 @@
 import type { DataRow, SortAction } from "@/types/sortType.js";
 
-export function sortDecider(sortFilter: SortAction, withinCategorySortOption: string | null, data: DataRow[], credentialMatch: string = ""): DataRow[]{
-    const copiedData: DataRow[] = [...data];
+export function sortDecider<T extends DataRow>(sortFilter: SortAction, withinCategorySortOption: string | null, data: T[], credentialMatch: string = ""): T[]{
+    const copiedData: T[] = [...data];
     // This is for all options
     if (sortFilter && withinCategorySortOption) sortAllCredentials(copiedData, sortFilter, withinCategorySortOption);
     else if (sortFilter === "azAscendingService") sortServiceNameAscending(copiedData);

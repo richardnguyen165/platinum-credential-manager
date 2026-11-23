@@ -42,6 +42,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, inject } from "vue";
+import { categoryIdKey } from "@/types/injectionKeys.js";
 import { useRouter, useRoute } from "vue-router";
 import BaseModal from "@/components/ui/base-modal/BaseModal.vue";
 
@@ -54,18 +55,20 @@ import { parsePayload } from "@/utils/parsePayload.js";
 import { useToast } from "vue-toastification";
 import { filterImportCSVResponse } from "@/csv/filterImportCSVResponse.js";
 import { descriptionHelper, inputHelper, ruleHelper, titleHelper } from "@/form-helper/formHelpers.js";
+import type { FormAction } from "@/types/formType.js";
+import type { ServiceCall } from "@/types/requestType.js";
 
-const { show, action, currentEntries, query } = defineProps({
+const { show, action, currentEntries, query } = defineProps<{
   show: Boolean,
-  action: String,
+  action: FormAction,
   currentEntries: Object,
   query: Object
-});
+}>();
 const emit = defineEmits(["close", "rerun"]);
 
 let errorMessage = ref("");
 let allCategories = ref([]);
-let categoryId = ref(inject("categoryId"));
+const categoryId = inject(categoryIdKey, null);
 let canClose = ref(false);
 let allCSVRuleViolationInfo = ref({});
 
@@ -74,7 +77,7 @@ const route = useRoute();
 
 // Since action changes we need computed
 const title = computed(() => titleHelper(action));
-const allInputs = computed(() => inputHelper(action, allCategories.value, currentEntries, categoryId.value));
+const allInputs = computed(() => inputHelper(action, allCategories.value, currentEntries, categoryId));
 const description = computed(() => descriptionHelper(action));
 const rules = computed(() => ruleHelper(action));
 
@@ -115,7 +118,7 @@ async function emitHelper(payload = {}, id = null) {
       reparsedPayload = {...payload};
   }
 
-  const payload = {
+  const servicePayload: ServiceCall = {
     action,
     payload: reparsedPayload
   }
@@ -124,10 +127,10 @@ async function emitHelper(payload = {}, id = null) {
     case "create-category":
     case "create-credential":
     case "edit-category":
-      response = await serviceHandler(payload);
+      response = await serviceHandler(servicePayload);
       canClose.value = response.valid;
       if (!canClose.value) {
-        errorMessage.value=`${response.data.title}: ${response.data.detail}`
+        errorMessage.value=`${response.data?.title}: ${response.data?.detail}`
         useToast().error(errorMessage.value);
       } else {
         toastSuccessHelper(action);
@@ -163,7 +166,7 @@ async function emitHelper(payload = {}, id = null) {
         errorMessage.value=`${response.data.title}: ${response.data.detail}`
         useToast().error(errorMessage.value);
       }
-      if (canClose.value && reparsedPayload.data.categoryId !== categoryId.value){
+      if (canClose.value && reparsedPayload.data.categoryId !== categoryId){
         toastSuccessHelper(action);
         if (query){
           router.push({
@@ -192,7 +195,7 @@ async function emitHelper(payload = {}, id = null) {
             query: parsePayload(query)
           });
         } else {
-          router.push(categoryPath(categoryId.value, route.params.user_id));
+          router.push(categoryPath(categoryId, route.params.user_id));
         }
       }
       return;
@@ -204,7 +207,7 @@ async function emitHelper(payload = {}, id = null) {
 
   // All the other cases do not return, so they run emit regardless
   // Cannot put rerun in Category.vue because it would not reload the page before closing the modal
-  if ((action !== "edit-credential" && canClose.value) || (action === "edit-credential" && reparsedPayload.data.categoryId === categoryId.value && canClose.value)) emit("rerun");
+  if ((action !== "edit-credential" && canClose.value) || (action === "edit-credential" && reparsedPayload.data.categoryId === categoryId && canClose.value)) emit("rerun");
 }
 
 function toastSuccessHelper(action) {

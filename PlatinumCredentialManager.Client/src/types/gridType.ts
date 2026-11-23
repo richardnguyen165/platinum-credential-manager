@@ -1,4 +1,6 @@
-import type { CategorySummary, CredentialDetail, CredentialSearchResult } from "./responseType.js";
+import type { CurrentEntries } from "./formType.js";
+import type { SearchQuery } from "./requestType.js";
+import type { CategorySummary, CredentialDetail, CredentialSearchResult, CredentialSummary } from "./responseType.js";
 import type { SortAction } from "./sortType.js";
 
 export type GridLocation = 'allCategories' | 'allCredentials' | 'credential' | 'searchup';
@@ -34,4 +36,27 @@ export type GridPayload =
   action: 'searchup'
   data: CredentialSearchResult[],
   params: SearchParams
+}
+
+export type GridData = 
+{
+  location: 'allCategories',
+  rows: CategorySummary[]
+}
+| 
+{
+  location: 'allCredentials',
+  rows: CredentialSummary[]
+}
+| 
+{
+  location: 'searchup',
+  rows: CredentialSearchResult[],
+  params: Partial<SearchQuery>,
+  credentialMatch: string
+}
+| 
+{
+  location: 'credential',
+  rows: CurrentEntries
 }

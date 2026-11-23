@@ -48,10 +48,10 @@
     </div>
     <button type="submit">Search for Credentials</button>
   </form>
-  <div v-if="credentials == null">
+  <!-- <div v-if="credentials == null">
     Please search for credentials using the inputs above.
-  </div>
-  <div v-else-if="credentials.length === 0">
+  </div> -->
+  <div v-if="credentials.length === 0">
     No credentials found with the following inputs above!
   </div>
   <div v-else-if="errorMessage !== ''">
@@ -64,10 +64,12 @@
       }}!
     </div>
     <PaginationGrid
-      :rows="credentials"
-      :params="data"
-      :location="'searchup'"
-      :credential-match="data.ServiceName"
+      :grid= "{
+        rows: credentials,
+        params: data,
+        location: 'searchup',
+        credentialMatch: data.ServiceName
+      }"
     />
   </div>
 </template>
@@ -77,6 +79,7 @@ import AppHeader from "@/components/layout/AppHeader.vue";
 import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
 import { ref, reactive, onMounted, provide, type Ref } from "vue";
+import { categoryIdKey, credentialIdKey } from "@/types/injectionKeys.js";
 import { useRouter, useRoute } from "vue-router";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
@@ -97,12 +100,12 @@ const data: Partial<SearchQuery> = reactive({
   EndDate: null,
 });
 const formErrorMessage = ref("");
-const credentials: Ref<CredentialSearchResult[] | null> = ref([]);
+const credentials: Ref<CredentialSearchResult[]> = ref([]);
 const submittedServiceName: Ref<string, string> = ref("");
 const errorMessage: Ref<string, string> = ref("");
 
-provide('categoryId', null);
-provide('credentialId', null);
+provide(categoryIdKey, null);
+provide(credentialIdKey, null);
 
 // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
 function todaysDate(): string {

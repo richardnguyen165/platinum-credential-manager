@@ -64,15 +64,16 @@ const disableButton = defineModel<boolean>('disableButton');
 const file = defineModel<File | null>('file');
 const data = defineModel<Record<string, unknown>>('data', { required: true });
 
-function selectedCategory(e){
-  data.value["categoryId"] = Number(e.target.value);
+function selectedCategory(e: Event){
+  data.value["categoryId"] = Number((e.target as HTMLInputElement).value);
 }
 
 // https://vueschool.io/articles/vuejs-tutorials/build-a-file-upload-component-in-vue-js-with-the-composition-api/
-function handleFileImport(e){
+function handleFileImport(e: Event){
   errorMessage.value = "";
 
-  const inputFile = e.target.files[0];
+    // e.target is cast as EventTarget | null
+  const inputFile = (e.target as HTMLInputElement).files?.[0];
 
   if (inputFile == undefined){
     return;

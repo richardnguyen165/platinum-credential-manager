@@ -42,12 +42,13 @@
 
 <script setup lang="ts">
 import { inject, ref, watch } from "vue";
+import { categoryIdKey, credentialIdKey } from "@/types/injectionKeys.js";
 import BaseModalReadArea from "./BaseModalReadArea.vue";
 import BaseModalActionArea from "./BaseModalActionArea.vue";
 import type { Input, Rule } from "@/types/formType.js";
 
-let categoryId = ref(inject('categoryId'));
-let credentialId = ref(inject('credentialId'));
+const categoryId = inject(categoryIdKey, null);
+const credentialId = inject(credentialIdKey, null);
 let data = ref<Record<string, unknown>>({}); // key string, value unknown
 let file = ref(null);
 let errorMessage = ref("");
@@ -96,7 +97,7 @@ function collectData() {
     return data.value;
   } else if (inputs.length > 0 && inputs[0].type !== 'file'){
     // change from !== to != because of categoryId is undefined it returns true => convert to loosy as its les stricter
-    if (categoryId.value != null && inputs[0].type !== 'select') data.value["categoryId"] = categoryId.value;
+    if (categoryId != null && inputs[0].type !== 'select') data.value["categoryId"] = categoryId;
     return data.value;
   } else {
     return file.value;
@@ -104,8 +105,8 @@ function collectData() {
 }
 
 function chooseId() {
-  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId.value || null;
-  return credentialId.value || categoryId.value;
+  if (inputs.length > 0 && inputs[0].type === 'file') return categoryId || null;
+  return credentialId || categoryId;
 }
 
 

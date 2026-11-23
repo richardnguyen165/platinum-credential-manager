@@ -1,5 +1,5 @@
 <template>
-  <div v-if="location === 'allCategories'">
+  <div v-if="grid.location === 'allCategories'">
     <div
       v-for="category in currentData"
       :key="category.id"
@@ -9,11 +9,11 @@
     </div>
   </div>
 
-  <div v-else-if="location === 'searchup'">
+  <div v-else-if="grid.location === 'searchup'">
     <div
       @click="redirectCredentialQuery(credential)"
       v-for="credential in currentData"
-      :key="credential.credentialId"
+      :key="credential.id"
     >
       <div>Service Name: {{ credential.serviceName }}</div>
       <div>Category Name: {{ credential.categoryName }}</div>
@@ -22,7 +22,7 @@
     </div>
   </div>
 
-  <div v-else-if="location === 'allCredentials'">
+  <div v-else-if="grid.location === 'allCredentials'">
     <div
       @click="redirectCredential(credential.id)"
       v-for="credential in currentData"
@@ -34,69 +34,82 @@
     </div>
   </div>
 
-  <div v-else-if="location === 'credential'">
-    <div>Category Name: {{ rows.CategoryName }}</div>
-    <p>Service Name: {{ rows.ServiceName }}</p>
-    <p>Username: {{ rows.Username }}</p>
+  <div v-else-if="grid.location === 'credential'">
+    <div>Category Name: {{ credential?.CategoryName }}</div>
+    <p>Service Name: {{ credential?.ServiceName }}</p>
+    <p>Username: {{ credential?.Username }}</p>
     <p>
       Password:
       <input
         :type="showPassword ? 'text' : 'password'"
-        :id="password"
-        v-model="rows.Password"
+        :id="'password'"
+        v-model="credential?.Password"
         readonly
       />
       <button @click="showPassword = !showPassword">
         {{ showPassword ? "Hide" : "Show" }} Password
       </button>
     </p>
-    <p>Date Created: {{ rows.DateCreated }}</p>
-    <p>Date Last Updated: {{ rows.DateLastUpdated }}</p>
+    <p>Date Created: {{ credential?.DateCreated }}</p>
+    <p>Date Last Updated: {{ credential?.DateLastUpdated }}</p>
   </div>
 </template>
 
 
 <script setup lang="ts">
 import { categoryPath, credentialPath } from '@/router/routes.js';
+import type { CurrentEntries } from '@/types/formType.js';
+import type { GridData } from '@/types/gridType.js';
+import { categoryIdKey } from '@/types/injectionKeys.js';
+import type { CredentialSearchResult } from '@/types/responseType.js';
+import type { DataRow } from '@/types/sortType.js';
 import { parsePayload } from '@/utils/parsePayload.js';
-import { ref, inject } from 'vue';
+import { ref, inject, computed, type ComputedRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 // for credential
 
-const { currentData, rows, location, params } = defineProps({
-    currentData: Array,
-    location: String,
-    rows: Object,
-    params: Object
-})
+const { grid, currentData} = defineProps<{
+  grid: GridData,
+  currentData: DataRow[],
+}>();
+
+const credential: ComputedRef<CurrentEntries | undefined> = computed(() =>
+  grid.location === 'credential' && !Array.isArray(grid.rows) ? grid.rows : undefined
+);
 
 const router = useRouter();
 const route = useRoute();
 
 const userId = ref(Number(route.params.user_id));
-const categoryId = ref(inject("categoryId"));
 const showPassword = ref(false);
-    
+
+const injectedCategoryId = inject(categoryIdKey);
+if (injectedCategoryId == null) {
+  throw new Error("categoryId was not provided");
+}
+const categoryId: number = injectedCategoryId;
+
 // When in category
-function redirectCredential(credentialId) {
-  router.push(credentialPath(credentialId, categoryId.value, userId.value));
+async function redirectCredential(credentialId: string) {
+  await router.push(credentialPath(credentialId, categoryId, userId.value));
 }
 
 // When in searchup of categories
-function redirectCredentialQuery(credential) {
-  router.push({
+async function redirectCredentialQuery(credential: CredentialSearchResult) {
+  if (grid.params == null) return;
+  await router.push({
     path: credentialPath(
       credential.credentialId,
       credential.categoryId,
       userId.value,
     ),
-    query: parsePayload(params),
+    query: parsePayload(grid.params),
   });
 }
 
 // When in credentials of a category
-function redirectToCredentialsOfCategory(categoryIdSpecific) {
-  router.push(categoryPath(categoryIdSpecific, userId.value));
+async function redirectToCredentialsOfCategory(categoryIdSpecific: string) {
+  await router.push(categoryPath(categoryIdSpecific, userId.value));
 }
 </script>
