@@ -17,7 +17,7 @@
   </button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const { allData } = defineProps({
   allData: Array,
 });

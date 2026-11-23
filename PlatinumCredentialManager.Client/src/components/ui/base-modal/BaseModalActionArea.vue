@@ -50,17 +50,19 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { Input } from "@/types/formType.js";
+
 const emit = defineEmits(["ok", "close"]);
 
-const { inputs } = defineProps({
-    inputs: Array
-});
+const { inputs } = defineProps<{
+    inputs: Input[]
+}>();
 
-const errorMessage = defineModel('errorMessage');
-const disableButton = defineModel('disableButton');
-const file = defineModel('file');
-const data = defineModel('data');
+const errorMessage = defineModel<string>('errorMessage');
+const disableButton = defineModel<boolean>('disableButton');
+const file = defineModel<File | null>('file');
+const data = defineModel<Record<string, unknown>>('data', { required: true });
 
 function selectedCategory(e){
   data.value["categoryId"] = Number(e.target.value);

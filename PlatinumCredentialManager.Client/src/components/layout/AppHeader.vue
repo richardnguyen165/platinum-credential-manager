@@ -12,35 +12,29 @@
   </div>
 </template>
 
-<script setup>
-import useAuth from "@/composables/useAuth";
+<script setup lang="ts">
+import useAuth from "@/composables/useAuth.js";
 
-import { homePath, categoriesPath, searchUpPath } from "@/router/routes";
-import { computed } from "vue";
+import { homePath, categoriesPath, searchUpPath } from "@/router/routes.js";
+import type { RedirectParam } from "@/types/headerType.js";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
 
-// Stores current tab
-const currentTab = computed(() => {
-  if (route.path.startsWith("/cred-homepage")) return "home";
-  if (route.path.startsWith("/cred-categories")) return "categories";
-  if (route.path.startsWith("/cred-searchup")) return "search";
-  return "";
-});
-
 const { logout } = useAuth();
 
-function executeRedirect(redirectParam) {
+function executeRedirect(redirectParam: RedirectParam) {
   let newRoute = null;
+
+  const user_id = Array.isArray(route.params.user_id) ? route.params.user_id[0] : route.params.user_id;
 
   switch (redirectParam) {
     case "categories":
-      newRoute = categoriesPath(route.params.user_id);
+      newRoute = categoriesPath(user_id);
       break;
     case "search":
-      newRoute = searchUpPath(route.params.user_id);
+      newRoute = searchUpPath(user_id);
       break;
     default:
       newRoute = homePath();

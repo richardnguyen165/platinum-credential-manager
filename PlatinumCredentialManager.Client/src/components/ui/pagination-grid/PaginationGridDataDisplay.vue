@@ -56,9 +56,9 @@
 </template>
 
 
-<script setup>
-import { categoryPath, credentialPath } from '@/router/routes';
-import { parsePayload } from '@/utils/parsePayload';
+<script setup lang="ts">
+import { categoryPath, credentialPath } from '@/router/routes.js';
+import { parsePayload } from '@/utils/parsePayload.js';
 import { ref, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 

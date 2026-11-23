@@ -15,12 +15,12 @@
     </div>
 
     <ul class="modal-rules">
-        <li v-for="rule in rules" :key="rule.key">{{ rule.text }}</li>
+        <li v-for="rule in rules" :key="String(rule.id)">{{ rule.text }}</li>
     </ul>
 </template>
 
-<script setup>
-    const { rules } = defineProps({
-        rules: Array
-    });
+<script setup lang="ts">
+    import type { Rule } from '@/types/formType.js'; 
+
+    const { rules } = defineProps<{ rules: Rule[] }>();
 </script>

@@ -10,15 +10,15 @@ export type Rule = {
 
 export type SelectOption = {
   label: string,
-  id: number,
+  id: string,
   selected: boolean
 }
 
 export type Input = {
-  label?: string,
-  key?: string,
-  id?: string,
-  type?: "password" | "select" | "text",
+  key: string,
+  label: string,
+  id: string | number,
+  type?: 'password' | 'select' | 'text'| 'file',
   required?: boolean,
   value?: string | number,
   selected?: string
@@ -26,6 +26,10 @@ export type Input = {
 }
 
 export type CurrentEntries = Partial<{
-  CategoryName: string; ServiceName: string; Username: string;
-  Password: string; DateCreated: string; DateLastUpdated: string;
+  CategoryName: string; 
+  ServiceName: string; 
+  Username: string;
+  Password: string; 
+  DateCreated: string; 
+  DateLastUpdated: string;
 }>;

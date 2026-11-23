@@ -68,6 +68,7 @@ export function inputHelper(action: FormAction, allCategories: CategoryListItem[
           type: "text",
           required: true,
           value: currentEntries?.ServiceName,
+          id: 'serviceName'
         },
         {
           key: "Username",
@@ -75,6 +76,7 @@ export function inputHelper(action: FormAction, allCategories: CategoryListItem[
           type: "text",
           required: true,
           value: currentEntries?.Username,
+          id: 'username'
         },
         {
           key: "Password",
@@ -82,6 +84,7 @@ export function inputHelper(action: FormAction, allCategories: CategoryListItem[
           type: "password",
           required: false,
           value: currentEntries?.Password,
+          id: 'password'
         },
   ];
 
@@ -89,13 +92,14 @@ export function inputHelper(action: FormAction, allCategories: CategoryListItem[
       key: "categoryId",
       label: "Category",
       type: "select",
-      value: categoryId
+      value: categoryId,
+      id: 'categoryId'
   };
 
   if (action === "edit-credential"){
     categoryOptions.options = allCategories.map((category: CategoryListItem): SelectOption => ({
       label: category.categoryName,
-      id: category.id,
+      id: String(category.id),
       selected: categoryId === category.id
     }));
   }
@@ -110,6 +114,7 @@ export function inputHelper(action: FormAction, allCategories: CategoryListItem[
           type: "text",
           required: true,
           value: currentEntries?.CategoryName,
+          id: 'categoryName'
         },
       ];
     case "edit-credential":
@@ -125,6 +130,7 @@ export function inputHelper(action: FormAction, allCategories: CategoryListItem[
           type: "file",
           required: true,
           value: "",
+          id: 'importCSV'
         }
       ];
     default:

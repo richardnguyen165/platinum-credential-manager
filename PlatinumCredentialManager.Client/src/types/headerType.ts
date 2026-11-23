@@ -1,0 +1,1 @@
+export type RedirectParam = 'home' | 'categories' | 'search' | 'logout'

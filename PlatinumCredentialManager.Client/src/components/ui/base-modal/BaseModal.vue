@@ -40,24 +40,25 @@
   </Transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { inject, ref, watch } from "vue";
 import BaseModalReadArea from "./BaseModalReadArea.vue";
 import BaseModalActionArea from "./BaseModalActionArea.vue";
+import type { Input, Rule } from "@/types/formType.js";
 
 let categoryId = ref(inject('categoryId'));
 let credentialId = ref(inject('credentialId'));
-let data = ref({});
+let data = ref<Record<string, unknown>>({}); // key string, value unknown
 let file = ref(null);
 let errorMessage = ref("");
 let disableButton = ref(true);
 
-const { show, inputs, rules, canClose } = defineProps({
-  show: Boolean,
-  inputs: Object,
-  rules: Object,
-  canClose: Boolean
-});
+const { show, inputs, rules, canClose } = defineProps<{
+  show: boolean,
+  inputs: Input[],
+  rules: Rule[],
+  canClose: boolean
+}>();
 
 // Passes up ok and close event
 const emit = defineEmits(["ok", "close"]);
@@ -83,7 +84,7 @@ watch(() => show, (newShow) => {
 
     if (inputs.length > 0 ) {
       for (const input of inputs){
-        data[input.key] = input["value"];
+        data.value[input.key] = input["value"];
       }
       disableButton.value = inputs[0]['type'] === 'file'
     }

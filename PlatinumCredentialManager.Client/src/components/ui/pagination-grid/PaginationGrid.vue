@@ -35,12 +35,12 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 
-import { paginateData } from "@/utils/pagination";
+import { paginateData } from "@/utils/pagination.js";
 import { parsePayload } from "@/utils/parsePayload.js";
-import { sortDecider } from "@/utils/sort";
+import { sortDecider } from "@/utils/sort.js";
 import { exportCSVDecider } from "@/csv/exportCSV.js";
 import { useModal } from "@/composables/useModal.js";
 import ActionFormModal from "@/components/ui/action-form-modal/ActionFormModal.vue";

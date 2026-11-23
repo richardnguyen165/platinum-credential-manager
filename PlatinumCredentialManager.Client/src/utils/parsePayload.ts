@@ -1,13 +1,14 @@
-import type { SearchParams } from "@/types/gridType.js";
-import type { CredentialSearchResult } from "@/types/responseType.js";
+// T is a placeholder for "whatever type the caller passed in"
+export function parsePayload<T extends object>(data: T): Partial<T> {
+    const polishedData: Partial<T> = {}
 
-export function parsePayload(data: SearchParams | CredentialSearchResult[]){
-    const polishedData: any = {}
+    // Object.entries() typed to return [string, any][] => throws aways keys the object actually has => the first item is some string, second item is unknown, so actually get it directly
 
-    for (const [key, value] of Object.entries(data)) {
+    // Solution: use the keys
+    for (const key of Object.keys(data) as (keyof T)[]) {
         // Preserving 0
-        let preserveZero = value ?? false;
-        if (preserveZero || value) polishedData[key] = value;
+        const value = data[key];
+        if (value !== null && value !== undefined && value !== "") polishedData[key] = value;
     }
 
     return polishedData;

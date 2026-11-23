@@ -16,13 +16,16 @@
     // and npm install -D @types/node
 
     // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
+    // No emit options here on purpose: vite does the building, and
+    // `npm run type-check` runs vue-tsc --noEmit, so sourceMap /
+    // declaration / declarationMap / outDir would all be inert.
 
     // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    // Both re-enabled as a dedicated pass once the JS -> TS conversion
+    // has landed. They roughly double the work per file while half the
+    // components are still plain JS.
+    // "noUncheckedIndexedAccess": true,
+    // "exactOptionalPropertyTypes": true,
 
     // Style Options
     // "noImplicitReturns": true,
@@ -34,14 +37,12 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
     "allowJs": true,
-    "outDir": "./ts-dist",
     "paths": {
       "@/*": ["./src/*"]
     }

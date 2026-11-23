@@ -117,7 +117,7 @@ export async function deleteCredential(credId: string | number): Promise<Service
 }
 
 // https://axios.rest/pages/advanced/request-config => for query parameters
-export async function searchCredential(queryParams: SearchQuery): Promise<ServiceResult<CredentialSearchResult[]> | undefined>{
+export async function searchCredential(queryParams: Partial<SearchQuery>): Promise<ServiceResult<CredentialSearchResult[]> | undefined>{
     try {
         const response: AxiosResponse<CredentialSearchResult[], any, {}> = await http.get(`/creds/search`, { params: queryParams });
         const { data } = response; 

@@ -13,10 +13,10 @@ export interface CategoryForm {
 export interface SearchQuery {
     CreateUpdateChoice: "Create" | "Update",
     UserDateChoice: "lastSevenDays" | "lastThirtyDays" | "lastYear" | "boundedByDates",
-    CategoryName?: string,
-    ServiceName?: string,
-    StartDate?: string,
-    EndDate?: string
+    CategoryName: string,
+    ServiceName: string,
+    StartDate: string | null,
+    EndDate: string | null
 }
 
 type Id = string | number;
@@ -33,7 +33,7 @@ export type ServiceCall =
     | { action: "create-category";    
         payload: CategoryForm }
     | { action: "search-credential";  
-        payload: SearchQuery }
+        payload: Partial<SearchQuery> }
     | { action: "create-credential";  
         payload: CredentialForm }
     | { action: "get-category";       

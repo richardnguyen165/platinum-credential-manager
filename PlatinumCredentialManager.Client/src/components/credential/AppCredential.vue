@@ -24,8 +24,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, reactive, watch, provide } from "vue";
+<script setup lang="ts">
+import { ref, onMounted, reactive, watch, provide, type Reactive } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
@@ -37,11 +37,13 @@ import { useToast } from 'vue-toastification'
 import { categoryPath, searchUpPath } from "@/router/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
+import type { ServiceCall } from "@/types/requestType.js";
+import type { CurrentEntries } from "@/types/formType.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
-const {  query } = defineProps({
-  query: Object,
+const { query } = defineProps({
+  query: { type: Object, required: true },
 });
 
 const router = useRouter();
@@ -53,7 +55,7 @@ const errorMessage = ref("");
 const userId = ref(Number(route.params.user_id));
 const categoryId = ref(Number(route.params.category_id));
 const credentialId = ref(Number(route.params.cred_id));
-const currentEntries = reactive({});
+const currentEntries: Reactive<CurrentEntries> = reactive({});
 
 provide("categoryId", categoryId.value);
 provide("credentialId", credentialId.value);
@@ -70,7 +72,7 @@ function goBackPrevious() {
 
 async function credentialLoaderHelper() {
   try {
-    const payload = {
+    const payload: ServiceCall = {
       action: 'get-credential',
       payload: {
         "id": credentialId.value
@@ -78,17 +80,17 @@ async function credentialLoaderHelper() {
     }
     
 
-    const { valid, data } = await serviceHandler(payload);
+    const { valid, data: extractedData } = await serviceHandler(payload);
     
     if (valid){
-      currentEntries.CategoryName = data.categoryName;
-      currentEntries.ServiceName = data.serviceName;
-      currentEntries.Username = data.username;
-      currentEntries.Password = data.password;
-      currentEntries.DateCreated = data.dateCreated;
-      currentEntries.DateLastUpdated = data.dateLastUpdated;
+      currentEntries.CategoryName = extractedData.categoryName;
+      currentEntries.ServiceName = extractedData.serviceName;
+      currentEntries.Username = extractedData.username;
+      currentEntries.Password = extractedData.password;
+      currentEntries.DateCreated = extractedData.dateCreated;
+      currentEntries.DateLastUpdated = extractedData.dateLastUpdated;
     } else {
-      errorMessage.value=`${data.title}: ${data.detail}`
+      errorMessage.value=`${extractedData?.title}: ${extractedData?.detail}`
       useToast().error(errorMessage.value);
     }
   } catch (error) {

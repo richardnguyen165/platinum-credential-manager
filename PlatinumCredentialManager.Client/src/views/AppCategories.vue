@@ -22,20 +22,22 @@
   </div>
 </template>
 
-<script setup>
-import { onMounted, ref, provide } from "vue";
+<script setup lang="ts">
+import { onMounted, ref, provide, type Ref } from "vue";
 
 import ActionFormModal from "@/components/ui//action-form-modal/ActionFormModal.vue";
 import AppHeader from "@/components/layout/AppHeader.vue";
 import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
-import { useModal } from "@/composables/useModal";
-import { serviceHandler } from "@/services/serviceHandler";
+import { useModal } from "@/composables/useModal.js";
+import { serviceHandler } from "@/services/serviceHandler.js";
 import { useToast } from "vue-toastification";
+import type { ServiceCall } from "@/types/requestType.js";
+import type { CategorySummary } from "../types/responseType.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
-const allCategories = ref(null);
+const allCategories: Ref<CategorySummary[]> = ref([]);
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const errorMessage = ref("");
@@ -45,15 +47,15 @@ provide('credentialId', null);
 
 async function categoryLoaderHelper() {
   try {
-    const payload = {
+    const payload: ServiceCall = {
       action: 'get-user'
     }
-    const { valid, data } = await serviceHandler(payload);
+    const { valid, data: extractedData } = await serviceHandler(payload);
     
     if (valid){
-      allCategories.value = data.categories;
+      allCategories.value = extractedData.categories;
     } else {
-      errorMessage.value = `${data.title}\n${data.detail}`
+      errorMessage.value = `${extractedData?.title}\n${extractedData?.detail}`
       useToast().error(errorMessage.value);
     }
   } catch (error) {

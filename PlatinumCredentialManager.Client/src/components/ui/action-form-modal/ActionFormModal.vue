@@ -40,7 +40,7 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import BaseModal from "@/components/ui/base-modal/BaseModal.vue";
@@ -53,7 +53,7 @@ import { serviceHandler } from "@/services/serviceHandler.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { useToast } from "vue-toastification";
 import { filterImportCSVResponse } from "@/csv/filterImportCSVResponse.js";
-import { descriptionHelper, inputHelper, ruleHelper, titleHelper } from "@/form-helper/formHelpers";
+import { descriptionHelper, inputHelper, ruleHelper, titleHelper } from "@/form-helper/formHelpers.js";
 
 const { show, action, currentEntries, query } = defineProps({
   show: Boolean,

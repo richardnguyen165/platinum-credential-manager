@@ -81,11 +81,11 @@
   </div>
 </template>
 
-<script setup>
-const { location } = defineProps({
-    location: String
-})
+<script setup lang="ts">
+  const { location } = defineProps({
+      location: String
+  })
 
-const sortOption = defineModel('sortOption');
-const withinCategorySortOption = defineModel('withinCategorySortOption');
+  const sortOption = defineModel('sortOption');
+  const withinCategorySortOption = defineModel('withinCategorySortOption');
 </script>

@@ -76,15 +76,19 @@
 import AppHeader from "@/components/layout/AppHeader.vue";
 import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 
-import { ref, reactive, onMounted, provide } from "vue";
-import { useRouter, useRoute, type Router, type RouteLocationNormalizedLoadedGeneric } from "vue-router";
+import { ref, reactive, onMounted, provide, type Ref } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { useToast } from 'vue-toastification'
+import type { SearchQuery } from "@/types/requestType.js";
+import type { ServiceCall } from "@/types/requestType.js";
+import type { CredentialSearchResult } from "@/types/responseType.js";
+import { cleanAppSearchUpQuery } from "@/utils/cleanAppSearchUpQuery.js";
 
 const router = useRouter();
 const route = useRoute(); // for query parameters
-const data = reactive({
+const data: Partial<SearchQuery> = reactive({
   CategoryName: "",
   ServiceName: "",
   UserDateChoice: "lastSevenDays",
@@ -93,15 +97,15 @@ const data = reactive({
   EndDate: null,
 });
 const formErrorMessage = ref("");
-const credentials = ref([]);
-const submittedServiceName = ref("");
-const errorMessage = ref("");
+const credentials: Ref<CredentialSearchResult[] | null> = ref([]);
+const submittedServiceName: Ref<string, string> = ref("");
+const errorMessage: Ref<string, string> = ref("");
 
 provide('categoryId', null);
 provide('credentialId', null);
 
 // https://stackoverflow.com/questions/1531093/how-do-i-get-the-current-date-in-javascript
-function todaysDate(): String {
+function todaysDate(): string {
   let today = new Date();
 
   let day = String(today.getDate()).padStart(2, "0");
@@ -137,7 +141,7 @@ async function searchForCredentials() {
 
   const searchPayload = parsePayload(data);
 
-  const payload = {
+  const payload: ServiceCall = {
     action: 'search-credential',
     payload: searchPayload
   }
@@ -146,34 +150,34 @@ async function searchForCredentials() {
   if (valid) {
     credentials.value = extractedData;
   } else {
-    errorMessage.value = `${data.title}\n${data.detail}`
+    errorMessage.value = `${extractedData?.title}\n${extractedData?.detail}`
     useToast().error(errorMessage.value);
     return;
   }
   credentials.value = extractedData;
 
   // Updates the sort, since without it, it would use the other service name value, and it would keep updating as typing (only change it when submitting the form)
-  submittedServiceName.value = payload["ServiceName"] ?? "";
+  submittedServiceName.value = searchPayload["ServiceName"] ?? "";
 
   // https://serversideup.net/blog/url-query-parameters-with-javascript-vue-2-and-vue-3/
-  router.push({ query: payload });
+  router.push({ query: searchPayload });
 }
 
 // Nothing reads the query back (suppose you go back to this page, the refs could be empty)
 // route => reading where you are right now (suppose the user bookmarks the page, the refs restart, and since this query and not parameter, the page will be blank despite the query parameters)
 onMounted(async () => {
   if (Object.keys(route.query).length === 0) return;
-  data["CategoryName"] = route.query.CategoryName ?? "";
-  data["ServiceName"] = route.query.ServiceName ?? "";
-  data["CreateUpdateChoice"] =
-  route.query.CreateUpdateChoice ?? "lastSevenDays";
-  data["UserDateChoice"] = route.query.UserDateChoice ?? "Create";
-  data["StartDate"] = route.query.StartDate ?? "";
-  data["EndDate"] = route.query.EndDate ?? "";
+  data["CategoryName"] = cleanAppSearchUpQuery(route.query.CategoryName, "");
+  data["ServiceName"] = cleanAppSearchUpQuery(route.query.ServiceName,"");
+  // as const is needed so that it knows which ones are actually constant
+  data["CreateUpdateChoice"] = cleanAppSearchUpQuery(route.query.CreateUpdateChoice, "Create", ['Create', 'Update'] as const);
+  data["UserDateChoice"] = cleanAppSearchUpQuery(route.query.UserDateChoice, "lastSevenDays", ['lastSevenDays', 'lastThirtyDays', 'lastYear', 'boundedByDates'] as const);
+  data["StartDate"] = cleanAppSearchUpQuery(route.query.StartDate, "");
+  data["EndDate"] = cleanAppSearchUpQuery(route.query.EndDate, "");
 
   const searchPayload = parsePayload(data);
 
-  const payload = {
+  const payload: ServiceCall = {
     action: 'search-credential',
     payload: searchPayload
   }
@@ -182,7 +186,7 @@ onMounted(async () => {
   if (valid) {
     credentials.value = extractedData;
   } else {
-    errorMessage.value = `${data.title}\n${data.detail}`
+    errorMessage.value = `${extractedData?.title}\n${extractedData?.detail}`
     useToast().error(errorMessage.value);
   }
 });

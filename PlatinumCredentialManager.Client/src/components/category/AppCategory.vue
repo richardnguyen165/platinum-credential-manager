@@ -27,8 +27,8 @@
   </div>
 </template>
 
-<script setup>
-import { onMounted, ref, reactive, provide } from "vue";
+<script setup lang="ts">
+import { onMounted, ref, reactive, provide, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useToast } from "vue-toastification";
 
@@ -38,20 +38,22 @@ import PaginationGrid from "@/components/ui/pagination-grid/PaginationGrid.vue";
 import { categoriesPath } from "@/router/routes.js";
 import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
+import type { CategoryForm, ServiceCall } from "@/types/requestType.js";
+import type { CredentialSummary } from "@/types/responseType.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
 const router = useRouter();
 const route = useRoute();
 
-const isMiscallaneous = ref(null);
-const allCredentials = ref(null);
+const isMiscallaneous = ref(false);
+const allCredentials: Ref<CredentialSummary[]> = ref([]);
 const isLoading = ref(true);
 const successfullyLoaded = ref(true);
 const errorMessage = ref("");
 const categoryId = ref(Number(route.params.category_id));
 const userId = ref(Number(route.params.user_id));
-const currentEntries = reactive({});
+const currentEntries = reactive<CategoryForm>({ CategoryName: "" });
 
 provide('categoryId', Number(route.params.category_id));
 provide('credentialId', null);
@@ -62,20 +64,20 @@ function redirectBackToAllCategories() {
 
 async function loaderHelper() {
   try {
-    const payload = {
+    const payload: ServiceCall = {
       action: 'get-category',
       payload: {
       "id": categoryId.value
       }
     }
 
-    const { valid, data } = await serviceHandler(payload);
+    const { valid, data: extractedData } = await serviceHandler(payload);
     if (valid) {
-      allCredentials.value = data.credentials;
-      currentEntries.CategoryName = data.categoryName;
+      allCredentials.value = extractedData.credentials;
+      currentEntries.CategoryName = extractedData.categoryName;
       isMiscallaneous.value = currentEntries.CategoryName === "Miscallaneous";
     } else {
-      errorMessage.value=`${data.title}\n${data.detail}`
+      errorMessage.value=`${extractedData?.title}\n${extractedData?.detail}`
       useToast().error(errorMessage.value);
     }
   } catch (error) {
