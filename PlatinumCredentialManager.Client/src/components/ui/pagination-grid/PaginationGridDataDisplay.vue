@@ -95,15 +95,17 @@ async function redirectCredential(credentialId: string) {
 
 // When in searchup of categories
 async function redirectCredentialQuery(credential: CredentialSearchResult) {
-  if (grid.params == null) return;
-  await router.push({
-    path: credentialPath(
-      credential.credentialId,
-      credential.categoryId,
-      userId.value,
-    ),
-    query: parsePayload(grid.params),
-  });
+  if (grid.location === 'searchup'){
+    if (grid.params == null) return;
+    await router.push({
+      path: credentialPath(
+        credential.credentialId,
+        credential.categoryId,
+        userId.value,
+      ),
+      query: parsePayload(grid.params),
+    });
+  }
 }
 
 // When in credentials of a category
