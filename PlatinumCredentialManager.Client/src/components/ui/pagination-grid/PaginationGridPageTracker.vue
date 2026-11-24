@@ -6,11 +6,11 @@
     v-model="inputPageNumber"
     type="number"
     min="1"
-    :max="allData.length"
+    :max="pageTotal"
     @keyup.enter="goToPage"
   />
   <button
-    :disabled="allData.length === 0 || pageNumber === allData.length"
+    :disabled="pageTotal === 0 || pageNumber === pageTotal"
     @click="checkIncrement"
   >
     »
@@ -18,31 +18,28 @@
 </template>
 
 <script setup lang="ts">
-import type { DataRow } from '@/types/sortType.js';
+import { ref, watch } from 'vue';
 
-const { allData } = defineProps<{
-  allData: DataRow[][],
+const { pageTotal } = defineProps<{
+  pageTotal: number,
 }>();
 
 const pageNumber = defineModel<number>('pageNumber', { required: true });
-const inputPageNumber = defineModel<number>('inputPageNumber', { required: true });
-const currentData = defineModel<DataRow[]>('currentData', { required: true });
+const inputPageNumber = ref(pageNumber.value);
 
+watch(pageNumber, () => {
+  inputPageNumber.value = pageNumber.value;
+})
+  
 function checkIncrement() {
-  if (pageNumber.value !== allData.length) {
-    const incrementedPage = pageNumber.value + 1;
-    pageNumber.value = incrementedPage;
-    inputPageNumber.value = incrementedPage;
-    currentData.value = allData[incrementedPage - 1];
+  if (pageNumber.value !== pageTotal) {
+    pageNumber.value += 1;
   }
 }
 
 function checkDecrement() {
-  if (pageNumber.value !== 1) {
-    const decrementedPage = pageNumber.value - 1;
-    pageNumber.value = decrementedPage;
-    inputPageNumber.value = decrementedPage;
-    currentData.value = allData[decrementedPage - 1];
+  if (pageNumber.value <= 1) {
+    pageNumber.value -= 1;
   }
 }
 
@@ -53,18 +50,13 @@ function goToPage() {
     currentInputPageNumber = Math.round(inputPageNumber.value);
   }
 
-  if (currentInputPageNumber > allData.length) {
-    inputPageNumber.value = allData.length;
-    pageNumber.value = allData.length;
-    currentData.value = allData[allData.length - 1];
-    return;
+  if (currentInputPageNumber > pageTotal) {
+    pageNumber.value = pageTotal;
   } else if (currentInputPageNumber < 1) {
-    inputPageNumber.value = 1;
     pageNumber.value = 1;
-    currentData.value = allData[0];
-    return;
+  } else {
+    pageNumber.value = currentInputPageNumber;
   }
-  currentData.value = allData[currentInputPageNumber - 1];
-  pageNumber.value = currentInputPageNumber;
+
 }
 </script>

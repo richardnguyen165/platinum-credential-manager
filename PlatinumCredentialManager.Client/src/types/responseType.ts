@@ -15,10 +15,7 @@ export interface CredentialSummary {
 
 export interface CategorySummary {
     id: number,
-    serviceName: string,
-    username: string,
-    dateCreated: string,
-    dateLastUpdated: string
+    categoryName: string
 }
 
 export interface CategoryDetail {

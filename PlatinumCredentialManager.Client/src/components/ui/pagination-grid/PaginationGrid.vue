@@ -12,16 +12,13 @@
   </div>
   
   <PaginationGridDataDisplay 
-    :grid="grid"
-    :currentData="currentData"
+    :grid="modifiedGrid"
   />
 
   <PaginationGridPageTracker 
     v-if="grid.location !== 'credential'"
     v-model:pageNumber="pageNumber"
-    v-model:inputPageNumber="inputPageNumber"
-    v-model:currentData="currentData"
-    :allData="allData"
+    :pageTotal="allPaginatedAndSortedRows?.length ?? 0"
   />
 
   <ActionFormModal
@@ -34,11 +31,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, computed } from "vue";
 
-import { paginateData } from "@/utils/pagination.js";
 import { parsePayload } from "@/utils/parsePayload.js";
-import { sortDecider } from "@/utils/sort.js";
 import { exportCSVDecider } from "@/csv/exportCSV.js";
 import { useModal } from "@/composables/useModal.js";
 import ActionFormModal from "@/components/ui/action-form-modal/ActionFormModal.vue";
@@ -46,7 +41,9 @@ import PaginationGridPageTracker from "./PaginationGridPageTracker.vue";
 import PaginationGridDataDisplay from "./PaginationGridDataDisplay.vue";
 import PaginationGridSortFilter from "./PaginationGridSortFilter.vue";
 import type { GridData } from "@/types/gridType.js";
-import type { DataRow, SortAction } from "@/types/sortType.js";
+import type { SortAction } from "@/types/sortType.js";
+import { sortDecider } from "@/utils/sort.js";
+import { paginateData } from "@/utils/pagination.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 
@@ -54,40 +51,50 @@ const { grid } = defineProps<{
   grid: GridData
 }>();
 
-const allData = ref<DataRow[][]>([]);
-const currentData = ref<DataRow[]>([]);
 const pageNumber = ref(1);
-const inputPageNumber = ref(pageNumber.value);
-const sortOption = ref<SortAction | null>("");
-const withinCategorySortOption = ref("");
+const sortOption = ref<SortAction>(grid.location === "allCategories" ? "azAscendingCategory" : (grid.location !== 'credential' ? "azAscendingService" : ""));
+const withinCategorySortOption = ref(grid.location === "allCategories" ? "azAscendingService" : "");
+
+// For measuring the length of the pagination
+const allPaginatedAndSortedRows = computed(() => {
+  if (grid.location === 'credential') return null;
+
+  if (grid.location === 'searchup') {
+    let searchSortedResults = sortDecider(sortOption.value, null, grid.rows, grid.credentialMatch);
+    return paginateData(searchSortedResults)
+  }
+  else {
+    let credentialResults = sortDecider(sortOption.value, null, grid.rows, "");
+    return paginateData(credentialResults);
+  }
+});
+
+// Sort and slice per branch: only inside the narrowing is grid.rows one concrete type, so the location and the rows provably belong to the same GridData member.
+const modifiedGrid = computed(() => {
+  if (grid.location === 'credential') return grid;
+  else if (grid.location === 'allCredentials'){
+    return {
+      location: grid.location,
+      rows: paginateData(sortDecider(sortOption.value, null, grid.rows, ""))[pageNumber.value - 1]
+    }
+  }
+  else if (grid.location === 'allCategories'){
+    return {
+      location: grid.location,
+      rows: paginateData(sortDecider(sortOption.value, null, grid.rows, ""))[pageNumber.value - 1]
+    } 
+  }
+  // searchup
+  else {
+      return {...grid, rows: paginateData(sortDecider(sortOption.value, null, grid.rows, grid.credentialMatch))[pageNumber.value - 1]}
+  }
+});
 
 const emit = defineEmits(["close", "rerun"]);
 
-watch(sortOption, () => changeData());
-if (grid.location === 'allCategories' || grid.location === 'allCredentials') watch(() => grid.rows, () => changeData()); // for import csv if new things are added
-
-function changeData(){
-  if (sortOption.value === null) return;
-  if (grid.location !== 'credential'){
-    let result;
-    if (grid.location === 'searchup') result = sortDecider(sortOption.value, null, grid.rows, grid.credentialMatch);
-    else result = sortDecider(sortOption.value, null, grid.rows, "");
-    allData.value = paginateData(result);
-    pageNumber.value = 1;
-    currentData.value = allData.value[pageNumber.value - 1];
-    inputPageNumber.value = pageNumber.value;
-  }
-}
 
 // for importing a csv
 function loaderHelper(){
   emit('rerun');
 }
-
-// First, when we reach onMounted => we have the data => we need to first paginate it
-onMounted(() => {
-  sortOption.value =
-    grid.location === "allCategories" ? "azAscendingCategory" : (grid.location !== 'credential' ? "azAscendingService" : null);
-  withinCategorySortOption.value = grid.location === "allCategories" ? "azAscendingService" : "";
-});
 </script>

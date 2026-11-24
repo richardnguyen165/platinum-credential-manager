@@ -449,7 +449,7 @@ Every entry here is a real error from converting the client to TypeScript. The e
 | Code | Message shape | Usually means |
 |---|---|---|
 | `TS2307` | Cannot find module `'@/utils/sort'` | Missing `.js` on the import (6.7) |
-| `TS2322` | Type `X` is not assignable to type `Y` | Wrong type on either side; check the *declaration*, not the line reported |
+| `TS2322` | Type `X` is not assignable to type `Y` | Wrong type on either side; check the *declaration*, not the line reported. Inside a narrowed branch, two values that cannot be correlated (6.12) |
 | `TS2339` | Property `x` does not exist on type `{}` | Declared empty: `reactive({})`, `ref({})` (6.1) |
 | `TS2345` | Argument of type `X` not assignable to parameter `Y` | A prop or model still optional (6.8) |
 | `TS2367` | This comparison appears to be unintentional | A union is missing a value the code really produces (6.4) |
@@ -713,10 +713,68 @@ Type-checking does not catch everything. These were found by reading:
 | `errorMessage` branch unreachable — `credentials.length === 0` is checked first and always matches on failure | `AppSearchup.vue` |
 | `submittedServiceName` written but never read; the template passes the live `data.ServiceName`, so sort shifts while typing | `AppSearchup.vue` |
 | `exportCSVDecider` called with 5 arguments after being refactored to take 1 | `PaginationGrid.vue` |
+| `ref(pageNumber)` returns the *same* ref, not a copy — `ref()` passes a ref through unchanged, so the page input wrote straight to the model and the typing buffer never existed | `PaginationGridPageTracker.vue` |
+| A page assigned onto a plain `{...grid}` object: not reactive, and the prop reference never changed, so the display never re-rendered | `PaginationGrid.vue` |
+| `withinCategorySortOption` passed to `sortDecider` as a hardcoded `null`, so choosing a within-category sort did nothing | `PaginationGrid.vue` |
+| `watch(() => grid.rows, …)` registered for only two of the four locations, so `searchup` never reacted to replaced rows | `PaginationGrid.vue` |
+| `allData[pageNumber - 1]` duplicated in six places, each able to yield `undefined` on an empty page set | `PaginationGrid.vue`, `PaginationGridPageTracker.vue` |
+| A derived page kept in a `ref` and synced by `watch(pageNumber, …)`: silent on mount and on sort changes, since `pageNumber` itself did not change | `PaginationGrid.vue` |
 
 ---
 
-### 6.12 Workflow
+### 6.12 Narrowing is per-branch, and never travels between values
+
+`GridData` is a discriminated union keyed on `location` ([gridType.ts](../PlatinumCredentialManager.Client/src/types/gridType.ts)). `PaginationGrid.vue` has to hand the display component one *page* of rows, still shaped as a `GridData`. The obvious split — one computed for the page, a second to attach it — cannot be typed:
+
+```ts
+const displayedRows = computed(() => pages.value[pageNumber.value - 1]);
+
+const modifiedGrid = computed(() => {
+    if (grid.location === 'allCategories') {
+        return { ...grid, rows: displayedRows.value };   // TS2322
+    }
+    ...
+});
+```
+
+Checking `grid.location` narrows `grid`. It says nothing about `displayedRows`, which was computed elsewhere and stays `CategorySummary[] | CredentialSummary[] | CredentialSearchResult[]`. So the object pairs a known `location` with an unknown `rows`, and nothing rules out `{ location: 'allCategories', rows: CredentialSearchResult[] }` — not a member of the union.
+
+Two rules are behind this:
+
+- **Narrowing applies to the value you checked, and only inside that block.** It is not a fact recorded about the function.
+- **TypeScript never correlates two separate values.** Knowing something about `grid` implies nothing about a different variable, prop or ref — even when the two always change together at runtime.
+
+The fix is to derive the rows *from the narrowed value, in the same block*:
+
+```ts
+const modifiedGrid = computed(() => {
+    if (grid.location === 'credential') return grid;          // not paginated
+    if (grid.location === 'allCategories') {
+        // grid.rows is CategorySummary[] here, so the page is too
+        const page = paginateData(sortDecider(sortOption.value, withinCategorySortOption.value, grid.rows))[pageNumber.value - 1];
+        return { ...grid, rows: page };
+    }
+    // one branch per remaining location
+});
+```
+
+Generic helpers are fine: `sortDecider<T extends DataRow>` and `paginateData<T>` pass the concrete type straight through. What must be repeated per branch is the **call** — its argument has to be the narrowed `grid.rows` — and the **spread**, where the location and the rows are paired. Three near-identical branches is the right amount of duplication here; it is what buys real narrowing in `PaginationGridDataDisplay.vue`, where `category.id` becomes `number` instead of `number | undefined`.
+
+The same rule explains three other errors in that folder:
+
+| Where | The pair TypeScript will not correlate |
+|---|---|
+| `exportCSVDecider(location, rows, …)` in the template | `location === 'searchup'` does not narrow `grid`, so `grid.params` is `TS2339` |
+| `redirectCredentialQuery` | reads `grid.params` with no `location` check at all |
+| `currentData: DataRow[]` as a second prop | `grid.location` cannot narrow a separately declared prop |
+
+That last row is why `DataRow` existed: with every field optional it is the lowest common denominator that compiles in all four branches, at the cost of `number | undefined` everywhere it is read. Carrying the discriminant *with* the rows is what replaces it.
+
+**Template expressions never narrow.** `:grid="{ ...grid, rows: page }"` is checked against the whole union — there is no `v-if` scope that narrows a sibling attribute, so this can never type-check. Build the object in `<script setup>` and bind the finished result.
+
+---
+
+### 6.13 Workflow
 
 - `npm run type-check` reads files **on disk**; IDE squiggles come from Volar's in-memory copy. When they disagree, the script is the authority.
 - An error's reported line is often not where the fix goes. Template errors point at the binding; the cause is usually a declaration elsewhere.

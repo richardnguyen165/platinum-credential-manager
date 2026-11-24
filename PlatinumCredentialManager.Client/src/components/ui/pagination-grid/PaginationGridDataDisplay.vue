@@ -1,9 +1,9 @@
 <template>
   <div v-if="grid.location === 'allCategories'">
     <div
-      v-for="category in currentData"
+      v-for="category in grid.rows"
       :key="category.id"
-      @click="redirectToCredentialsOfCategory(category.id)"
+      @click="redirectToCredentialsOfCategory(String(category.id))"
     >
       {{ category.categoryName }}
     </div>
@@ -12,8 +12,8 @@
   <div v-else-if="grid.location === 'searchup'">
     <div
       @click="redirectCredentialQuery(credential)"
-      v-for="credential in currentData"
-      :key="credential.id"
+      v-for="credential in grid.rows"
+      :key="credential.credentialId"
     >
       <div>Service Name: {{ credential.serviceName }}</div>
       <div>Category Name: {{ credential.categoryName }}</div>
@@ -24,8 +24,8 @@
 
   <div v-else-if="grid.location === 'allCredentials'">
     <div
-      @click="redirectCredential(credential.id)"
-      v-for="credential in currentData"
+      @click="redirectCredential(String(credential.id))"
+      v-for="credential in grid.rows"
       :key="credential.id"
     >
       <div>Service Name: {{ credential.serviceName }}</div>
@@ -62,16 +62,14 @@ import type { CurrentEntries } from '@/types/formType.js';
 import type { GridData } from '@/types/gridType.js';
 import { categoryIdKey } from '@/types/injectionKeys.js';
 import type { CredentialSearchResult } from '@/types/responseType.js';
-import type { DataRow } from '@/types/sortType.js';
 import { parsePayload } from '@/utils/parsePayload.js';
 import { ref, inject, computed, type ComputedRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 // for credential
 
-const { grid, currentData} = defineProps<{
-  grid: GridData,
-  currentData: DataRow[],
+const { grid } = defineProps<{
+  grid: GridData
 }>();
 
 const credential: ComputedRef<CurrentEntries | undefined> = computed(() =>
