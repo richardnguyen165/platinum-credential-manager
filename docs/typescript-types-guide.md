@@ -455,7 +455,9 @@ Every entry here is a real error from converting the client to TypeScript. The e
 | `TS2367` | This comparison appears to be unintentional | A union is missing a value the code really produces (6.4) |
 | `TS2538` | Type `undefined` cannot be used as an index type | Indexing with an optional key |
 | `TS2554` | Expected 1 arguments, but got 5 | A signature changed and a caller was missed |
+| `TS2693` | `X` only refers to a type, but is being used as a value here | An interface or type alias in a value position (6.3) |
 | `TS2696` | The `Object` type is assignable to very few other types | Capital-`O` `Object` used as a type (6.2) |
+| `TS2739` | Type `{...}` is missing the following properties from type `{...}` | A `Record<Union, V>` lost exhaustiveness because the union gained members (6.13) |
 | `TS2741` | Property `x` is missing in type ... but required | A type gained a field the real data does not have (6.4) |
 | `TS7006` | Parameter implicitly has an `any` type | Untyped function parameter |
 | `TS7053` | Element implicitly has an `any` type because expression of type `string` can't be used to index | Indexing `{}` or a generic `T` (6.1, 6.10) |
@@ -774,7 +776,53 @@ That last row is why `DataRow` existed: with every field optional it is the lowe
 
 ---
 
-### 6.13 Workflow
+### 6.13 A placeholder is not a union member
+
+`useModal` holds the action for the form modal ([useModal.ts](../PlatinumCredentialManager.Client/src/composables/useModal.ts)). Before any modal opens there is no action, but `FormAction` has no value meaning "none":
+
+```ts
+const action: Ref<FormAction> = ref('');   // TS2322: '""' is not assignable to FormAction
+```
+
+The tempting fix is to give the union something to hold — first `''`, then real-looking members, so each page can seed the composable with its own identity:
+
+```ts
+export type FormAction =
+  | "create-category" | /* … */ | "allCredentials"
+  | "get-category" | "get-credential" | "get-user"   // service actions
+  | "credential" | "searchup";                        // grid locations
+
+useModal('get-credential')   // AppCredential.vue
+useModal('get-user')         // AppCategories.vue
+useModal()                   // PaginationGrid.vue — TS2554, nothing to pass
+```
+
+The error count went **39 → 41**. Two things went wrong:
+
+1. `TITLES` and `DESCRIPTIONS` in [formHelpers.ts](../PlatinumCredentialManager.Client/src/form-helper/formHelpers.ts) are `Record<FormAction, string>`, which is an **exhaustiveness check**: every member of the union needs an entry. `get-user` has no form, so there is no title to write. (`RULES` is already `Partial<Record<FormAction, Rule[]>>` for exactly this reason — the comment above it says so.)
+2. `PaginationGrid` is a child component with no page identity to offer, so there was *nothing* it could legitimately pass. **A required parameter with no legal value at one call site is a sign the parameter should not exist.**
+
+The widening also destroyed what `FormAction` meant. Three vocabularies in this codebase share string literals, and each already has its own type:
+
+| Members | What they are | Discriminant for |
+|---|---|---|
+| `create-*`, `edit-*`, `delete-*`, `allCategories`, `allCredentials` | form actions | the modal (`FormAction`) |
+| `get-category`, `get-credential`, `get-user` | service calls | `ServiceCall["action"]` |
+| `credential`, `searchup` | page locations | `GridData` (`GridLocation`) |
+
+`allCategories` and `allCredentials` appear in two of them, which is what makes the merge look harmless. Merging means every `Record<FormAction, …>` and every `switch (action)` must handle cases that are meaningless to it — and `filterImportCSVResponse.ts` already narrows back by hand with `Extract<FormAction, "allCategories" | "allCredentials">`.
+
+**The rule:** when a value can be absent, model absence with `null`. Never widen a union to make room for a stand-in — absence is not one of the cases, and a borrowed member from another vocabulary is a lie the compiler will believe.
+
+```ts
+const action: Ref<FormAction | null> = ref(null);
+```
+
+The cost is a nullable prop, and it is paid where it belongs: guard the render so the modal only mounts with a real action. A truthiness `v-if` *does* narrow the binding on the same element, so `:action="action"` is `FormAction` again — one of the few places a template narrows anything (contrast 6.12).
+
+---
+
+### 6.14 Workflow
 
 - `npm run type-check` reads files **on disk**; IDE squiggles come from Volar's in-memory copy. When they disagree, the script is the authority.
 - An error's reported line is often not where the fix goes. Template errors point at the binding; the cause is usually a declaration elsewhere.
