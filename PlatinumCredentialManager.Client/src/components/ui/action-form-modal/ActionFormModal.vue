@@ -53,7 +53,7 @@ import { categoriesPath, categoryPath, credentialPath, searchUpPath } from "@/ro
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { parsePayload } from "@/utils/parsePayload.js";
 import { useToast } from "vue-toastification";
-import { filterImportCSVResponse } from "@/csv/filterImportCSVResponse.js";
+import { filterImportCSVResponse, type ImportCSVViolation } from "@/csv/filterImportCSVResponse.js";
 import { descriptionHelper, inputHelper, ruleHelper, titleHelper } from "@/form-helper/formHelpers.js";
 import type { FormAction } from "@/types/formType.js";
 import type { SearchQuery, ServiceCall } from "@/types/requestType.js";
@@ -70,7 +70,7 @@ let errorMessage = ref("");
 let allCategories = ref([]);
 const categoryId = inject(categoryIdKey, null);
 let canClose = ref(false);
-let allCSVRuleViolationInfo = ref({});
+let allCSVRuleViolationInfo = ref<ImportCSVViolation | undefined>();
 
 const router = useRouter();
 const route = useRoute();
@@ -83,7 +83,6 @@ const rules = computed(() => ruleHelper(action));
 
 watch(() => show, async () => {
   errorMessage.value = "";
-  allCSVRuleViolationInfo.value = {};
   if (action === 'edit-credential'){
     const { data } = await getCategories();
     allCategories.value = data;
@@ -210,7 +209,7 @@ async function emitHelper(payload = {}, id = null) {
   if ((action !== "edit-credential" && canClose.value) || (action === "edit-credential" && reparsedPayload.data.categoryId === categoryId && canClose.value)) emit("rerun");
 }
 
-function toastSuccessHelper(action) {
+function toastSuccessHelper(action: FormAction) {
   const toast = useToast();
 
   switch(action){
