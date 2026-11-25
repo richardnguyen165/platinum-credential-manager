@@ -8,7 +8,7 @@
 
   <div>
     <button v-if="grid.location === 'allCategories' || grid.location === 'allCredentials'" @click="createModal(grid.location)">Import CSV</button>
-    <button @click="exportCSVDecider(location, rows, sortOption, withinCategorySortOption, (location === 'searchup' ? parsePayload(params): null))">Export CSV</button>
+    <button @click="exportCSVDecider(grid, sortOption, withinCategorySortOption)">Export CSV</button>
   </div>
   
   <PaginationGridDataDisplay 
@@ -33,7 +33,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 
-import { parsePayload } from "@/utils/parsePayload.js";
 import { exportCSVDecider } from "@/csv/exportCSV.js";
 import { useModal } from "@/composables/useModal.js";
 import ActionFormModal from "@/components/ui/action-form-modal/ActionFormModal.vue";
@@ -62,6 +61,10 @@ const allPaginatedAndSortedRows = computed(() => {
   if (grid.location === 'searchup') {
     let searchSortedResults = sortDecider(sortOption.value, null, grid.rows, grid.credentialMatch);
     return paginateData(searchSortedResults)
+  }
+  else if (grid.location === 'allCategories') {
+    let categoryResults = sortDecider(sortOption.value, null, grid.rows, "");
+    return paginateData(categoryResults);
   }
   else {
     let credentialResults = sortDecider(sortOption.value, null, grid.rows, "");

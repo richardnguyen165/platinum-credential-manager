@@ -41,6 +41,7 @@ import { useModal } from "@/composables/useModal.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import type { CategoryForm, ServiceCall } from "@/types/requestType.js";
 import type { CredentialSummary } from "@/types/responseType.js";
+import { categoryIdKey, credentialIdKey } from "@/types/injectionKeys.js";
 
 const { showModal, action, createModal, closeModal } = useModal();
 

@@ -60,7 +60,7 @@ export function ruleHelper(action: FormAction): Rule[] {
   return RULES[action] ?? [];
 }
 
-export function inputHelper(action: FormAction, allCategories: CategoryListItem[], currentEntries: CurrentEntries, categoryId: number | string) {
+export function inputHelper(action: FormAction, allCategories: CategoryListItem[], currentEntries: CurrentEntries | undefined, categoryId: number | string) {
   const credentialArray = [
         {
           key: "ServiceName",

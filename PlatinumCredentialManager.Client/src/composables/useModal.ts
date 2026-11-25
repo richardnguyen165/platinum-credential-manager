@@ -1,9 +1,9 @@
 import type { FormAction } from "@/types/formType.js";
-import { ref } from "vue"
+import { ref, type Ref } from "vue"
 
 export const useModal = () => {
 
-    const action: FormAction = ref('');
+    const action: Ref<FormAction, FormAction> = ref('');
     const showModal = ref(false);
 
     function createModal(modalAction: FormAction){

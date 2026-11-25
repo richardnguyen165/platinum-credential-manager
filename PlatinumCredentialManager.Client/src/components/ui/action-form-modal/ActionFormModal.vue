@@ -56,13 +56,13 @@ import { useToast } from "vue-toastification";
 import { filterImportCSVResponse } from "@/csv/filterImportCSVResponse.js";
 import { descriptionHelper, inputHelper, ruleHelper, titleHelper } from "@/form-helper/formHelpers.js";
 import type { FormAction } from "@/types/formType.js";
-import type { ServiceCall } from "@/types/requestType.js";
+import type { SearchQuery, ServiceCall } from "@/types/requestType.js";
 
 const { show, action, currentEntries, query } = defineProps<{
-  show: Boolean,
+  show: boolean,
   action: FormAction,
-  currentEntries: Object,
-  query: Object
+  currentEntries?: Object,
+  query?: SearchQuery // question mark is optionality
 }>();
 const emit = defineEmits(["close", "rerun"]);
 

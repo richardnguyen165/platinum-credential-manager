@@ -3,20 +3,21 @@ import { useToast } from 'vue-toastification';
 import { sortDecider } from "@/utils/sort.js";
 import { serviceHandler } from "@/services/serviceHandler.js";
 import { ExportError } from "@/csv/ExportError.js";
-import type { GridPayload, SearchParams } from '@/types/gridType.js';
+import type { GridData, SearchParams } from '@/types/gridType.js';
 import type { DataRow, SortAction } from '@/types/sortType.js';
-import type { ServiceCall } from '@/types/requestType.js';
+import type { SearchQuery, ServiceCall } from '@/types/requestType.js';
 import type { HandlerResult } from '@/types/serviceType.js';
-import type { CredentialDetail, CredentialSearchResult } from '@/types/responseType.js';
+import type { CredentialDetail, CredentialSearchResult, CredentialSummary } from '@/types/responseType.js';
+import type { CurrentEntries } from '@/types/formType.js';
 
 const SEARCH_KEYS = ["CategoryName", "ServiceName", "UserDateChoice", "CreateUpdateChoice", "StartDate", "EndDate"] as const satisfies readonly (keyof SearchParams)[];
 
-export async function exportCSVDecider(csvPayload: GridPayload){
+export async function exportCSVDecider(csvPayload: GridData, sortOption: SortAction, withinCategorySortOption: string | null){
     try {
-        if (csvPayload.action === 'allCategories') await exportCategoriesAsCSV(csvPayload.sortOption, csvPayload.withinCategorySortOption);
-        else if (csvPayload.action === 'allCredentials') await exportCredentialsAsCSV(csvPayload.data);
-        else if (csvPayload.action === 'credential') await exportCredentialAsCSV(csvPayload.data);
-        else await exportSearchCredentialsAsCSV(csvPayload.data, csvPayload.params);
+        if (csvPayload.location === 'allCategories') await exportCategoriesAsCSV(sortOption, withinCategorySortOption);
+        else if (csvPayload.location === 'allCredentials') await exportCredentialsAsCSV(csvPayload.rows);
+        else if (csvPayload.location === 'credential') await exportCredentialAsCSV(csvPayload.rows);
+        else await exportSearchCredentialsAsCSV(csvPayload.rows, csvPayload.params);
     } catch (error) {
         const toast = useToast();
         if (error instanceof ExportError){
@@ -156,7 +157,7 @@ async function exportCategoriesAsCSV(sortOption: SortAction, withinCategorySortO
 };
 
 // Per category
-async function exportCredentialsAsCSV(credentials: CredentialDetail[]) {
+async function exportCredentialsAsCSV(credentials: CredentialSummary[]) {
     const creationDateAndTime = currentDateAndTime();
 
     const csvRows = [`Date and Timestamp of Creation:, ${creationDateAndTime} \n`];
@@ -174,7 +175,7 @@ async function exportCredentialsAsCSV(credentials: CredentialDetail[]) {
 
     const data = credentials.map(findPassword);
 
-    function findPassword(credential: CredentialDetail){
+    function findPassword(credential: CredentialSummary){
         const firstElement = allCredentials.find(c => c.id === credential.id);
         if (!firstElement) throw new ExportError(`Credential ${credential.id} not found`);
         return {
@@ -219,7 +220,7 @@ async function exportCredentialsAsCSV(credentials: CredentialDetail[]) {
 }
 
 // One credential
-async function exportCredentialAsCSV(credential: CredentialDetail) 
+async function exportCredentialAsCSV(credential: CurrentEntries) 
 {
     const creationDateAndTime = currentDateAndTime();
 
@@ -229,12 +230,12 @@ async function exportCredentialAsCSV(credential: CredentialDetail)
     csvRows.push(headers.join(","));
 
     const credentialData = [
-        credential.categoryName, 
-        credential.serviceName, 
-        credential.username, 
-        credential.password, 
-        credential.dateCreated, 
-        credential.dateLastUpdated
+        credential.CategoryName, 
+        credential.ServiceName, 
+        credential.Username, 
+        credential.Password, 
+        credential.DateCreated, 
+        credential.DateLastUpdated
     ];
     csvRows.push(credentialData.join(","));
 
@@ -242,12 +243,12 @@ async function exportCredentialAsCSV(credential: CredentialDetail)
 
     const blob = new Blob([csvString], { type: 'text/csv' });
 
-    const title = `credential_${credential.serviceName.toLowerCase()}_${creationDateAndTime}.csv`;
+    const title = `credential_${credential.ServiceName?.toLowerCase() ?? "credential"}_${creationDateAndTime}.csv`;
 
     await fileWriter(title, blob);
 }
 
-async function exportSearchCredentialsAsCSV(credentials: CredentialSearchResult[], params: SearchParams)
+async function exportSearchCredentialsAsCSV(credentials: CredentialSearchResult[], params: Partial<SearchQuery>)
 {
     const creationDateAndTime = currentDateAndTime();
 
